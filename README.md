@@ -11,7 +11,12 @@ sin servidor: todo vive en tu equipo.
 
 ## Estado
 
-Primera entrega. Funciona de punta a punta con la base vacía, y con datos importados también.
+**Versión 0.1.0.** Instalador para Windows en
+[Releases](https://github.com/LordAntonio99/cardex/releases).
+
+Al abrirla por primera vez se descarga el catálogo publicado: de momento el **Set Base** (102
+cartas, con la 1ª edición como impresión propia) y **Oscuridad Absoluta** (120 cartas), con sus
+imágenes, sus sobres y precios de Cardmarket. Tu colección arranca vacía.
 
 Lo que **todavía no** hace:
 
@@ -19,11 +24,13 @@ Lo que **todavía no** hace:
   confirmación son reales: «Simular detección» mete una carta del catálogo en el lote para que
   puedas recorrer el flujo entero. El reconocimiento de verdad (hash perceptual contra
   `cards.phash`, y OCR del número después) entra detrás de la misma interfaz.
-- **No se descargan precios.** El esquema, el histórico y las gráficas están listos, pero nadie
-  los alimenta todavía, así que Mercado sale a cero.
+- **Los precios no se refrescan solos.** Llegan con el catálogo, así que se actualizan cuando se
+  publica uno nuevo. El histórico de tu colección sí crece: cada sincronización anota el precio
+  del día de lo que tienes.
 - **Sólo se compila para Windows.** El código no asume Windows más allá de la barra de título,
   pero macOS y Linux no se han probado.
-- Los instaladores van **sin firmar**: Windows SmartScreen avisará la primera vez.
+- El instalador va **sin firmar**: Windows SmartScreen avisará la primera vez. Hay que darle a
+  «Más información» → «Ejecutar de todas formas».
 
 ## Requisitos
 
@@ -38,16 +45,17 @@ npm run dev
 
 Atajos: `Ctrl+1` a `Ctrl+5` cambian de vista.
 
-### Ver la aplicación con datos
+El catálogo se descarga solo al arrancar, así que en desarrollo ya tienes cartas con las que
+trabajar. Para meter algunas en tu colección: Escáner → «Simular detección» → «Confirmar lote».
 
-La base arranca vacía a propósito. Para verla llena:
+### Probar un catálogo antes de publicarlo
 
 ```bash
-npm run catalog:sample      # genera ./catalog con un set de muestra (30 cartas)
-npm run catalog:serve       # lo sirve en http://localhost:8787
+npm run catalog:build -- --sets me05   # genera ./catalog
+npm run catalog:serve                  # lo sirve en http://localhost:8787
 ```
 
-Y en otra terminal:
+Y en otra terminal, la aplicación apuntando ahí en vez de a GitHub:
 
 ```bash
 CARDEX_CATALOG_BASE=http://localhost:8787 npm run dev
@@ -55,7 +63,7 @@ CARDEX_CATALOG_BASE=http://localhost:8787 npm run dev
 
 En PowerShell: `$env:CARDEX_CATALOG_BASE="http://localhost:8787"; npm run dev`
 
-Luego, en el Escáner, «Simular detección» y «Confirmar lote» meten cartas en tu colección.
+La variable sólo se atiende en desarrollo.
 
 ### Comprobaciones
 
@@ -97,16 +105,21 @@ El renderer no habla nunca con SQLite ni con la red: todo pasa por
 `src/shared/ipc-contract.ts`, que es una lista cerrada de operaciones con tipos. No se expone
 SQL libre.
 
-### La carta holográfica
+### El visor de carta
 
-Es la pieza delicada. Antes de tocar `src/renderer/src/styles/card.css`, léete su cabecera: en
-CSS, cualquier «propiedad de agrupación» (`opacity`, `filter`, `mix-blend-mode`, `isolation`,
-`mask`, `clip-path`, `content-visibility`) fuerza `transform-style: flat`. Si alguna cae sobre
-el nodo con `preserve-3d`, el volteo de la carta colapsa a 2D sin ningún error en consola.
+La rejilla enseña las cartas planas. Pulsando la miniatura de la ficha se abre el visor a media
+pantalla, que se gira arrastrando: el giro horizontal no tiene tope, así que pasando de 90°
+aparece el reverso.
 
-El seguimiento del puntero es **un único listener** para toda la aplicación
-(`src/renderer/src/lib/cardPointer.ts`), que escribe variables CSS directamente en el nodo sin
-pasar por React.
+Es la pieza delicada del CSS. Antes de tocar `src/renderer/src/styles/card.css`, léete su
+cabecera: cualquier «propiedad de agrupación» (`opacity`, `filter`, `mix-blend-mode`,
+`isolation`, `mask`, `clip-path`, `content-visibility`) fuerza `transform-style: flat`. Si
+alguna cae sobre el nodo con `preserve-3d`, el giro colapsa a 2D sin ningún error en consola.
+Por eso qué cara se ve se decide además en JavaScript, a partir del ángulo.
+
+El **efecto holográfico** está retirado: a tamaño de rejilla ensuciaba la ilustración en vez de
+realzarla. El CSS se conserva entero y documentado, marcado como en barbecho, para recuperarlo
+cuando se afine.
 
 ## Catálogo
 
