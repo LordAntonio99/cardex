@@ -260,7 +260,10 @@ function PackSlot({
       src={art.data}
       placeholder={placeholder}
       title={name}
-      style={{ width: 138, flex: '0 0 138px', minHeight: 180 }}
+      // Altura fija y `contain`: un sobre es vertical y una caja apaisada, así
+      // que sin esto cada producto se sienta a una altura distinta y la fila
+      // queda desigual.
+      style={{ width: 138, flex: '0 0 138px', height: 210, objectFit: 'contain' }}
     />
   )
 }
