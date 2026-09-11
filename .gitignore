@@ -12,3 +12,6 @@ Thumbs.db
 # El catálogo generado no va en `main`: vive en la rama `catalog`.
 # Ver docs/CATALOG.md
 catalog/
+
+# Caché incremental de TypeScript
+*.tsbuildinfo
