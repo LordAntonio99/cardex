@@ -1,0 +1,11 @@
+/*
+ * Punto de entrada de estilos.
+ *
+ * El orden importa: primero las tipografías, luego el design system
+ * vendorizado (tokens, escala tipográfica y utilidades), y encima lo propio de
+ * la aplicación.
+ */
+@import './ds/fonts.css';
+@import './ds/_ds_bundle.css';
+@import './base.css';
+@import './card.css';

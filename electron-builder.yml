@@ -1,0 +1,77 @@
+appId: es.lordantonio99.cardex
+productName: Cardex
+copyright: Copyright © 2026 LordAntonio99
+
+directories:
+  buildResources: resources
+  output: release/${version}
+
+files:
+  - out/**
+  - package.json
+  # better-sqlite3 sólo necesita el cargador y el binario de la plataforma.
+  # Lo demás (fuentes C++, amalgama de SQLite, documentación) son ~10 MB que no
+  # se usan en tiempo de ejecución.
+  - '!node_modules/better-sqlite3/{build,deps,src,docs,benchmark,.github}/**'
+
+asar: true
+# Un .node no se puede cargar desde dentro del asar: tiene que quedar en disco.
+asarUnpack:
+  - '**/node_modules/better-sqlite3/**'
+
+# better-sqlite3 13 es N-API y trae binarios precompilados para las ocho
+# combinaciones de plataforma/arquitectura. No hace falta node-gyp, ni Python,
+# ni las Build Tools de Visual Studio en el runner de CI.
+npmRebuild: false
+
+# Cierra puertas que esta aplicación no usa.
+electronFuses:
+  runAsNode: false
+  enableCookieEncryption: true
+  enableNodeOptionsEnvironmentVariable: false
+  enableNodeCliInspectArguments: false
+  enableEmbeddedAsarIntegrityValidation: true
+  onlyLoadAppFromAsar: true
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  artifactName: ${productName}-${version}-${arch}.${ext}
+  files:
+    # Los prebuilds son ficheros sueltos (win32-x64.node, darwin-arm64.node...),
+    # 17 MB en total. Sin este filtro se empaquetan los ocho.
+    - '!node_modules/better-sqlite3/prebuilds/!(win32-x64).node'
+
+nsis:
+  oneClick: false
+  perMachine: false # instalación por usuario: sin UAC ni al instalar ni al actualizar
+  allowToChangeInstallationDirectory: true
+  differentialPackage: true # genera el .blockmap para actualizaciones diferenciales
+  # NUNCA a true: borraría la colección del usuario al desinstalar.
+  deleteAppDataOnUninstall: false
+  createDesktopShortcut: true
+  shortcutName: Cardex
+
+mac:
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+  category: public.app-category.utilities
+  hardenedRuntime: true
+  files:
+    - '!node_modules/better-sqlite3/prebuilds/!(darwin-*).node'
+  extendInfo:
+    NSCameraUsageDescription: Cardex usa la cámara para escanear tus cartas.
+
+linux:
+  target: [AppImage, deb]
+  category: Utility
+  files:
+    - '!node_modules/better-sqlite3/prebuilds/!(linux*).node'
+
+publish:
+  - provider: github
+    owner: LordAntonio99
+    repo: cardex
+    releaseType: release

@@ -1,0 +1,210 @@
+/*
+ * ╔══════════════════════════════════════════════════════════════════════════╗
+ * ║  CARTA HOLOGRÁFICA — NO TOCAR SIN LEER ESTO                              ║
+ * ╚══════════════════════════════════════════════════════════════════════════╝
+ *
+ * Según css-transforms-2, cualquier «propiedad de agrupación» fuerza el valor
+ * usado de `transform-style` a `flat`. Son estas:
+ *
+ *     opacity < 1 · filter · mix-blend-mode · isolation · mask · clip-path
+ *     contain: paint · content-visibility · will-change de cualquiera de ellas
+ *
+ * Esto NO es un fallo de un navegador concreto: pasa igual en Chromium. Si
+ * alguna de ellas cae sobre `.card-3d`, el volteo de la carta colapsa a 2D sin
+ * ningún error en consola y cuesta horas encontrarlo.
+ *
+ * La jerarquía es deliberada:
+ *
+ *   .card-persp     perspective        -> SIN propiedades de agrupación
+ *     .card-3d      preserve-3d        -> SIN propiedades de agrupación, JAMÁS
+ *       .card-face  backface-visibility + isolation  (es una hoja: aplanarla da igual)
+ *         .holo-layer   mix-blend-mode: screen
+ *
+ * `isolation: isolate` en la cara es obligatorio, no decorativo: sin él,
+ * `mix-blend-mode: screen` mezcla contra todo lo pintado debajo en el contexto
+ * de apilado más cercano (o sea, la página entera), lo que se ve mal al
+ * desplazar y obliga a Chromium a mantener una superficie enorme de fondo.
+ */
+
+/* ── Estructura 3D ─────────────────────────────────────────────────────────── */
+
+.card-persp {
+  /* La perspectiva va en CADA carta, nunca en la rejilla: si se pone en el
+     contenedor, las dos mil cartas pasan a compartir un único contexto de
+     render 3D y el compositor se ahoga. */
+  perspective: 1100px;
+  cursor: pointer;
+}
+
+.card-3d {
+  position: relative;
+  aspect-ratio: 63 / 88;
+  transform-style: preserve-3d;
+  transition:
+    transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1),
+    box-shadow 0.18s ease;
+  transform: translate3d(0, var(--lift, 0px), 0) rotateX(var(--rx, 0deg))
+    rotateY(calc(var(--ry, 0deg) + var(--flip, 0deg)));
+  box-shadow: 0 calc(3px + var(--glow, 0) * var(--shy, 22px))
+    calc(9px + var(--glow, 0) * var(--shb, 40px))
+    rgba(0, 0, 0, calc(0.34 + var(--glow, 0) * var(--sho, 0.38)));
+}
+
+.card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  overflow: hidden;
+  border-radius: 4px;
+  border: 1px solid rgba(237, 234, 227, 0.16);
+  /* Ver la cabecera: acota la mezcla a esta cara. */
+  isolation: isolate;
+}
+
+.card-front {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Las que no se tienen salen en gris, como marca el diseño. `filter` aquí es
+   inofensivo: la cara es una hoja del árbol 3D. */
+.card-front.is-missing {
+  filter: grayscale(1);
+}
+
+.card-back {
+  transform: rotateY(180deg);
+  background: var(--deep);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Ventana de la ilustración. */
+.card-art {
+  position: relative;
+  flex: 1 1 auto;
+  margin: 7px 7px 0;
+  border: 1px solid rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.card-art img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Capas del foil ────────────────────────────────────────────────────────
+ *
+ * Tres patrones superpuestos en `screen`, cada uno con su peso:
+ *
+ *   --pa/--pb/--pc   peso del preajuste (arcoíris / prismático / glitter),
+ *                    lo escribe el JS en :root al cambiar de preajuste
+ *   --wa/--wb/--wc   peso por rareza, SÓLO en la ventana de ilustración
+ *   --fa/--fb/--fc   peso por rareza, en TODA la carta
+ *   --rest           brillo en reposo: un foil de verdad no se apaga del todo
+ *   --glow           0 en reposo, 1 con el puntero encima
+ */
+
+.holo-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.holo-a {
+  background: repeating-linear-gradient(
+    102deg,
+    hsl(0 92% 60%) 0px,
+    hsl(45 96% 58%) 17px,
+    hsl(100 88% 54%) 34px,
+    hsl(170 92% 54%) 51px,
+    hsl(205 96% 58%) 68px,
+    hsl(270 92% 62%) 85px,
+    hsl(320 92% 58%) 102px,
+    hsl(0 92% 60%) 119px
+  );
+  background-position: calc(var(--mxn, 50) * 1.6px) calc(var(--myn, 50) * 1.6px);
+  filter: saturate(1.35);
+}
+
+.holo-b {
+  background: repeating-linear-gradient(
+    calc(34deg + var(--rx, 0deg) * 2.5),
+    hsl(186 100% 88% / 0.28) 0 2px,
+    hsl(186 100% 58% / 0.9) 2px 9px,
+    hsl(268 100% 66% / 0.88) 9px 16px,
+    hsl(330 100% 62% / 0.88) 16px 23px,
+    transparent 23px 38px
+  );
+  filter: saturate(1.35) hue-rotate(calc(var(--mxn, 50) * 2.4deg));
+}
+
+.holo-c {
+  background:
+    radial-gradient(circle at var(--mx, 50%) var(--my, 50%), hsl(48 100% 72% / 0.45), transparent 24%),
+    radial-gradient(hsl(190 100% 76% / 0.95) 1px, transparent 1.6px) 0 0 / 7px 7px,
+    radial-gradient(hsl(322 100% 78% / 0.85) 1px, transparent 1.6px) 3px 4px / 11px 11px,
+    radial-gradient(hsl(60 100% 80% / 0.8) 1px, transparent 1.6px) 5px 1px / 15px 15px;
+  filter: saturate(1.4);
+}
+
+/* Pesos según dónde vive la capa. */
+.holo-win.holo-a {
+  opacity: calc((var(--rest, 0) + var(--glow, 0)) * var(--pa, 0) * var(--wa, 0));
+}
+.holo-win.holo-b {
+  opacity: calc((var(--rest, 0) + var(--glow, 0)) * var(--pb, 0) * var(--wb, 0));
+}
+.holo-win.holo-c {
+  opacity: calc((var(--rest, 0) + var(--glow, 0)) * var(--pc, 0) * var(--wc, 0));
+}
+
+.holo-frame.holo-a {
+  opacity: calc((var(--rest, 0) + var(--glow, 0)) * var(--pa, 0) * var(--fa, 0));
+}
+.holo-frame.holo-b {
+  opacity: calc((var(--rest, 0) + var(--glow, 0)) * var(--pb, 0) * var(--fb, 0));
+}
+.holo-frame.holo-c {
+  opacity: calc((var(--rest, 0) + var(--glow, 0)) * var(--pc, 0) * var(--fc, 0));
+}
+
+/* Reflejo especular que sigue al puntero. */
+.holo-glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    42% 30% at var(--mx, 50%) var(--my, 50%),
+    rgba(255, 255, 255, 0.42),
+    rgba(255, 255, 255, 0.04) 45%,
+    transparent 68%
+  );
+  opacity: calc(var(--glow, 0) * var(--pglare, 0.4));
+}
+
+/* ── Rendimiento ───────────────────────────────────────────────────────────
+ *
+ * `will-change` se pone y se quita desde JS al entrar y salir el puntero. Una
+ * regla general en CSS reservaría capa de compositor para cada carta visible y
+ * se comería el presupuesto de memoria de Chromium.
+ */
+.card-3d.is-hot {
+  will-change: transform;
+}
+
+/* Con «reducir movimiento» la carta se queda quieta: nada de inclinación ni de
+   volteo animado. El foil en reposo se mantiene, que no molesta a nadie. */
+@media (prefers-reduced-motion: reduce) {
+  .card-3d {
+    transition: none;
+    transform: none;
+  }
+}

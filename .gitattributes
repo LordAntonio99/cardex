@@ -1,0 +1,8 @@
+# Normaliza los finales de línea: el repositorio guarda LF y cada quien trabaja
+# con lo que use su sistema. Evita diffs enteros por cambiar de máquina.
+* text=auto eol=lf
+
+*.png binary
+*.ico binary
+*.icns binary
+*.woff2 binary

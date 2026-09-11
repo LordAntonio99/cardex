@@ -1,0 +1,65 @@
+name: release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write # electron-builder crea la release y sube los instaladores
+
+jobs:
+  # La release se crea ANTES de compilar. Si cada plataforma intentara crearla
+  # por su cuenta, tres trabajos en paralelo compiten por el mismo tag y acaban
+  # saliendo dos borradores con los ficheros repartidos (y un latest.yml
+  # perdido, que es lo que rompe el autoactualizador).
+  prepare:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Crear la release en borrador
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 \
+            || gh release create "$GITHUB_REF_NAME" \
+                 --repo "$GITHUB_REPOSITORY" \
+                 --draft --title "$GITHUB_REF_NAME" --generate-notes
+
+  build:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            flag: --win
+          # macOS y Linux quedan comentados hasta que se puedan probar de
+          # verdad. Publicar un binario que nadie ha abierto nunca es peor que
+          # no publicarlo.
+          # - os: macos-latest
+          #   flag: --mac
+          # - os: ubuntu-latest
+          #   flag: --linux
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Comprobar tipos
+        run: npm run typecheck
+
+      - name: Compilar y publicar
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder ${{ matrix.flag }} --publish always

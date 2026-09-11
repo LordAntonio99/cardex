@@ -1,0 +1,151 @@
+/*
+ * Base de la aplicación, encima del design system.
+ *
+ * Aquí sólo va lo que el bundle no cubre: la ventana sin marco, las regiones de
+ * arrastre, la barra de desplazamiento y las animaciones propias del diseño.
+ */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden; /* el desplazamiento lo gestiona cada panel, no la ventana */
+}
+
+#root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+a {
+  color: var(--ac);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--ink);
+}
+
+/*
+ * Japonés. Las tres familias del design system son latinas, así que para los
+ * nombres de carta en japonés se cae a la del sistema en vez de meter varios
+ * megas de Noto Sans JP en el instalador.
+ */
+:lang(ja) {
+  font-family: 'Yu Gothic UI', 'Hiragino Sans', 'Noto Sans JP', system-ui, sans-serif;
+}
+
+/* ── Ventana sin marco ─────────────────────────────────────────────────────
+ *
+ * La cabecera del diseño hace de barra de título. Todo lo que sea interactivo
+ * necesita `no-drag` explícito: dentro de una región de arrastre, Chromium le
+ * quita el hover y los clics a los hijos si no se marca.
+ *
+ * Y ojo: arrastre y backdrop-filter en el MISMO elemento producen artefactos de
+ * repintado, así que van en elementos hermanos.
+ */
+.drag-region {
+  -webkit-app-region: drag;
+}
+
+.no-drag,
+button,
+input,
+select,
+textarea,
+a,
+[role='button'] {
+  -webkit-app-region: no-drag;
+}
+
+/*
+ * Hueco de los botones de ventana en Windows.
+ *
+ * La franja de minimizar/maximizar/cerrar la pinta el sistema, es opaca y se
+ * dibuja ENCIMA del contenido: sin reservar su anchura, tapa lo que haya
+ * debajo. Se reserva con la variable de entorno que expone Electron, más el
+ * margen normal de la cabecera.
+ *
+ * Ojo: esto es padding-right, así que el elemento no puede llevar un `padding`
+ * en línea con la forma corta, o lo pisa. Por eso el margen izquierdo se aplica
+ * aquí también y la cabecera no toca su padding.
+ */
+.titlebar-inset {
+  padding-left: 22px;
+  padding-right: calc(22px + 100vw - env(titlebar-area-width, 100vw) - env(titlebar-area-x, 0px));
+}
+
+/* En macOS los semáforos van arriba a la izquierda. */
+.platform-darwin .titlebar-leading {
+  padding-left: 74px;
+}
+
+/* ── Barra de desplazamiento ───────────────────────────────────────────────── */
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(237, 234, 227, 0.14);
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+[data-theme='light'] *::-webkit-scrollbar-thumb {
+  background: rgba(22, 24, 28, 0.16);
+}
+
+/* ── Animaciones del diseño ───────────────────────────────────────────────── */
+
+@keyframes cdx-scan {
+  0% {
+    transform: translateY(-2%);
+  }
+  100% {
+    transform: translateY(102%);
+  }
+}
+
+@keyframes cdx-blip {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes cdx-sweep {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Utilidad: texto que no desborda su columna. */
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,14 @@
+node_modules/
+out/
+dist/
+release/
+.vite/
+*.log
+.DS_Store
+Thumbs.db
+.env
+.env.local
+
+# El catálogo generado no va en `main`: vive en la rama `catalog`.
+# Ver docs/CATALOG.md
+catalog/
