@@ -11,7 +11,7 @@ sin servidor: todo vive en tu equipo.
 
 ## Estado
 
-**Versión 0.1.0.** Instalador para Windows en
+**Versión 0.1.1.** Instalador para Windows en
 [Releases](https://github.com/LordAntonio99/cardex/releases).
 
 Al abrirla por primera vez se descarga el catálogo publicado: de momento el **Set Base** (102

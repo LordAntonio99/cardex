@@ -1,6 +1,6 @@
 {
   "name": "cardex",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Gestor de colección de cartas Pokémon TCG",
   "main": "./out/main/index.js",
   "author": "LordAntonio99",
