@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync } from 'node:fs'
 import { readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
@@ -65,6 +66,27 @@ interface Candidate {
 }
 
 /**
+ * URL externa aceptable para el arte de un sobre.
+ *
+ * Sólo https, y nada de direcciones internas. El contenido del catálogo llega
+ * de la red, así que se trata como dato: aunque lo publiques tú, una URL de ahí
+ * no debería poder apuntar a un servicio de la máquina o de la red local.
+ */
+const PRIVATE_HOST =
+  /^(localhost$|127\.|0\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|\[|::1$)/i
+
+function externalUrl(value: string): URL | null {
+  if (!/^https:\/\//i.test(value)) return null
+  try {
+    const url = new URL(value)
+    if (PRIVATE_HOST.test(url.hostname)) return null
+    return url
+  } catch {
+    return null
+  }
+}
+
+/**
  * Lista de intentos, en orden.
  *
  * Para las imágenes de TCGdex se prueba el idioma pedido y después el inglés:
@@ -77,6 +99,21 @@ function candidates(
   lang: string,
   quality: string
 ): Candidate[] | null {
+  // El arte de sobres admite una URL completa, no sólo una ruta dentro del
+  // catálogo. Así se puede apuntar a donde ya está alojada la imagen en vez de
+  // volver a publicarla: la aplicación se la baja una vez a la máquina de cada
+  // usuario y ahí se queda.
+  if (kind === 'packAsset' && /^https?:\/\//i.test(rawPath)) {
+    const url = externalUrl(rawPath)
+    if (!url) return null
+    const ext = path.extname(url.pathname).toLowerCase()
+    const safeExt = /^\.(webp|png|jpe?g|gif|avif)$/.test(ext) ? ext : '.img'
+    // El nombre en la caché sale de un hash de la URL: los nombres remotos
+    // traen caracteres que no queremos escribir en disco.
+    const name = createHash('sha1').update(url.href).digest('hex').slice(0, 20)
+    return [{ relative: path.join('packs', 'ext', `${name}${safeExt}`), url: url.href }]
+  }
+
   const parts = safeSegments(rawPath)
   if (!parts) return null
 

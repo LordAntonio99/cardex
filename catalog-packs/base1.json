@@ -7,7 +7,7 @@
       "en": "Base Set Booster Pack (Charizard)"
     },
     "kind": "booster",
-    "artworkPath": null
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/0/06/Base_Set_Booster_Charizard_Long.jpg/440px-Base_Set_Booster_Charizard_Long.jpg"
   },
   {
     "id": "base1-booster-blastoise",
@@ -17,7 +17,7 @@
       "en": "Base Set Booster Pack (Blastoise)"
     },
     "kind": "booster",
-    "artworkPath": null
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/6/6c/Base_Set_Booster_Blastoise_Long.jpg/440px-Base_Set_Booster_Blastoise_Long.jpg"
   },
   {
     "id": "base1-booster-venusaur",
@@ -27,17 +27,17 @@
       "en": "Base Set Booster Pack (Venusaur)"
     },
     "kind": "booster",
-    "artworkPath": null
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/f/fb/Base_Set_Booster_Venusaur_Long.jpg/440px-Base_Set_Booster_Venusaur_Long.jpg"
   },
   {
     "id": "base1-starter",
-    "name": "2-Player Starter Set",
+    "name": "2-Player Starter Set (CD-ROM)",
     "names": {
-      "es": "Set de Inicio para 2 Jugadores",
-      "en": "2-Player Starter Set"
+      "es": "Set de Inicio para 2 Jugadores (CD-ROM)",
+      "en": "2-Player Starter Set (CD-ROM)"
     },
     "kind": "collection",
-    "artworkPath": null
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/0/06/2_Player_CD-ROM_Starter_Set.jpg"
   },
   {
     "id": "base1-booster-box",
@@ -47,6 +47,6 @@
       "en": "Base Set Booster Box"
     },
     "kind": "bundle",
-    "artworkPath": null
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/9/90/Base_Set_Booster_Box.jpg/440px-Base_Set_Booster_Box.jpg"
   }
 ]
