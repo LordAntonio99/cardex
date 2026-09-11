@@ -58,10 +58,14 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
-      - name: Comprobar tipos
-        run: npm run typecheck
+      # `npm run build` es comprobar tipos + electron-vite build, y es quien
+      # genera out/. Sin este paso, electron-builder empaqueta un asar vacío y
+      # muere con «Application entry file out/main/index.js ... was not found».
+      # electron-builder sólo empaqueta: no compila nada.
+      - name: Comprobar tipos y compilar
+        run: npm run build
 
-      - name: Compilar y publicar
+      - name: Empaquetar y publicar
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx electron-builder ${{ matrix.flag }} --publish always
