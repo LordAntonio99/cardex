@@ -116,6 +116,11 @@ en [docs/CATALOG.md](docs/CATALOG.md).
 
 Fuente: [TCGdex](https://tcgdex.dev) (MIT), que trae los nombres en español de forma nativa.
 
+Lo único que no sale de ninguna API es el **arte de los sobres**. Se mantiene a mano en
+`catalog-packs/`: las definiciones por set en `catalog-packs/<setId>.json` y las imágenes en
+`catalog-packs/images/`, que el generador copia al catálogo publicado. Mientras un sobre no
+tenga imagen, la vista de Sets dibuja el hueco con su nombre.
+
 Las imágenes de carta **no se empaquetan** en el instalador: son propiedad de sus titulares. Se
 descargan a tu equipo cuando hacen falta, y se pueden desactivar en los ajustes.
 
