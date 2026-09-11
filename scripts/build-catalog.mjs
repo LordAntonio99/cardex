@@ -274,16 +274,28 @@ async function buildSet(setId, langs, limit, concurrency) {
     // Impresiones concretas, con su precio. Aquí está lo que separa una carta
     // del Set Base unlimited de la misma en shadowless de 1ª edición: pueden ir
     // seis veces de diferencia.
-    const printings = (full.variants_detailed ?? []).map((v, i) => ({
-      id: v.variantId ?? `${full.id}-p${i}`,
-      kind: v.type ?? 'normal',
-      subtype: v.subtype ?? '',
-      stamp: v.stamp ?? [],
-      label: printingLabel(v),
-      variant: coarseVariant(v),
-      sortKey: i,
-      prices: printingPrices(v)
-    }))
+    //
+    // Los campos estructurales (type, subtype, stamp) se toman del inglés,
+    // cruzando por `variantId`: TCGdex los traduce, y en español llegan como
+    // 'reversa' y 'básico'. Con esos valores el clasificador guardaría todas
+    // las reverse como normales. El precio da igual de dónde salga: comparten
+    // identificador de producto en Cardmarket.
+    const canonical = new Map(
+      (english?.variants_detailed ?? []).filter((v) => v.variantId).map((v) => [v.variantId, v])
+    )
+    const printings = (full.variants_detailed ?? []).map((v, i) => {
+      const shape = canonical.get(v.variantId) ?? v
+      return {
+        id: v.variantId ?? `${full.id}-p${i}`,
+        kind: shape.type ?? 'normal',
+        subtype: shape.subtype ?? '',
+        stamp: shape.stamp ?? [],
+        label: printingLabel(shape),
+        variant: coarseVariant(shape),
+        sortKey: i,
+        prices: printingPrices(v)
+      }
+    })
 
     process.stdout.write('.')
     return {
