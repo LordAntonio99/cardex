@@ -6,15 +6,17 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write # electron-builder crea la release y sube los instaladores
+  contents: write # electron-builder sube los instaladores a la release
 
 jobs:
-  # La release se crea ANTES de compilar. Si cada plataforma intentara crearla
-  # por su cuenta, tres trabajos en paralelo compiten por el mismo tag y acaban
-  # saliendo dos borradores con los ficheros repartidos (y un latest.yml
-  # perdido, que es lo que rompe el autoactualizador).
+  # La release se crea ANTES de compilar, y como borrador. Dos motivos:
+  #
+  #  - Si cada plataforma intentara crearla por su cuenta, varios trabajos en
+  #    paralelo competirían por el mismo tag y acabarían saliendo dos borradores
+  #    con los ficheros repartidos (y un latest.yml perdido, que es justo lo que
+  #    rompe el autoactualizador).
+  #  - En borrador, nadie se descarga una versión a medio subir.
   prepare:
-    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -63,3 +65,19 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx electron-builder ${{ matrix.flag }} --publish always
+
+  # Sin esto la release se queda en borrador para siempre y electron-updater no
+  # la ve: sólo mira la última release publicada.
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Publicar la release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release edit "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --draft=false --latest
+          echo "Publicada: $(gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --json url --jq .url)"
