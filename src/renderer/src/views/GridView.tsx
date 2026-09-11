@@ -47,6 +47,16 @@ export function GridView({ scope, strings, lang }: Props): React.JSX.Element {
   const syncing = catalog.data?.state === 'syncing' || catalog.data?.state === 'checking'
   const showEmpty = !counts.loading && counts.total === 0
 
+  /**
+   * Qué estado vacío toca.
+   *
+   * Importa distinguirlos: si la colección está vacía, decir «ninguna carta
+   * encaja con estos filtros» es engañoso, porque el problema no son los
+   * filtros. Sólo se culpa a los filtros cuando de verdad hay algo que filtrar.
+   */
+  const emptyKind: 'scope' | 'filters' =
+    counts.scopeTotal === 0 ? 'scope' : 'filters'
+
   return (
     <main
       ref={scrollRef}
@@ -125,7 +135,7 @@ export function GridView({ scope, strings, lang }: Props): React.JSX.Element {
       </div>
 
       {showEmpty ? (
-        catalogEmpty ? (
+        emptyKind === 'scope' ? (
           <EmptyState
             eyebrow={meta.eyebrow}
             title={scope === 'collection' ? strings.emptyCollectionTitle : strings.emptyExplorerTitle}
@@ -134,16 +144,23 @@ export function GridView({ scope, strings, lang }: Props): React.JSX.Element {
             }
             action={
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <Button
-                  variant="brand"
-                  size="sm"
-                  disabled={syncing}
-                  onClick={() => void call('catalog:sync', { force: false })}
-                >
-                  {syncing ? strings.catalogSyncing : strings.catalogSync}
-                </Button>
+                {/* Sincronizar sólo se ofrece si falta el catálogo de verdad. */}
+                {catalogEmpty ? (
+                  <Button
+                    variant="brand"
+                    size="sm"
+                    disabled={syncing}
+                    onClick={() => void call('catalog:sync', { force: false })}
+                  >
+                    {syncing ? strings.catalogSyncing : strings.catalogSync}
+                  </Button>
+                ) : null}
                 {scope === 'collection' ? (
-                  <Button variant="ghost" size="sm" onClick={() => setView('scan')}>
+                  <Button
+                    variant={catalogEmpty ? 'ghost' : 'brand'}
+                    size="sm"
+                    onClick={() => setView('scan')}
+                  >
                     {strings.navScan}
                   </Button>
                 ) : null}
