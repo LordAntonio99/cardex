@@ -107,11 +107,24 @@ export interface IpcRequests {
 
   // Imágenes ──────────────────────────────────────────────────────────────────
   /**
-   * Resuelve la URL local de una imagen de carta, descargándola a la caché si
-   * hace falta. Devuelve null si las descargas están desactivadas o falla.
+   * Resuelve la URL local de una imagen, descargándola a la caché si hace
+   * falta. Devuelve null si las descargas están desactivadas o si falla.
+   *
+   * Hay tres orígenes distintos y no se pueden tratar igual:
+   *
+   *  - `card`      TCGdex, con idioma y calidad: `{lang}/{path}/{quality}.webp`
+   *  - `setAsset`  TCGdex, con idioma pero SIN calidad: `{lang}/{path}.webp`
+   *                (los logos de set viven ahí, no bajo /high.webp)
+   *  - `packAsset` el catálogo publicado en el repositorio, sin idioma: el arte
+   *                de sobres no existe en ninguna API y lo aporta el catálogo
    */
   'images:resolve': {
-    req: { imagePath: string; lang: string; quality: 'low' | 'high' }
+    req: {
+      kind: 'card' | 'setAsset' | 'packAsset'
+      path: string
+      lang?: string
+      quality?: 'low' | 'high'
+    }
     res: string | null
   }
 

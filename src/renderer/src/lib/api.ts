@@ -114,25 +114,40 @@ export function imageLang(available: readonly string[] | undefined, preferred: s
 }
 
 /**
- * URL local de la imagen de una carta.
+ * URL local de una imagen.
  *
  * El proceso main la descarga a la caché la primera vez y luego la sirve desde
- * disco por el esquema `cardimg://`. Se cachea para siempre: una imagen de
- * carta no cambia nunca.
+ * disco por el esquema `cardimg://`. Se cachea para siempre: la ilustración de
+ * una carta no cambia nunca.
  */
+export function useAssetImage(
+  kind: 'card' | 'setAsset' | 'packAsset',
+  assetPath: string | null | undefined,
+  opts: { lang?: string; quality?: 'low' | 'high' } = {}
+): UseQueryResult<string | null> {
+  return useQuery({
+    queryKey: ['image', kind, assetPath, opts.lang, opts.quality],
+    queryFn: () =>
+      call('images:resolve', {
+        kind,
+        path: assetPath as string,
+        ...(opts.lang ? { lang: opts.lang } : {}),
+        ...(opts.quality ? { quality: opts.quality } : {})
+      }),
+    enabled: Boolean(assetPath),
+    staleTime: Infinity,
+    gcTime: Infinity,
+    retry: false
+  })
+}
+
+/** Atajo para la ilustración de una carta. */
 export function useCardImage(
   imagePath: string | null,
   lang: string,
   quality: 'low' | 'high'
 ): UseQueryResult<string | null> {
-  return useQuery({
-    queryKey: ['image', imagePath, lang, quality],
-    queryFn: () => call('images:resolve', { imagePath: imagePath as string, lang, quality }),
-    enabled: Boolean(imagePath),
-    staleTime: Infinity,
-    gcTime: Infinity,
-    retry: false
-  })
+  return useAssetImage('card', imagePath, { lang, quality })
 }
 
 /**

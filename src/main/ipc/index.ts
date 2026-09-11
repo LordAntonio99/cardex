@@ -98,8 +98,8 @@ export function registerIpc(): void {
   handle('scan:commit', ({ detections }) => scan.commit(detections))
 
   // ── Imágenes ───────────────────────────────────────────────────────────────
-  handle('images:resolve', ({ imagePath, lang, quality }) =>
-    images.resolve(imagePath, lang, quality)
+  handle('images:resolve', ({ kind, path: assetPath, lang, quality }) =>
+    images.resolve(kind, assetPath, lang, quality)
   )
 
   // ── Actualización ──────────────────────────────────────────────────────────

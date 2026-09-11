@@ -1,6 +1,6 @@
 import type { UiLang } from '@shared/types'
 import { Button, EmptyState, Eyebrow, ImageSlot } from '../components/ds'
-import { call, useCatalogStatus, useSetProgress } from '../lib/api'
+import { call, useAssetImage, useCatalogStatus, useSetProgress } from '../lib/api'
 import { money } from '../lib/format'
 import type { Strings } from '../i18n'
 import { useStore } from '../state/store'
@@ -85,10 +85,11 @@ export function SetsView({ strings, lang }: { strings: Strings; lang: UiLang }):
                     placeItems: 'center'
                   }}
                 >
-                  <ImageSlot
+                  <SetLogo
+                    logoPath={row.set.logoPath}
+                    name={row.set.name}
+                    lang={lang}
                     placeholder={strings.logoPlaceholder}
-                    title={row.set.name}
-                    style={{ width: '100%', height: 104 }}
                   />
                 </div>
 
@@ -187,11 +188,11 @@ export function SetsView({ strings, lang }: { strings: Strings; lang: UiLang }):
                     }}
                   >
                     {row.packs.map((pack) => (
-                      <ImageSlot
+                      <PackSlot
                         key={pack.id}
+                        artworkPath={pack.artworkPath}
+                        name={pack.name}
                         placeholder={strings.packPlaceholder}
-                        title={pack.name}
-                        style={{ width: 138, flex: '0 0 138px', minHeight: 180 }}
                       />
                     ))}
                   </div>
@@ -202,5 +203,64 @@ export function SetsView({ strings, lang }: { strings: Strings; lang: UiLang }):
         </div>
       )}
     </main>
+  )
+}
+
+/**
+ * Logo del set.
+ *
+ * Va en su propio componente porque necesita un hook y no se puede llamar a uno
+ * dentro de un map: el orden cambiaría al variar la lista.
+ *
+ * El logo vive en TCGdex bajo "{idioma}/{ruta}.webp", sin segmento de calidad
+ * (a diferencia de las cartas), y no está en todos los idiomas. El proceso main
+ * cae al inglés si el pedido no lo tiene: el Set Base sólo existe en inglés.
+ */
+function SetLogo({
+  logoPath,
+  name,
+  lang,
+  placeholder
+}: {
+  logoPath: string | null
+  name: string
+  lang: UiLang
+  placeholder: string
+}): React.JSX.Element {
+  const logo = useAssetImage('setAsset', logoPath, { lang })
+  return (
+    <ImageSlot
+      src={logo.data}
+      placeholder={placeholder}
+      title={name}
+      style={{ width: '100%', height: 104 }}
+    />
+  )
+}
+
+/**
+ * Sobre o producto.
+ *
+ * Ninguna API pública publica arte de sobres, así que la imagen sale del
+ * catálogo del repositorio. Mientras no la haya se dibuja el hueco con el
+ * nombre del sobre, que ya dice bastante más que un genérico «Sobre».
+ */
+function PackSlot({
+  artworkPath,
+  name,
+  placeholder
+}: {
+  artworkPath: string | null
+  name: string
+  placeholder: string
+}): React.JSX.Element {
+  const art = useAssetImage('packAsset', artworkPath)
+  return (
+    <ImageSlot
+      src={art.data}
+      placeholder={placeholder}
+      title={name}
+      style={{ width: 138, flex: '0 0 138px', minHeight: 180 }}
+    />
   )
 }

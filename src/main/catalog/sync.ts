@@ -36,6 +36,11 @@ const BASE =
     ? process.env['CARDEX_CATALOG_BASE'].replace(/\/+$/, '')
     : DEFAULT_BASE
 
+/** Base del catálogo publicado. El arte de sobres se sirve desde aquí. */
+export function catalogBase(): string {
+  return BASE
+}
+
 const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000
 
 let current: CatalogStatus['state'] = 'idle'

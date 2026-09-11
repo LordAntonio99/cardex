@@ -1,0 +1,52 @@
+[
+  {
+    "id": "base1-booster-charizard",
+    "name": "Base Set Booster Pack (Charizard)",
+    "names": {
+      "es": "Sobre Edición Básica (Charizard)",
+      "en": "Base Set Booster Pack (Charizard)"
+    },
+    "kind": "booster",
+    "artworkPath": null
+  },
+  {
+    "id": "base1-booster-blastoise",
+    "name": "Base Set Booster Pack (Blastoise)",
+    "names": {
+      "es": "Sobre Edición Básica (Blastoise)",
+      "en": "Base Set Booster Pack (Blastoise)"
+    },
+    "kind": "booster",
+    "artworkPath": null
+  },
+  {
+    "id": "base1-booster-venusaur",
+    "name": "Base Set Booster Pack (Venusaur)",
+    "names": {
+      "es": "Sobre Edición Básica (Venusaur)",
+      "en": "Base Set Booster Pack (Venusaur)"
+    },
+    "kind": "booster",
+    "artworkPath": null
+  },
+  {
+    "id": "base1-starter",
+    "name": "2-Player Starter Set",
+    "names": {
+      "es": "Set de Inicio para 2 Jugadores",
+      "en": "2-Player Starter Set"
+    },
+    "kind": "collection",
+    "artworkPath": null
+  },
+  {
+    "id": "base1-booster-box",
+    "name": "Base Set Booster Box",
+    "names": {
+      "es": "Caja de Sobres Edición Básica",
+      "en": "Base Set Booster Box"
+    },
+    "kind": "bundle",
+    "artworkPath": null
+  }
+]

@@ -6,9 +6,10 @@ import { imagesDir } from '../db/connection'
 import { getDb } from '../db'
 import { log } from '../log'
 import { getSettings } from '../settings'
+import { catalogBase } from './sync'
 
 /**
- * Caché local de imágenes de carta.
+ * Caché local de imágenes.
  *
  * Las imágenes NO se empaquetan nunca en el instalador: son propiedad de sus
  * titulares. Se descargan bajo demanda a userData, de modo que el instalable no
@@ -19,14 +20,17 @@ const ASSET_BASE = 'https://assets.tcgdex.net'
 
 export const IMAGE_SCHEME = 'cardimg'
 
+export type ImageKind = 'card' | 'setAsset' | 'packAsset'
+
 /** Sólo estos caracteres en las rutas: nada de '..' ni rutas absolutas. */
 const SAFE_SEGMENT = /^[A-Za-z0-9._-]+$/
 
-function safeRelative(imagePath: string, lang: string, quality: string): string | null {
-  if (!SAFE_SEGMENT.test(lang) || !SAFE_SEGMENT.test(quality)) return null
-  const parts = imagePath.split('/').filter(Boolean)
-  if (!parts.length || !parts.every((p) => SAFE_SEGMENT.test(p) && p !== '..')) return null
-  return path.join(lang, ...parts, `${quality}.webp`)
+function safeSegments(value: string): string[] | null {
+  const parts = value.split('/').filter(Boolean)
+  if (!parts.length || !parts.every((p) => SAFE_SEGMENT.test(p) && p !== '..' && p !== '.')) {
+    return null
+  }
+  return parts
 }
 
 function absoluteFor(relative: string): string | null {
@@ -53,48 +57,104 @@ function touch(relative: string, bytes: number): void {
   }
 }
 
+interface Candidate {
+  /** Ruta dentro de la caché local. */
+  relative: string
+  /** De dónde se baja. */
+  url: string
+}
+
+/**
+ * Lista de intentos, en orden.
+ *
+ * Para las imágenes de TCGdex se prueba el idioma pedido y después el inglés:
+ * hay sets que sólo existen en un idioma —el Set Base nunca se imprimió en
+ * español— y sin este respaldo su logo no aparecería nunca.
+ */
+function candidates(
+  kind: ImageKind,
+  rawPath: string,
+  lang: string,
+  quality: string
+): Candidate[] | null {
+  const parts = safeSegments(rawPath)
+  if (!parts) return null
+
+  if (kind === 'packAsset') {
+    // El arte de sobres viene del catálogo publicado, no de TCGdex, y no tiene
+    // idioma: la ruta ya trae su extensión.
+    return [
+      {
+        relative: path.join('packs', ...parts),
+        url: `${catalogBase()}/${parts.join('/')}`
+      }
+    ]
+  }
+
+  if (!SAFE_SEGMENT.test(lang) || !SAFE_SEGMENT.test(quality)) return null
+
+  const langs = lang === 'en' ? ['en'] : [lang, 'en']
+  return langs.map((l) =>
+    kind === 'card'
+      ? {
+          relative: path.join('cards', l, ...parts, `${quality}.webp`),
+          url: `${ASSET_BASE}/${l}/${parts.join('/')}/${quality}.webp`
+        }
+      : {
+          // Los logos y símbolos de set NO llevan segmento de calidad.
+          relative: path.join('sets', l, `${parts.join('/')}.webp`),
+          url: `${ASSET_BASE}/${l}/${parts.join('/')}.webp`
+        }
+  )
+}
+
+const localUrl = (relative: string): string =>
+  `${IMAGE_SCHEME}://local/${relative.split(path.sep).join('/')}`
+
 /**
  * Devuelve una URL que el renderer puede poner en un <img>, descargando la
  * imagen si todavía no está en la caché. `null` si no se puede.
  */
 export async function resolve(
-  imagePath: string,
-  lang: string,
-  quality: 'low' | 'high'
+  kind: ImageKind,
+  rawPath: string,
+  lang = 'en',
+  quality: 'low' | 'high' = 'low'
 ): Promise<string | null> {
-  const relative = safeRelative(imagePath, lang, quality)
-  if (!relative) {
-    log.warn(`Ruta de imagen rechazada: ${imagePath} (${lang}/${quality})`)
+  const list = candidates(kind, rawPath, lang, quality)
+  if (!list) {
+    log.warn(`Ruta de imagen rechazada: ${kind} ${rawPath} (${lang}/${quality})`)
     return null
   }
 
-  const abs = absoluteFor(relative)
-  if (!abs) return null
-
-  const url = `${IMAGE_SCHEME}://local/${relative.split(path.sep).join('/')}`
-  if (existsSync(abs)) return url
+  // Si alguna ya está en disco, se sirve sin tocar la red.
+  for (const c of list) {
+    const abs = absoluteFor(c.relative)
+    if (abs && existsSync(abs)) return localUrl(c.relative)
+  }
 
   if (!getSettings().downloadImages) return null
 
-  try {
-    const remote = `${ASSET_BASE}/${lang}/${imagePath}/${quality}.webp`
-    const res = await fetch(remote, {
-      headers: { 'User-Agent': 'Cardex' },
-      signal: AbortSignal.timeout(20_000)
-    })
-    if (!res.ok) {
-      log.warn(`Imagen no disponible (${res.status}): ${remote}`)
-      return null
+  for (const c of list) {
+    const abs = absoluteFor(c.relative)
+    if (!abs) continue
+    try {
+      const res = await fetch(c.url, {
+        headers: { 'User-Agent': 'Cardex' },
+        signal: AbortSignal.timeout(20_000)
+      })
+      if (!res.ok) continue
+      const buf = Buffer.from(await res.arrayBuffer())
+      mkdirSync(path.dirname(abs), { recursive: true })
+      await writeFile(abs, buf)
+      touch(c.relative, buf.byteLength)
+      return localUrl(c.relative)
+    } catch (e) {
+      log.warn(`No se ha podido descargar ${c.url}: ${String(e)}`)
     }
-    const buf = Buffer.from(await res.arrayBuffer())
-    mkdirSync(path.dirname(abs), { recursive: true })
-    await writeFile(abs, buf)
-    touch(relative, buf.byteLength)
-    return url
-  } catch (e) {
-    log.warn(`No se ha podido descargar la imagen ${imagePath}: ${String(e)}`)
-    return null
   }
+
+  return null
 }
 
 /**
@@ -110,6 +170,15 @@ export function registerImageScheme(): void {
   ])
 }
 
+const CONTENT_TYPES: Record<string, string> = {
+  '.webp': 'image/webp',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.avif': 'image/avif'
+}
+
 /** Sirve la caché. Se llama con la aplicación ya lista. */
 export function registerImageProtocol(): void {
   protocol.handle(IMAGE_SCHEME, async (request) => {
@@ -119,9 +188,10 @@ export function registerImageProtocol(): void {
       const abs = absoluteFor(relative)
       if (!abs || !existsSync(abs)) return new Response(null, { status: 404 })
       const data = await readFile(abs)
+      const type = CONTENT_TYPES[path.extname(abs).toLowerCase()] ?? 'application/octet-stream'
       return new Response(new Uint8Array(data), {
         status: 200,
-        headers: { 'Content-Type': 'image/webp', 'Cache-Control': 'public, max-age=31536000' }
+        headers: { 'Content-Type': type, 'Cache-Control': 'public, max-age=31536000' }
       })
     } catch (e) {
       log.warn(`Fallo sirviendo imagen: ${String(e)}`)

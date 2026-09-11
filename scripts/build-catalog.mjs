@@ -26,7 +26,7 @@
 
 import { createHash } from 'node:crypto'
 import { existsSync } from 'node:fs'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { cp, mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
 const API = 'https://api.tcgdex.net/v2'
@@ -44,7 +44,7 @@ const PREFERRED = 'es'
 // ── Argumentos ───────────────────────────────────────────────────────────────
 
 function parseArgs(argv) {
-  const args = { sets: [], series: null, langs: ['es', 'en'], limit: 0, out: 'catalog', concurrency: 8 }
+  const args = { sets: [], series: null, langs: ['es', 'en'], limit: 0, out: 'catalog', packs: 'catalog-packs', concurrency: 8 }
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]
     const next = () => argv[++i]
@@ -53,6 +53,7 @@ function parseArgs(argv) {
     else if (a === '--langs') args.langs = next().split(',').map((s) => s.trim()).filter(Boolean)
     else if (a === '--limit') args.limit = Number(next()) || 0
     else if (a === '--out') args.out = next()
+    else if (a === '--packs') args.packs = next()
     else if (a === '--concurrency') args.concurrency = Number(next()) || 8
     else if (a === '--help' || a === '-h') args.help = true
   }
@@ -352,6 +353,7 @@ Opciones:
   --langs es,en     idiomas; la ficha completa sale del primero que tenga cartas
   --limit N         sólo las N primeras cartas de cada set (para pruebas)
   --out dir         directorio de salida (por defecto: catalog)
+  --packs dir       sobres mantenidos a mano (por defecto: catalog-packs)
   --concurrency N   peticiones en paralelo (por defecto: 8)
 `)
     process.exit(args.help ? 0 : 1)
@@ -370,9 +372,22 @@ Opciones:
 
   const outDir = path.resolve(args.out)
   const setsDir = path.join(outDir, 'sets')
-  const packsDir = path.join(outDir, 'packs')
+  // Los sobres se mantienen a mano y viven en el repositorio, no en la salida
+  // generada: si estuvieran ahí, un borrado de la carpeta se los llevaría.
+  const packsDir = path.resolve(args.packs)
   await mkdir(setsDir, { recursive: true })
-  await mkdir(packsDir, { recursive: true })
+
+  // El arte de sobres vive en el repositorio y se copia tal cual a la salida:
+  // es lo único del catálogo que no sale de ninguna API.
+  const packImages = path.join(packsDir, 'images')
+  if (existsSync(packImages)) {
+    await cp(packImages, path.join(outDir, 'packs'), {
+      recursive: true,
+      // La documentación de esa carpeta se queda en el repositorio.
+      filter: (src) => !src.toLowerCase().endsWith('.md')
+    })
+    console.log(`Arte de sobres copiado desde ${packImages}`)
+  }
 
   console.log(`Generando ${setIds.length} set(s) en ${outDir}`)
 
@@ -388,9 +403,9 @@ Opciones:
       try {
         const packs = JSON.parse(await readFile(overlay, 'utf8'))
         if (Array.isArray(packs)) built.packs = packs
-        console.log(`    + ${packs.length} sobre(s) de packs/${setId}.json`)
+        console.log(`    + ${packs.length} sobre(s) de ${args.packs}/${setId}.json`)
       } catch (e) {
-        console.warn(`    ! packs/${setId}.json ilegible: ${e.message}`)
+        console.warn(`    ! ${args.packs}/${setId}.json ilegible: ${e.message}`)
       }
     }
 

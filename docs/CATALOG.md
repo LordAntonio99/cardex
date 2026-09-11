@@ -248,11 +248,23 @@ Sin eso, todo el Set Base se quedaría con el marcador de posición, porque
 ### Los sobres son cosa tuya
 
 **Ninguna fuente pública tiene arte de sobres.** TCGdex no lo publica: su endpoint
-`/boosters` devuelve 404 y el campo no aparece ni en cartas ni en sets. Comprobado, no
-supuesto.
+`/boosters` devuelve 404, el campo no aparece ni en cartas ni en sets, y tampoco hay nada en
+su CDN. Comprobado, no supuesto.
 
-Por eso el generador respeta un fichero de superposición por set en `catalog/packs/<setId>.json`.
-Lo que pongas ahí sobrevive a cada regeneración:
+Por eso los sobres se mantienen a mano, en `catalog-packs/` de la rama `main`:
+
+```
+catalog-packs/
+├── base1.json            definición de los sobres del set
+└── images/
+    └── base1-booster-charizard.webp
+```
+
+Está fuera de `catalog/` a propósito: esa carpeta es salida generada y está en el
+`.gitignore`, así que lo que pusieras dentro se perdería al regenerar. El generador lee las
+definiciones de ahí y copia `catalog-packs/images/` a `catalog/packs/` de la salida.
+
+Un fichero de set se ve así:
 
 ```json
 [
@@ -274,8 +286,13 @@ Lo que pongas ahí sobrevive a cada regeneración:
 
 `kind` acepta `booster`, `etb`, `bundle`, `collection` y `other`.
 
-Mientras `artworkPath` sea nulo, la vista «Sets y sobres» dibuja el hueco con su etiqueta, que
-es exactamente lo que el diseño ya preveía.
+`artworkPath` es relativo a la raíz del catálogo publicado, así que apunta a
+`packs/<fichero>`. Mientras sea nulo, la vista «Sets y sobres» dibuja el hueco con el nombre
+del sobre, que es exactamente lo que el diseño ya preveía.
+
+Para añadir arte: deja el fichero en `catalog-packs/images/`, apúntalo desde el JSON y
+regenera. Formato recomendado `.webp` vertical, de 400-600 px de ancho; también valen `.png`,
+`.jpg`, `.gif` y `.avif`.
 
 ---
 
