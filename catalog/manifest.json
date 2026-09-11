@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "catalogVersion": "2026.09.11",
-  "generatedAt": "2026-09-11T12:38:15.965Z",
+  "generatedAt": "2026-09-11T12:50:21.814Z",
   "sets": [
     {
       "id": "base1",
       "file": "sets/base1.json",
-      "sha256": "597502ae79261e945c0c9fb8eb128611ff30ebab182747edccc413d393cd997d",
+      "sha256": "8f36e3de6055d7bd152dd4ac8283ea50c4414c568feb550235d74644f0910150",
       "cardCount": 102
     }
   ]
