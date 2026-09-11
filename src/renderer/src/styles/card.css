@@ -1,7 +1,12 @@
 /*
  * ╔══════════════════════════════════════════════════════════════════════════╗
- * ║  CARTA HOLOGRÁFICA — NO TOCAR SIN LEER ESTO                              ║
+ * ║  CARTA HOLOGRÁFICA — EN BARBECHO. NO TOCAR SIN LEER ESTO                 ║
  * ╚══════════════════════════════════════════════════════════════════════════╝
+ *
+ * El efecto holográfico está DESACTIVADO: ensuciaba la ilustración en vez de
+ * realzarla, tanto en la rejilla como en el visor. Las clases .holo-* y .card-3d
+ * se conservan enteras, con esta documentación, porque la intención es
+ * recuperarlo cuando se afine. Hoy no las usa nadie.
  *
  * Según css-transforms-2, cualquier «propiedad de agrupación» fuerza el valor
  * usado de `transform-style` a `flat`. Son estas:
@@ -207,4 +212,119 @@
     transition: none;
     transform: none;
   }
+}
+
+/* ── Visor a tamaño grande ─────────────────────────────────────────────────
+ *
+ * La carta limpia, grande y girable con el ratón. Sin foil: es lo único que
+ * sigue vivo del bloque 3D de arriba.
+ *
+ * Misma regla de siempre: `.card-viewer-card` lleva el `preserve-3d` y NO puede
+ * recibir ninguna propiedad de agrupación, o el giro colapsa a 2D y el reverso
+ * deja de ocultarse.
+ */
+
+.card-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 18px;
+  padding: 22px 26px 26px;
+  background: color-mix(in srgb, var(--deep) 88%, transparent);
+  backdrop-filter: blur(14px);
+}
+
+.card-viewer-head,
+.card-viewer-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.card-viewer-head {
+  align-items: flex-start;
+}
+
+.card-viewer-stage {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  /* La perspectiva va aquí, sobre el escenario: así el giro se ve desde el
+     punto de vista del observador y no desde el de la propia carta. */
+  perspective: 1600px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.card-viewer-stage:active {
+  cursor: grabbing;
+}
+
+.card-viewer-card {
+  position: relative;
+  height: min(72vh, 860px);
+  aspect-ratio: 63 / 88;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  /* Con transición el giro acompaña a los atajos de teclado y al botón de
+     media vuelta; mientras se arrastra estorba, así que se quita. */
+  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.3, 1);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6);
+  /* Sin `will-change` a propósito. Aquí sólo hay UNA carta, así que no aporta
+     nada, y en un nodo con preserve-3d cualquier pista de composición es una
+     invitación a que el giro se aplane sin avisar. */
+}
+
+.card-viewer-card.is-dragging {
+  transition: none;
+}
+
+.card-viewer-face {
+  border-radius: 12px;
+  border: 1px solid rgba(237, 234, 227, 0.18);
+}
+
+.card-viewer-back {
+  transform: rotateY(180deg);
+  background: var(--deep);
+}
+
+.card-viewer-face img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 11px;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* La ventana de ilustración ocupa la carta entera: la imagen que sirve TCGdex
+   ya ES la carta completa, con su marco impreso. */
+.card-viewer-art {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 11px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-viewer-card {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* Qué cara se ve. `visibility` no es propiedad de agrupación, así que se puede
+   usar aquí dentro sin aplanar el contexto 3D. Lo alterna el JS según el
+   ángulo: ver el comentario en CardViewer.apply(). */
+.card-viewer-card.is-back .card-viewer-front,
+.card-viewer-card:not(.is-back) .card-viewer-back {
+  visibility: hidden;
 }

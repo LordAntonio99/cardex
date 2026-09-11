@@ -1,9 +1,7 @@
 import { useRef } from 'react'
-import { EFFECTS_3D, type CardLang, type Effect3d, type UiLang } from '@shared/types'
-import { call, useFilterOptions } from '../lib/api'
+import type { CardLang, UiLang } from '@shared/types'
+import { useFilterOptions } from '../lib/api'
 import { money } from '../lib/format'
-import { applyPreset } from '../lib/holo'
-import { setPointerPreset } from '../lib/cardPointer'
 import type { Strings } from '../i18n'
 import { useStore } from '../state/store'
 import { Eyebrow, Input } from '../components/ds'
@@ -15,22 +13,10 @@ import { Eyebrow, Input } from '../components/ds'
  * lo que define la consulta SQL que alimenta las dos rejillas. Las opciones
  * (sets, rarezas, idiomas) salen del catálogo real, no de una lista fija: cada
  * set nuevo estrena rarezas.
+ *
+ * El selector de efecto 3D vivía aquí. Se ha retirado al quitar el efecto
+ * holográfico: era un control que ya no gobernaba nada.
  */
-
-const PRESET_LABEL: Record<Effect3d, { es: [string, string]; en: [string, string] }> = {
-  rainbow: {
-    es: ['Arcoíris', 'INCLINACIÓN SUAVE · SOMBRA AMPLIA'],
-    en: ['Rainbow', 'SOFT TILT · WIDE SHADOW']
-  },
-  prism: {
-    es: ['Prismático', 'INCLINACIÓN FUERTE · SOMBRA CERRADA'],
-    en: ['Prismatic', 'HARD TILT · TIGHT SHADOW']
-  },
-  glitter: {
-    es: ['Glitter', 'POCA INCLINACIÓN · SOMBRA DIFUSA'],
-    en: ['Glitter', 'LOW TILT · DIFFUSE SHADOW']
-  }
-}
 
 const SECTION: React.CSSProperties = {
   padding: '16px 18px',
@@ -45,8 +31,6 @@ export function Sidebar({ strings, lang }: { strings: Strings; lang: UiLang }): 
   const filters = useStore((s) => s.filters)
   const setFilters = useStore((s) => s.setFilters)
   const resetFilters = useStore((s) => s.resetFilters)
-  const settings = useStore((s) => s.settings)
-  const setSettings = useStore((s) => s.setSettings)
   const ceiling = useStore((s) => s.priceCeiling)
   const options = useFilterOptions()
 
@@ -68,12 +52,6 @@ export function Sidebar({ strings, lang }: { strings: Strings; lang: UiLang }): 
   const applyPrice = (v: number): void => {
     if (dragging.current === 'min') setFilters({ minCents: Math.min(v, filters.maxCents) })
     else setFilters({ maxCents: Math.max(v, filters.minCents) })
-  }
-
-  const chooseEffect = async (effect: Effect3d): Promise<void> => {
-    applyPreset(effect)
-    setPointerPreset(effect)
-    setSettings(await call('settings:patch', { effect3d: effect }))
   }
 
   const pill = (active: boolean): React.CSSProperties => ({
@@ -249,51 +227,6 @@ export function Sidebar({ strings, lang }: { strings: Strings; lang: UiLang }): 
             <span className="font-code text-faint" style={{ fontSize: 9, letterSpacing: '.12em' }}>
               {strings.fMax}
             </span>
-          </div>
-        </div>
-
-        {/* ── Efecto 3D ── */}
-        <div style={SECTION}>
-          <Eyebrow>{strings.effect3d}</Eyebrow>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 1, background: 'var(--rule)' }}>
-            {EFFECTS_3D.map((effect) => {
-              const active = settings.effect3d === effect
-              const [label, hint] = PRESET_LABEL[effect][lang]
-              return (
-                <button
-                  key={effect}
-                  type="button"
-                  onClick={() => void chooseEffect(effect)}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 4,
-                    alignItems: 'flex-start',
-                    background: active ? 'var(--card)' : 'var(--paper)',
-                    border: 0,
-                    borderLeft: `2px solid ${active ? 'var(--ac)' : 'transparent'}`,
-                    padding: '9px 11px',
-                    cursor: 'pointer',
-                    textAlign: 'left'
-                  }}
-                >
-                  <span
-                    className="font-brand"
-                    style={{
-                      fontSize: 12.5,
-                      fontWeight: 600,
-                      letterSpacing: '-.01em',
-                      color: active ? 'var(--ink)' : 'var(--soft)'
-                    }}
-                  >
-                    {label}
-                  </span>
-                  <span className="font-code text-faint" style={{ fontSize: 9, letterSpacing: '.04em' }}>
-                    {hint}
-                  </span>
-                </button>
-              )
-            })}
           </div>
         </div>
 

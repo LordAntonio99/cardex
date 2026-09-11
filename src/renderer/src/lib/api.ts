@@ -121,7 +121,7 @@ export function imageLang(available: readonly string[] | undefined, preferred: s
  * una carta no cambia nunca.
  */
 export function useAssetImage(
-  kind: 'card' | 'setAsset' | 'packAsset',
+  kind: 'card' | 'setAsset' | 'external',
   assetPath: string | null | undefined,
   opts: { lang?: string; quality?: 'low' | 'high' } = {}
 ): UseQueryResult<string | null> {

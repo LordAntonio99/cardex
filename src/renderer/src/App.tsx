@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
-import { VIEWS, type ViewId } from '@shared/types'
+import { VIEWS, type CardLang, type ViewId } from '@shared/types'
+import { CardViewer } from './components/card/CardViewer'
 import { DetailPanel } from './layout/DetailPanel'
 import { Header } from './layout/Header'
 import { Sidebar } from './layout/Sidebar'
@@ -11,13 +12,12 @@ import { t } from './i18n'
 import {
   useCatalogStatus,
   useDbInvalidation,
+  useCard,
   useFilterOptions,
   useIpcEvent,
   useSettings,
   useSystemInfo
 } from './lib/api'
-import { installCardPointer, setPointerPreset, setPointerReducedMotion } from './lib/cardPointer'
-import { applyPreset } from './lib/holo'
 import { useStore } from './state/store'
 
 export function App(): React.JSX.Element {
@@ -28,11 +28,15 @@ export function App(): React.JSX.Element {
   const theme = useStore((s) => s.theme)
   const setTheme = useStore((s) => s.setTheme)
   const setPriceCeiling = useStore((s) => s.setPriceCeiling)
+  const viewCardId = useStore((s) => s.viewCardId)
+  const filters = useStore((s) => s.filters)
 
   const loadedSettings = useSettings()
   const system = useSystemInfo()
   const filterOptions = useFilterOptions()
   const catalog = useCatalogStatus()
+  // La carta abierta en el visor grande, si la hay.
+  const viewed = useCard(viewCardId)
 
   useDbInvalidation()
 
@@ -48,19 +52,6 @@ export function App(): React.JSX.Element {
   useEffect(() => {
     if (filterOptions.data) setPriceCeiling(filterOptions.data.maxCents)
   }, [filterOptions.data, setPriceCeiling])
-
-  // El efecto 3D se escribe en :root, de donde lo leen las capas del foil.
-  useEffect(() => {
-    applyPreset(settings.effect3d)
-    setPointerPreset(settings.effect3d)
-  }, [settings.effect3d])
-
-  useEffect(() => {
-    setPointerReducedMotion(settings.reduceMotion)
-  }, [settings.reduceMotion])
-
-  // El seguimiento del puntero es un único listener para toda la aplicación.
-  useEffect(() => installCardPointer(), [])
 
   // El bundle del design system usa [data-theme="light"]; el proceso main manda
   // el tema ya resuelto contra el del sistema.
@@ -84,6 +75,8 @@ export function App(): React.JSX.Element {
   useIpcEvent('catalog:progress', () => void catalog.refetch())
 
   const strings = t(settings.uiLang)
+  const cardLang: CardLang =
+    filters.lang === 'all' ? (settings.uiLang === 'en' ? 'en' : 'es') : filters.lang
   const isGrid = view === 'collection' || view === 'explorer'
 
   return (
@@ -105,6 +98,15 @@ export function App(): React.JSX.Element {
 
         <DetailPanel strings={strings} lang={settings.uiLang} />
       </div>
+
+      {viewed.data ? (
+        <CardViewer
+          card={viewed.data}
+          lang={settings.uiLang}
+          cardLang={cardLang}
+          strings={strings}
+        />
+      ) : null}
     </>
   )
 }

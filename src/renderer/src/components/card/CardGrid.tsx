@@ -4,7 +4,7 @@ import type { CardLang, CardQuery, UiLang } from '@shared/types'
 import { useCardPage } from '../../lib/api'
 import type { Strings } from '../../i18n'
 import { useStore } from '../../state/store'
-import { HoloCard } from './HoloCard'
+import { CardTile } from './CardTile'
 
 /**
  * Rejilla de cartas virtualizada.
@@ -175,7 +175,7 @@ export function CardGrid({ scope, scrollRef, lang, strings, onEmpty }: Props): R
                 )
               }
               return (
-                <HoloCard
+                <CardTile
                   key={card.cardId}
                   card={card}
                   lang={lang}

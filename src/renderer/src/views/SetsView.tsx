@@ -254,7 +254,7 @@ function PackSlot({
   name: string
   placeholder: string
 }): React.JSX.Element {
-  const art = useAssetImage('packAsset', artworkPath)
+  const art = useAssetImage('external', artworkPath)
   return (
     <ImageSlot
       src={art.data}

@@ -115,12 +115,13 @@ export interface IpcRequests {
    *  - `card`      TCGdex, con idioma y calidad: `{lang}/{path}/{quality}.webp`
    *  - `setAsset`  TCGdex, con idioma pero SIN calidad: `{lang}/{path}.webp`
    *                (los logos de set viven ahí, no bajo /high.webp)
-   *  - `packAsset` el catálogo publicado en el repositorio, sin idioma: el arte
-   *                de sobres no existe en ninguna API y lo aporta el catálogo
+   *  - `external`  una URL https completa, o una ruta dentro del catálogo
+   *                publicado. Es lo que usan el arte de sobres y el reverso de
+   *                las cartas, que no están en ninguna API de cartas.
    */
   'images:resolve': {
     req: {
-      kind: 'card' | 'setAsset' | 'packAsset'
+      kind: 'card' | 'setAsset' | 'external'
       path: string
       lang?: string
       quality?: 'low' | 'high'

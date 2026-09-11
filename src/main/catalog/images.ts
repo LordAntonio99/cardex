@@ -21,7 +21,7 @@ const ASSET_BASE = 'https://assets.tcgdex.net'
 
 export const IMAGE_SCHEME = 'cardimg'
 
-export type ImageKind = 'card' | 'setAsset' | 'packAsset'
+export type ImageKind = 'card' | 'setAsset' | 'external'
 
 /** Sólo estos caracteres en las rutas: nada de '..' ni rutas absolutas. */
 const SAFE_SEGMENT = /^[A-Za-z0-9._-]+$/
@@ -103,7 +103,7 @@ function candidates(
   // catálogo. Así se puede apuntar a donde ya está alojada la imagen en vez de
   // volver a publicarla: la aplicación se la baja una vez a la máquina de cada
   // usuario y ahí se queda.
-  if (kind === 'packAsset' && /^https?:\/\//i.test(rawPath)) {
+  if (kind === 'external' && /^https?:\/\//i.test(rawPath)) {
     const url = externalUrl(rawPath)
     if (!url) return null
     const ext = path.extname(url.pathname).toLowerCase()
@@ -117,7 +117,7 @@ function candidates(
   const parts = safeSegments(rawPath)
   if (!parts) return null
 
-  if (kind === 'packAsset') {
+  if (kind === 'external') {
     // El arte de sobres viene del catálogo publicado, no de TCGdex, y no tiene
     // idioma: la ruta ya trae su extensión.
     return [

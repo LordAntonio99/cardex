@@ -1,18 +1,22 @@
 import { memo } from 'react'
 import type { CardLang, CardListItem, UiLang } from '@shared/types'
 import { imageLang, useCardImage } from '../../lib/api'
-import { flipCard } from '../../lib/cardPointer'
 import { deltaColor, money, pct } from '../../lib/format'
-import { RARITY_HOLO, RARITY_TONE, artGradient, frameGradient, rarityTier } from '../../lib/holo'
+import { RARITY_TONE, artGradient, frameGradient, rarityTier } from '../../lib/holo'
 import type { Strings } from '../../i18n'
 
 /**
- * La carta.
+ * La carta en la rejilla. Plana.
  *
- * El orden de los elementos no es decorativo: ver la cabecera de card.css antes
- * de mover nada. En resumen, `.card-3d` no puede recibir NINGUNA propiedad de
- * agrupación (opacity, filter, mix-blend-mode, mask, clip-path…) o el volteo
- * deja de ser 3D sin avisar.
+ * El efecto holográfico y la inclinación 3D vivían aquí, y a 150 px de ancho no
+ * lucían: las capas en `screen` se comen el dibujo y el brillo no se lee. Ahora
+ * el efecto está donde tiene sentido, en el visor a tamaño grande (CardViewer),
+ * y la rejilla muestra la carta tal cual.
+ *
+ * Cuando hay ilustración descargada se enseña a sangre: la imagen YA es la
+ * carta entera, con su marco y su nombre impresos. Meterla dentro de un marco
+ * dibujado por nosotros daba una carta dentro de otra carta. El marco sintético
+ * sólo se usa como respaldo mientras no hay imagen.
  */
 
 interface Props {
@@ -23,63 +27,69 @@ interface Props {
   onOpenDetail: (cardId: string) => void
 }
 
-function HoloCardImpl({ card, lang, cardLang, strings, onOpenDetail }: Props): React.JSX.Element {
-  const tier = rarityTier(card.rarity)
-  const holo = RARITY_HOLO[tier]
-  const tone = RARITY_TONE[tier]
+function CardTileImpl({ card, lang, cardLang, strings, onOpenDetail }: Props): React.JSX.Element {
+  const tone = RARITY_TONE[rarityTier(card.rarity)]
   const owned = card.ownedQty > 0
   // En la rejilla basta la calidad baja: 31 KB frente a 126 KB por carta.
   const image = useCardImage(card.imagePath, imageLang(card.langs, cardLang), 'low')
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 11, opacity: owned ? 1 : 0.4 }}>
-      <div
-        className="card-persp"
-        data-c3d
-        onClick={flipCard}
-        style={
-          {
-            '--rest': holo.rest,
-            '--fa': holo.fa,
-            '--fb': holo.fb,
-            '--fc': holo.fc,
-            '--wa': holo.wa,
-            '--wb': holo.wb,
-            '--wc': holo.wc
-          } as React.CSSProperties
-        }
+      <button
+        type="button"
+        onClick={() => onOpenDetail(card.cardId)}
+        title={card.name}
+        style={{
+          position: 'relative',
+          aspectRatio: '63 / 88',
+          width: '100%',
+          padding: 0,
+          border: '1px solid rgba(237, 234, 227, .16)',
+          borderRadius: 4,
+          overflow: 'hidden',
+          cursor: 'pointer',
+          background: image.data ? 'var(--deep)' : frameGradient(card.types),
+          // Las que no se tienen salen en gris, como marca el diseño.
+          filter: owned ? 'none' : 'grayscale(1)',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
       >
-        <div className="card-3d">
-          {/* ── Anverso ── */}
-          <div
-            className={`card-face card-front${owned ? '' : ' is-missing'}`}
-            style={{ background: frameGradient(card.types) }}
-          >
-            <div className="card-art" style={{ background: artGradient(card.types) }}>
-              {image.data ? <img src={image.data} alt={card.name} loading="lazy" /> : null}
-
-              <div className="holo-layer holo-win holo-a" />
-              <div className="holo-layer holo-win holo-b" />
-              <div className="holo-layer holo-win holo-c" />
-
-              {/* Inicial de relleno mientras no hay ilustración descargada. */}
-              {!image.data ? (
-                <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
-                  <span
-                    className="font-brand"
-                    style={{
-                      fontSize: 46,
-                      fontWeight: 700,
-                      color: 'rgba(255,255,255,.13)',
-                      letterSpacing: '-.04em',
-                      lineHeight: 1
-                    }}
-                  >
-                    {card.name.slice(0, 1)}
-                  </span>
-                </div>
-              ) : null}
-
+        {image.data ? (
+          <img
+            src={image.data}
+            alt={card.name}
+            loading="lazy"
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+        ) : (
+          <>
+            {/* Respaldo mientras no hay ilustración: marco sintético con la
+                inicial, el nombre y el número, como en el diseño original. */}
+            <div
+              style={{
+                position: 'relative',
+                flex: '1 1 auto',
+                margin: '7px 7px 0',
+                border: '1px solid rgba(0, 0, 0, .45)',
+                background: artGradient(card.types),
+                overflow: 'hidden'
+              }}
+            >
+              <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
+                <span
+                  className="font-brand"
+                  style={{
+                    fontSize: 46,
+                    fontWeight: 700,
+                    color: 'rgba(255,255,255,.13)',
+                    letterSpacing: '-.04em',
+                    lineHeight: 1
+                  }}
+                >
+                  {card.name.slice(0, 1)}
+                </span>
+              </div>
               <div
                 style={{
                   position: 'absolute',
@@ -116,7 +126,6 @@ function HoloCardImpl({ card, lang, cardLang, strings, onOpenDetail }: Props): R
                 ) : null}
               </div>
             </div>
-
             <div
               style={{
                 padding: '6px 9px 8px',
@@ -139,70 +148,9 @@ function HoloCardImpl({ card, lang, cardLang, strings, onOpenDetail }: Props): R
                 {card.numberLabel}
               </span>
             </div>
-
-            <div className="holo-layer holo-frame holo-a" />
-            <div className="holo-layer holo-frame holo-b" />
-            <div className="holo-layer holo-frame holo-c" />
-            <div className="holo-glare" />
-          </div>
-
-          {/* ── Reverso ── */}
-          <div className="card-face card-back">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <span
-                className="font-code"
-                style={{ fontSize: 9.5, letterSpacing: '.18em', color: 'var(--on-deep-faint)' }}
-              >
-                {strings.backBoosters}
-              </span>
-              <span
-                className="font-brand"
-                style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: 'var(--on-deep)',
-                  letterSpacing: '-.01em'
-                }}
-              >
-                {card.setName}
-              </span>
-            </div>
-
-            <div style={{ flex: 1 }} />
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <span
-                className="font-code"
-                style={{ fontSize: 9.5, letterSpacing: '.18em', color: 'var(--on-deep-faint)' }}
-              >
-                {strings.back90d}
-              </span>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'baseline',
-                  justifyContent: 'space-between',
-                  borderTop: '1px solid var(--on-deep-rule)',
-                  paddingTop: 6
-                }}
-              >
-                <span
-                  className="font-code tabular"
-                  style={{ fontSize: 11, fontWeight: 700, color: 'var(--on-deep)' }}
-                >
-                  {money(card.priceCents, lang)}
-                </span>
-                <span
-                  className="font-code tabular"
-                  style={{ fontSize: 9.5, color: deltaColor(card.delta7) }}
-                >
-                  {pct(card.delta7)}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+          </>
+        )}
+      </button>
 
       {/* ── Pie: datos fuera de la carta ── */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -257,7 +205,6 @@ function HoloCardImpl({ card, lang, cardLang, strings, onOpenDetail }: Props): R
           <div style={{ flex: 1 }} />
           <button
             type="button"
-            data-nof
             onClick={() => onOpenDetail(card.cardId)}
             className="font-code"
             style={{
@@ -281,4 +228,4 @@ function HoloCardImpl({ card, lang, cardLang, strings, onOpenDetail }: Props): R
  * el contenedor constantemente y no hay motivo para repintar cartas cuyos datos
  * no han cambiado.
  */
-export const HoloCard = memo(HoloCardImpl)
+export const CardTile = memo(CardTileImpl)

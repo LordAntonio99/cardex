@@ -46,6 +46,8 @@ interface State {
   view: ViewId
   filters: Filters
   selectedCardId: string | null
+  /** Carta abierta en el visor grande, si la hay. */
+  viewCardId: string | null
   settings: AppSettings
   theme: 'light' | 'dark'
   /** Tope del deslizador de precio, que sale del catálogo real. */
@@ -55,6 +57,7 @@ interface State {
   setFilters: (patch: Partial<Filters>) => void
   resetFilters: () => void
   select: (cardId: string | null) => void
+  viewCard: (cardId: string | null) => void
   setSettings: (settings: AppSettings) => void
   setTheme: (theme: 'light' | 'dark') => void
   setPriceCeiling: (cents: number) => void
@@ -64,13 +67,14 @@ export const useStore = create<State>((set) => ({
   view: 'collection',
   filters: DEFAULT_FILTERS,
   selectedCardId: null,
+  viewCardId: null,
   settings: DEFAULT_SETTINGS,
   theme: 'dark',
   priceCeiling: 60000,
 
   // Cambiar de vista cierra la ficha: si no, queda una carta abierta sobre una
   // pantalla que ya no tiene nada que ver con ella.
-  setView: (view) => set({ view, selectedCardId: null }),
+  setView: (view) => set({ view, selectedCardId: null, viewCardId: null }),
 
   setFilters: (patch) => set((s) => ({ filters: { ...s.filters, ...patch } })),
 
@@ -87,6 +91,7 @@ export const useStore = create<State>((set) => ({
     })),
 
   select: (selectedCardId) => set({ selectedCardId }),
+  viewCard: (viewCardId) => set({ viewCardId }),
   setSettings: (settings) => set({ settings }),
   setTheme: (theme) => set({ theme }),
   setPriceCeiling: (priceCeiling) =>

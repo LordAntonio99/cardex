@@ -3,7 +3,7 @@ import type { CardLang, UiLang } from '@shared/types'
 import { Eyebrow, Tag } from '../components/ds'
 import { call, imageLang, keys, useCard, useCardImage } from '../lib/api'
 import { deltaColor, money, monthYear, pct, polygonArea, polyline } from '../lib/format'
-import { RARITY_HOLO, artGradient, frameGradient, rarityTier } from '../lib/holo'
+import { artGradient, frameGradient } from '../lib/holo'
 import type { Strings } from '../i18n'
 import { useStore } from '../state/store'
 
@@ -22,6 +22,7 @@ export function DetailPanel({
 }): React.JSX.Element | null {
   const cardId = useStore((s) => s.selectedCardId)
   const close = useStore((s) => s.select)
+  const view = useStore((s) => s.viewCard)
   const filters = useStore((s) => s.filters)
   const card = useCard(cardId)
 
@@ -52,8 +53,6 @@ export function DetailPanel({
 
   if (!cardId || !card.data) return null
   const c = card.data
-  const tier = rarityTier(c.rarity)
-  const holo = RARITY_HOLO[tier]
   const prices = (history.data ?? []).map((p) => p.trendCents)
 
   const section: React.CSSProperties = {
@@ -113,45 +112,54 @@ export function DetailPanel({
           borderBottom: '1px solid var(--rule)'
         }}
       >
-        <div
-          className="card-persp"
-          data-c3d
-          style={
-            {
-              '--rest': holo.rest,
-              '--fa': holo.fa,
-              '--fb': holo.fb,
-              '--fc': holo.fc,
-              '--wa': holo.wa,
-              '--wb': holo.wb,
-              '--wc': holo.wc,
-              perspective: '900px'
-            } as React.CSSProperties
-          }
+        {/*
+          La miniatura abre el visor a tamaño grande, que es donde la carta se
+          puede girar y donde el efecto holográfico luce. Aquí se deja plana: a
+          132 px el foil sólo ensucia.
+        */}
+        <button
+          type="button"
+          onClick={() => view(c.cardId)}
+          title={strings.viewerOpen}
+          style={{
+            position: 'relative',
+            aspectRatio: '63 / 88',
+            width: '100%',
+            padding: 0,
+            border: '1px solid rgba(237,234,227,.16)',
+            borderRadius: 4,
+            overflow: 'hidden',
+            cursor: 'zoom-in',
+            background: image.data ? 'var(--deep)' : frameGradient(c.types)
+          }}
         >
-          <div className="card-3d">
-            <div className="card-face card-front" style={{ background: frameGradient(c.types) }}>
-              <div className="card-art" style={{ background: artGradient(c.types) }}>
-                {image.data ? <img src={image.data} alt={c.name} /> : null}
-                <div className="holo-layer holo-win holo-a" />
-                <div className="holo-layer holo-win holo-b" />
-                <div className="holo-layer holo-win holo-c" />
-              </div>
-              <div style={{ padding: '6px 9px 8px', display: 'flex', justifyContent: 'space-between' }}>
-                <span className="font-code" style={{ fontSize: 9, color: 'rgba(255,255,255,.6)' }}>
-                  {c.setCode ?? ''}
-                </span>
-                <span className="font-code" style={{ fontSize: 9, color: 'rgba(255,255,255,.5)' }}>
-                  {c.numberLabel}
-                </span>
-              </div>
-              <div className="holo-layer holo-frame holo-a" />
-              <div className="holo-layer holo-frame holo-b" />
-              <div className="holo-layer holo-frame holo-c" />
-              <div className="holo-glare" />
-            </div>
-          </div>
-        </div>
+          {image.data ? (
+            <img
+              src={image.data}
+              alt={c.name}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
+          ) : (
+            <div style={{ position: 'absolute', inset: 0, background: artGradient(c.types) }} />
+          )}
+          <span
+            className="font-code"
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              bottom: 0,
+              padding: '6px 4px',
+              background: 'linear-gradient(to top, rgba(0,0,0,.8), transparent)',
+              color: '#fff',
+              fontSize: 8.5,
+              letterSpacing: '.14em',
+              textAlign: 'center'
+            }}
+          >
+            {strings.viewerOpen}
+          </span>
+        </button>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
           <h2 className="type-h4 text-ink" style={{ margin: 0 }}>
