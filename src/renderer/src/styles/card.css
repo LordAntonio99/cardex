@@ -264,7 +264,30 @@
   cursor: grabbing;
 }
 
+/* Redondeo de las esquinas.
+ *
+ * Una carta del JCC mide 63 x 88 mm y sale del troquel con las esquinas
+ * redondeadas a unos 3 mm. Aquí no hay milímetros: la carta se pinta a
+ * `min(72vh, 860px)` de alto, así que el radio va en porcentaje y acompaña al
+ * tamaño en vez de quedarse corto en las pantallas grandes.
+ *
+ * Los dos ejes van por separado a propósito. Un porcentaje suelto se aplica al
+ * ancho para el radio horizontal y al alto para el vertical, y como la carta no
+ * es cuadrada la curva saldría elíptica; con 3/63 del ancho y 3/88 del alto los
+ * dos radios miden lo mismo en pantalla y la esquina es un arco de
+ * circunferencia, como el troquel de verdad.
+ *
+ * No es sólo estética: el reverso trae las esquinas blancas incrustadas en la
+ * propia imagen —su arco va de 0 a unos 22 px sobre 600 de ancho— y con el
+ * radio corto de antes asomaban como un contorno blanco.
+ *
+ * Las variables se declaran aquí porque esta caja mide lo mismo que la de las
+ * caras (van con `inset: 0`), así que los porcentajes resuelven igual en las
+ * dos y la sombra puede compartir el radio.
+ */
 .card-viewer-card {
+  --corner-x: calc(100% * 3 / 63);
+  --corner-y: calc(100% * 3 / 88);
   position: relative;
   height: min(72vh, 860px);
   aspect-ratio: 63 / 88;
@@ -274,6 +297,11 @@
      media vuelta; mientras se arrastra estorba, así que se quita. */
   transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.3, 1);
   box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6);
+  /* El radio también aquí, aunque este nodo no pinte nada: la sombra se dibuja
+     con la silueta de SU caja, y sin redondear asomaría en escuadra por debajo
+     de las esquinas ya redondeadas de la carta. `border-radius` no es una
+     propiedad de agrupación, así que no aplana el contexto 3D. */
+  border-radius: var(--corner-x) / var(--corner-y);
   /* Sin `will-change` a propósito. Aquí sólo hay UNA carta, así que no aporta
      nada, y en un nodo con preserve-3d cualquier pista de composición es una
      invitación a que el giro se aplane sin avisar. */
@@ -284,7 +312,7 @@
 }
 
 .card-viewer-face {
-  border-radius: 12px;
+  border-radius: var(--corner-x) / var(--corner-y);
   border: 1px solid rgba(237, 234, 227, 0.18);
 }
 
@@ -300,7 +328,8 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  border-radius: 11px;
+  /* Por dentro del borde de 1px de la cara. */
+  border-radius: calc(var(--corner-x) - 1px) / calc(var(--corner-y) - 1px);
   user-select: none;
   -webkit-user-drag: none;
 }
@@ -311,7 +340,7 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
-  border-radius: 11px;
+  border-radius: calc(var(--corner-x) - 1px) / calc(var(--corner-y) - 1px);
 }
 
 @media (prefers-reduced-motion: reduce) {
