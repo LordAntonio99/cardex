@@ -286,13 +286,36 @@ Un fichero de set se ve así:
 
 `kind` acepta `booster`, `etb`, `bundle`, `collection` y `other`.
 
-`artworkPath` es relativo a la raíz del catálogo publicado, así que apunta a
-`packs/<fichero>`. Mientras sea nulo, la vista «Sets y sobres» dibuja el hueco con el nombre
-del sobre, que es exactamente lo que el diseño ya preveía.
+`artworkPath` admite dos formas:
 
-Para añadir arte: deja el fichero en `catalog-packs/images/`, apúntalo desde el JSON y
-regenera. Formato recomendado `.webp` vertical, de 400-600 px de ancho; también valen `.png`,
-`.jpg`, `.gif` y `.avif`.
+**Una URL https completa** — se referencia donde ya esté alojada la imagen:
+
+```json
+"artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/0/06/Base_Set_Booster_Charizard_Long.jpg/440px-Base_Set_Booster_Charizard_Long.jpg"
+```
+
+Es lo que usa el Set Base. [Bulbagarden Archives](https://archives.bulbagarden.net) tiene arte
+de sobres de casi todos los sets y sirve miniaturas por su API de MediaWiki: pedir
+`prop=imageinfo&iiurlwidth=440` devuelve un `thumburl` de 20-90 KB, que es de sobra para un
+hueco de 138 px. Referenciar en vez de republicar mantiene el repositorio libre de material
+ajeno, igual que con las ilustraciones de carta, y cada usuario se baja la imagen una sola vez
+a su caché local.
+
+Sólo se aceptan URL `https` y nunca hacia direcciones internas: el catálogo llega de la red y
+se trata como dato.
+
+**Una ruta dentro del catálogo** — si prefieres alojarlas tú:
+
+```json
+"artworkPath": "packs/base1-booster-charizard.webp"
+```
+
+Deja el fichero en `catalog-packs/images/` y el generador lo copia a `catalog/packs/`. Formato
+recomendado `.webp` vertical, de 400-600 px de ancho; también valen `.png`, `.jpg`, `.gif` y
+`.avif`.
+
+Mientras `artworkPath` sea nulo, la vista «Sets y sobres» dibuja el hueco con el nombre del
+sobre, que es exactamente lo que el diseño ya preveía.
 
 ---
 
