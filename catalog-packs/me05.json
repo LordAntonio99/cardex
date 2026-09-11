@@ -7,7 +7,7 @@
       "en": "Pitch Black Booster Pack (Mega Darkrai)"
     },
     "kind": "booster",
-    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/a/ae/ME5_Booster_Mega_Darkrai.png/440px-ME5_Booster_Mega_Darkrai.png"
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/a/ae/ME5_Booster_Mega_Darkrai.png/300px-ME5_Booster_Mega_Darkrai.png"
   },
   {
     "id": "me05-booster-chandelure",
@@ -17,7 +17,7 @@
       "en": "Pitch Black Booster Pack (Mega Chandelure)"
     },
     "kind": "booster",
-    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/8/8c/ME5_Booster_Mega_Chandelure.png/440px-ME5_Booster_Mega_Chandelure.png"
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/8/8c/ME5_Booster_Mega_Chandelure.png/300px-ME5_Booster_Mega_Chandelure.png"
   },
   {
     "id": "me05-booster-excadrill",
@@ -27,7 +27,7 @@
       "en": "Pitch Black Booster Pack (Mega Excadrill)"
     },
     "kind": "booster",
-    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/3/3b/ME5_Booster_Mega_Excadrill.png/440px-ME5_Booster_Mega_Excadrill.png"
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/3/3b/ME5_Booster_Mega_Excadrill.png/300px-ME5_Booster_Mega_Excadrill.png"
   },
   {
     "id": "me05-booster-zeraora",
@@ -37,7 +37,7 @@
       "en": "Pitch Black Booster Pack (Mega Zeraora)"
     },
     "kind": "booster",
-    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/f/f8/ME5_Booster_Mega_Zeraora.png/440px-ME5_Booster_Mega_Zeraora.png"
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/f/f8/ME5_Booster_Mega_Zeraora.png/300px-ME5_Booster_Mega_Zeraora.png"
   },
   {
     "id": "me05-etb",
@@ -47,7 +47,7 @@
       "en": "Pitch Black Elite Trainer Box"
     },
     "kind": "etb",
-    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/5/57/ME5_Elite_Trainer_Box_outer.png/440px-ME5_Elite_Trainer_Box_outer.png"
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/5/57/ME5_Elite_Trainer_Box_outer.png/300px-ME5_Elite_Trainer_Box_outer.png"
   },
   {
     "id": "me05-bundle",
@@ -57,7 +57,7 @@
       "en": "Pitch Black Booster Bundle"
     },
     "kind": "bundle",
-    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/5/59/ME5_Booster_Bundle.png/440px-ME5_Booster_Bundle.png"
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/5/59/ME5_Booster_Bundle.png/300px-ME5_Booster_Bundle.png"
   },
   {
     "id": "me05-build-battle",
@@ -67,7 +67,7 @@
       "en": "Pitch Black Build & Battle Box"
     },
     "kind": "collection",
-    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/f/f9/ME5_Build_Battle_Box_outer.png/440px-ME5_Build_Battle_Box_outer.png"
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/f/f9/ME5_Build_Battle_Box_outer.png/300px-ME5_Build_Battle_Box_outer.png"
   },
   {
     "id": "me05-display",
@@ -77,6 +77,6 @@
       "en": "Pitch Black Booster Display (36)"
     },
     "kind": "bundle",
-    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/b/bf/ME5_Booster_Display_36_Pack.png/440px-ME5_Booster_Display_36_Pack.png"
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/b/bf/ME5_Booster_Display_36_Pack.png/300px-ME5_Booster_Display_36_Pack.png"
   }
 ]
