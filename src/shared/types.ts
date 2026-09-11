@@ -205,6 +205,13 @@ export interface CardListItem {
   hp: number | null
   imagePath: string | null
   variantMask: number
+  /**
+   * Idiomas en los que existe esta impresión.
+   *
+   * No es decorativo: el Set Base nunca se imprimió en español, así que pedir
+   * su imagen en español devuelve un 404. La interfaz elige con esto.
+   */
+  langs: CardLang[]
   /** Suma de copias en todas las variantes e idiomas. 0 = no la tienes. */
   ownedQty: number
   /** Precio de mercado actual, en céntimos. null si no se conoce. */

@@ -67,14 +67,12 @@ export function progress(): SetProgress[] {
                 WHERE c2.set_id = s.id
               ), 0) AS owned_cards,
               COALESCE((
-                SELECT SUM(ci.qty * COALESCE((
-                  SELECT pp.trend_cents FROM price_points pp
-                  WHERE pp.card_key_id = ck.id AND pp.source = 0
-                  ORDER BY pp.day DESC LIMIT 1
-                ), 0))
+                SELECT SUM(ci.qty * COALESCE(v.trend_cents, 0))
                 FROM card_keys ck
                 JOIN collection_items ci ON ci.card_key_id = ck.id AND ci.qty > 0
                 JOIN cat.cards c3 ON c3.id = ck.card_id
+                LEFT JOIN cat.card_variant_price v
+                  ON v.card_id = ck.card_id AND v.variant = ck.variant
                 WHERE c3.set_id = s.id
               ), 0) AS value_cents
        FROM cat.sets s

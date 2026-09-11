@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import type { CardLang, CardListItem, UiLang } from '@shared/types'
-import { useCardImage } from '../../lib/api'
+import { imageLang, useCardImage } from '../../lib/api'
 import { flipCard } from '../../lib/cardPointer'
 import { deltaColor, money, pct } from '../../lib/format'
 import { RARITY_HOLO, RARITY_TONE, artGradient, frameGradient, rarityTier } from '../../lib/holo'
@@ -29,7 +29,7 @@ function HoloCardImpl({ card, lang, cardLang, strings, onOpenDetail }: Props): R
   const tone = RARITY_TONE[tier]
   const owned = card.ownedQty > 0
   // En la rejilla basta la calidad baja: 31 KB frente a 126 KB por carta.
-  const image = useCardImage(card.imagePath, cardLang, 'low')
+  const image = useCardImage(card.imagePath, imageLang(card.langs, cardLang), 'low')
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 11, opacity: owned ? 1 : 0.4 }}>

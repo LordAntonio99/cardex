@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import type { CardLang, UiLang } from '@shared/types'
 import { Eyebrow, Tag } from '../components/ds'
-import { call, keys, useCard, useCardImage } from '../lib/api'
+import { call, imageLang, keys, useCard, useCardImage } from '../lib/api'
 import { deltaColor, money, monthYear, pct, polygonArea, polyline } from '../lib/format'
 import { RARITY_HOLO, artGradient, frameGradient, rarityTier } from '../lib/holo'
 import type { Strings } from '../i18n'
@@ -26,7 +26,8 @@ export function DetailPanel({
   const card = useCard(cardId)
 
   const cardLang: CardLang = filters.lang === 'all' ? (lang === 'en' ? 'en' : 'es') : filters.lang
-  const image = useCardImage(card.data?.imagePath ?? null, cardLang, 'high')
+  const shownLang = imageLang(card.data?.langs ?? [], cardLang)
+  const image = useCardImage(card.data?.imagePath ?? null, shownLang, 'high')
 
   const copies = useQuery({
     queryKey: keys.cardCopies(cardId ?? ''),
@@ -159,7 +160,7 @@ export function DetailPanel({
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {c.rarity ? <Tag tone="brand">{c.rarity}</Tag> : null}
             {c.types[0] ? <Tag>{c.types[0]}</Tag> : null}
-            <Tag>{cardLang.toUpperCase()}</Tag>
+            <Tag>{shownLang.toUpperCase()}</Tag>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 5, paddingTop: 4 }}>
             <span className="font-code text-faint" style={{ fontSize: 9, letterSpacing: '.18em' }}>
@@ -197,7 +198,7 @@ export function DetailPanel({
           { k: strings.fSetK, v: c.setName },
           { k: strings.fNumK, v: c.numberLabel },
           { k: strings.fTypeK, v: c.types.join(', ') || '—' },
-          { k: strings.fLangK, v: cardLang.toUpperCase() }
+          { k: strings.fLangK, v: shownLang.toUpperCase() }
         ].map((f) => (
           <div
             key={f.k}

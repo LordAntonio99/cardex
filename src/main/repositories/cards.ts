@@ -24,6 +24,7 @@ interface CardRow {
   hp: number | null
   image_path: string | null
   variant_mask: number
+  langs: string | null
   owned_qty: number | null
   price_cents: number | null
   delta7: number | null
@@ -67,6 +68,7 @@ function toItem(r: CardRow): CardListItem {
     hp: r.hp,
     imagePath: r.image_path,
     variantMask: r.variant_mask,
+    langs: (r.langs ?? 'en').split(',').filter(Boolean) as CardListItem['langs'],
     ownedQty: r.owned_qty ?? 0,
     priceCents: r.price_cents,
     delta7: r.delta7
@@ -76,10 +78,16 @@ function toItem(r: CardRow): CardListItem {
 /**
  * Subconsultas compartidas.
  *
- * `owned`  suma las copias de todas las variantes e idiomas de una carta.
- * `latest` toma el último precio conocido de Cardmarket (source 0) por carta,
- *          y `prev7` el más reciente de hace siete días o más, para la
- *          variación que pinta el diseño.
+ * `owned`       suma las copias de todas las variantes e idiomas de una carta.
+ * `owned_price` vale lo que valen las impresiones que el usuario tiene de
+ *               verdad. Importa: un Charizard del Set Base holo unlimited anda
+ *               por 590 € y el mismo shadowless de 1ª edición pasa de 3.500.
+ * `catalog`     el precio de referencia de la carta (su impresión corriente),
+ *               para las que no se tienen.
+ *
+ * La variación a siete días sale de comparar la tendencia con la media de la
+ * semana, ambas de Cardmarket y ya en el catálogo. Así hay variación desde el
+ * primer día, sin esperar a acumular histórico local.
  */
 const WITH_BLOCK = `
   WITH owned AS (
@@ -88,21 +96,19 @@ const WITH_BLOCK = `
     JOIN collection_items ci ON ci.card_key_id = ck.id
     GROUP BY ck.card_id
   ),
-  ranked AS (
-    SELECT ck.card_id AS card_id, pp.trend_cents, pp.day,
-           ROW_NUMBER() OVER (PARTITION BY ck.card_id ORDER BY pp.day DESC) AS rn
-    FROM price_points pp
-    JOIN card_keys ck ON ck.id = pp.card_key_id
-    WHERE pp.source = 0
+  owned_price AS (
+    SELECT ck.card_id AS card_id, MAX(v.trend_cents) AS trend_cents
+    FROM card_keys ck
+    JOIN collection_items ci ON ci.card_key_id = ck.id AND ci.qty > 0
+    JOIN cat.card_variant_price v ON v.card_id = ck.card_id AND v.variant = ck.variant
+    GROUP BY ck.card_id
   ),
-  latest AS (SELECT card_id, trend_cents, day FROM ranked WHERE rn = 1),
-  prev7 AS (
-    SELECT r.card_id, r.trend_cents
-    FROM ranked r
-    JOIN latest l ON l.card_id = r.card_id
-    WHERE r.day <= l.day - 7
-      AND r.rn = (SELECT MIN(r2.rn) FROM ranked r2
-                  WHERE r2.card_id = r.card_id AND r2.day <= l.day - 7)
+  catalog AS (
+    SELECT p.card_id AS card_id, pr.trend_cents AS trend_cents, pr.avg7_cents AS avg7_cents
+    FROM cat.card_printings p
+    JOIN cat.printing_prices pr
+      ON pr.card_id = p.card_id AND pr.printing_id = p.printing_id AND pr.source = 0
+    WHERE p.is_default = 1
   )
 `
 
@@ -119,11 +125,12 @@ const SELECT_COLS = `
   c.hp            AS hp,
   c.image_path    AS image_path,
   c.variant_mask  AS variant_mask,
+  (SELECT GROUP_CONCAT(cl.lang) FROM cat.card_langs cl WHERE cl.card_id = c.id) AS langs,
   owned.qty       AS owned_qty,
-  latest.trend_cents AS price_cents,
+  COALESCE(owned_price.trend_cents, catalog.trend_cents) AS price_cents,
   CASE
-    WHEN prev7.trend_cents IS NULL OR prev7.trend_cents = 0 THEN NULL
-    ELSE ROUND((latest.trend_cents - prev7.trend_cents) * 100.0 / prev7.trend_cents, 1)
+    WHEN catalog.avg7_cents IS NULL OR catalog.avg7_cents = 0 THEN NULL
+    ELSE ROUND((catalog.trend_cents - catalog.avg7_cents) * 100.0 / catalog.avg7_cents, 1)
   END AS delta7
 `
 
@@ -132,9 +139,9 @@ const FROM_BLOCK = `
   JOIN cat.sets s        ON s.id = c.set_id
   LEFT JOIN cat.card_names cn ON cn.card_id = c.id AND cn.lang = @uiLang
   LEFT JOIN cat.set_names  sn ON sn.set_id  = s.id AND sn.lang = @uiLang
-  LEFT JOIN owned  ON owned.card_id  = c.id
-  LEFT JOIN latest ON latest.card_id = c.id
-  LEFT JOIN prev7  ON prev7.card_id  = c.id
+  LEFT JOIN owned       ON owned.card_id       = c.id
+  LEFT JOIN owned_price ON owned_price.card_id = c.id
+  LEFT JOIN catalog     ON catalog.card_id     = c.id
 `
 
 interface Params {
@@ -196,11 +203,11 @@ function buildFilters(q: CardQuery): { sql: string; params: Params } {
     params.rarity = q.rarity
   }
   if (q.minCents > 0) {
-    where.push('COALESCE(latest.trend_cents, 0) >= @minCents')
+    where.push('COALESCE(owned_price.trend_cents, catalog.trend_cents, 0) >= @minCents')
     params.minCents = q.minCents
   }
   if (q.maxCents > 0) {
-    where.push('COALESCE(latest.trend_cents, 0) <= @maxCents')
+    where.push('COALESCE(owned_price.trend_cents, catalog.trend_cents, 0) <= @maxCents')
     params.maxCents = q.maxCents
   }
 
@@ -208,7 +215,7 @@ function buildFilters(q: CardQuery): { sql: string; params: Params } {
 }
 
 const ORDER: Record<CardQuery['sort'], string> = {
-  value: 'COALESCE(latest.trend_cents, -1) DESC, name ASC',
+  value: 'COALESCE(owned_price.trend_cents, catalog.trend_cents, -1) DESC, name ASC',
   delta: 'COALESCE(delta7, -9999) DESC, name ASC',
   name: 'name COLLATE NOCASE ASC',
   date: 's.released_on DESC, s.sort_key DESC, c.number_sort ASC'
@@ -301,7 +308,7 @@ export function filterOptions(): FilterOptions {
     .all()
 
   const maxRow = db
-    .prepare<[], { m: number | null }>('SELECT MAX(trend_cents) AS m FROM price_points WHERE source = 0')
+    .prepare<[], { m: number | null }>('SELECT MAX(trend_cents) AS m FROM cat.printing_prices WHERE source = 0')
     .get()
 
   return {

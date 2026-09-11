@@ -99,6 +99,21 @@ export const useUpdateStatus = (): UseQueryResult<UpdateStatus> =>
   useQuery({ queryKey: keys.update, queryFn: () => call('update:status', undefined) })
 
 /**
+ * Idioma en el que pedir la imagen de una carta.
+ *
+ * Se respeta el idioma elegido sólo si la carta existe en él. El Set Base, por
+ * ejemplo, nunca se imprimió en español: pedirlo así devuelve un 404 y la carta
+ * se quedaría con el marcador de posición para siempre.
+ */
+export function imageLang(available: readonly string[] | undefined, preferred: string): string {
+  // `available` puede llegar vacío o sin definir si el proceso main todavía no
+  // se ha reiniciado tras un cambio de esquema. Mejor caer al inglés, que es el
+  // idioma en el que existen prácticamente todas las cartas, que reventar.
+  if (available?.includes(preferred)) return preferred
+  return available?.[0] ?? 'en'
+}
+
+/**
  * URL local de la imagen de una carta.
  *
  * El proceso main la descarga a la caché la primera vez y luego la sirve desde

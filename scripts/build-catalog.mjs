@@ -32,8 +32,14 @@ import path from 'node:path'
 const API = 'https://api.tcgdex.net/v2'
 const SCHEMA_VERSION = 1
 
-/** Idioma del que se saca la ficha completa. Los demás sólo aportan el nombre. */
-const PRIMARY = 'es'
+/**
+ * Idioma preferido para la ficha completa.
+ *
+ * No siempre se puede usar: el Set Base, por ejemplo, nunca se imprimió en
+ * español, así que TCGdex tiene el set traducido pero con cero cartas. Por eso
+ * el idioma de origen se decide por set, no de forma global (ver `sourceLang`).
+ */
+const PREFERRED = 'es'
 
 // ── Argumentos ───────────────────────────────────────────────────────────────
 
@@ -50,7 +56,7 @@ function parseArgs(argv) {
     else if (a === '--concurrency') args.concurrency = Number(next()) || 8
     else if (a === '--help' || a === '-h') args.help = true
   }
-  if (!args.langs.includes(PRIMARY)) args.langs.unshift(PRIMARY)
+  if (!args.langs.includes(PREFERRED)) args.langs.unshift(PREFERRED)
   return args
 }
 
@@ -129,16 +135,113 @@ function sortKey(releaseDate) {
   return Number(releaseDate.replaceAll('-', '')) || 0
 }
 
+/**
+ * Etiqueta legible de una impresión: 'Holo · Shadowless · 1ª edición'.
+ */
+const SUBTYPE_LABEL = {
+  unlimited: 'Unlimited',
+  shadowless: 'Shadowless',
+  'shadowless-red-cheek': 'Shadowless (mejilla roja)',
+  '1999-2000-copyright': 'Copyright 1999-2000',
+  'first-edition': '1ª edición'
+}
+const STAMP_LABEL = {
+  '1st-edition': '1ª edición',
+  'poketour-99': 'Poké Tour 99',
+  'prerelease': 'Prerelease',
+  'staff': 'Staff'
+}
+const KIND_LABEL = { normal: 'Normal', holo: 'Holo', reverse: 'Reverse' }
+
+function printingLabel(v) {
+  const parts = [KIND_LABEL[v.type] ?? v.type]
+  if (v.subtype) parts.push(SUBTYPE_LABEL[v.subtype] ?? v.subtype)
+  for (const s of v.stamp ?? []) parts.push(STAMP_LABEL[s] ?? s)
+  return parts.join(' · ')
+}
+
+/**
+ * Eje grueso al que pertenece una impresión.
+ *
+ * La 1ª edición manda sobre todo lo demás: es lo que separa un Charizard de
+ * 590 € de uno de 3.500 €.
+ */
+function coarseVariant(v) {
+  if ((v.stamp ?? []).includes('1st-edition')) return 'first_ed'
+  if (v.type === 'holo') return 'holo'
+  if (v.type === 'reverse') return 'reverse'
+  return 'normal'
+}
+
+const cents = (n) => (typeof n === 'number' && Number.isFinite(n) ? Math.round(n * 100) : null)
+
+/** Extrae los precios de una impresión, en céntimos enteros. */
+function printingPrices(v) {
+  const out = []
+  const cm = v.pricing?.cardmarket
+  if (cm && typeof cm.trend === 'number') {
+    out.push({
+      source: 'cardmarket',
+      currency: cm.unit ?? 'EUR',
+      lowCents: cents(cm.low),
+      trendCents: cents(cm.trend),
+      avg7Cents: cents(cm.avg7),
+      avg30Cents: cents(cm.avg30),
+      updatedAt: cm.updated ?? null
+    })
+  }
+  const tp = v.pricing?.tcgplayer
+  // TCGplayer agrupa por acabado (normal, holofoil, reverseHolofoil...).
+  for (const [finish, data] of Object.entries(tp ?? {})) {
+    if (!data || typeof data !== 'object' || typeof data.marketPrice !== 'number') continue
+    out.push({
+      source: 'tcgplayer',
+      currency: tp.unit ?? 'USD',
+      finish,
+      lowCents: cents(data.lowPrice),
+      trendCents: cents(data.marketPrice),
+      avg7Cents: null,
+      avg30Cents: null,
+      updatedAt: tp.updated ?? null
+    })
+    break // basta con el primer acabado: el desglose fino no se usa todavía
+  }
+  return out
+}
+
+/**
+ * Decide de qué idioma sacar la ficha completa de un set.
+ *
+ * Se queda con el primero que traiga cartas de verdad. Sin esto, un set que
+ * nunca se imprimió en español (el Set Base, sin ir más lejos) saldría vacío.
+ */
+function sourceLang(heads, langs) {
+  const ordered = [PREFERRED, ...langs].filter((l, i, a) => a.indexOf(l) === i)
+  for (const lang of ordered) {
+    if ((heads[lang]?.cards ?? []).length > 0) return lang
+  }
+  return null
+}
+
 async function buildSet(setId, langs, limit, concurrency) {
   // Cabecera del set en cada idioma.
   const heads = {}
   for (const lang of langs) {
     heads[lang] = await get(`${API}/${lang}/sets/${setId}`)
   }
-  const head = heads[PRIMARY] ?? Object.values(heads).find(Boolean)
+
+  const source = sourceLang(heads, langs)
+  const head = (source && heads[source]) || Object.values(heads).find(Boolean)
   if (!head) {
     console.warn(`  ! set ${setId} no encontrado`)
     return null
+  }
+  if (!source) {
+    console.warn(`  ! set ${setId}: ningún idioma de ${langs.join('/')} tiene cartas`)
+    return null
+  }
+  if (source !== PREFERRED) {
+    console.log(`    (${setId} no existe en ${PREFERRED}; se toma la ficha de '${source}')`)
   }
 
   const names = {}
@@ -150,7 +253,7 @@ async function buildSet(setId, langs, limit, concurrency) {
   process.stdout.write(`  ${setId}: ${briefs.length} cartas `)
 
   const cards = await pool(briefs, concurrency, async (brief) => {
-    const full = await get(`${API}/${PRIMARY}/cards/${brief.id}`)
+    const full = await get(`${API}/${source}/cards/${brief.id}`)
     if (!full) return null
 
     // El resto de idiomas aportan el nombre traducido y dicen en qué idiomas
@@ -159,13 +262,27 @@ async function buildSet(setId, langs, limit, concurrency) {
     const availableLangs = []
     let english = null
     for (const lang of langs) {
-      const localized = lang === PRIMARY ? full : await get(`${API}/${lang}/cards/${brief.id}`)
+      const localized = lang === source ? full : await get(`${API}/${lang}/cards/${brief.id}`)
       if (lang === 'en') english = localized
       if (localized?.name) {
         cardNames[lang] = localized.name
         availableLangs.push(lang)
       }
     }
+
+    // Impresiones concretas, con su precio. Aquí está lo que separa una carta
+    // del Set Base unlimited de la misma en shadowless de 1ª edición: pueden ir
+    // seis veces de diferencia.
+    const printings = (full.variants_detailed ?? []).map((v, i) => ({
+      id: v.variantId ?? `${full.id}-p${i}`,
+      kind: v.type ?? 'normal',
+      subtype: v.subtype ?? '',
+      stamp: v.stamp ?? [],
+      label: printingLabel(v),
+      variant: coarseVariant(v),
+      sortKey: i,
+      prices: printingPrices(v)
+    }))
 
     process.stdout.write('.')
     return {
@@ -186,7 +303,8 @@ async function buildSet(setId, langs, limit, concurrency) {
       illustrator: full.illustrator ?? null,
       imagePath: imagePath(full.image),
       variants: variantList(full.variants),
-      langs: availableLangs
+      langs: availableLangs,
+      printings
     }
   })
 
@@ -208,7 +326,8 @@ async function buildSet(setId, langs, limit, concurrency) {
       totalAll: head.cardCount?.total ?? 0,
       logoPath: imagePath(head.logo),
       symbolPath: imagePath(head.symbol),
-      sortKey: sortKey(head.releaseDate)
+      sortKey: sortKey(head.releaseDate),
+      sourceLang: source
     },
     cards: cards.filter(Boolean),
     packs: []
@@ -230,7 +349,7 @@ Uso:
 Opciones:
   --sets a,b        sets a generar
   --series id       todos los sets de una serie
-  --langs es,en     idiomas (el primero, ${PRIMARY}, aporta la ficha completa)
+  --langs es,en     idiomas; la ficha completa sale del primero que tenga cartas
   --limit N         sólo las N primeras cartas de cada set (para pruebas)
   --out dir         directorio de salida (por defecto: catalog)
   --concurrency N   peticiones en paralelo (por defecto: 8)
@@ -240,7 +359,7 @@ Opciones:
 
   let setIds = args.sets
   if (args.series) {
-    const serie = await get(`${API}/${PRIMARY}/series/${args.series}`)
+    const serie = await get(`${API}/en/series/${args.series}`)
     if (!serie) {
       console.error(`Serie ${args.series} no encontrada`)
       process.exit(1)

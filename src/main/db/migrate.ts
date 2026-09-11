@@ -2,6 +2,7 @@ import { copyFileSync, existsSync } from 'node:fs'
 import type { Db } from './connection'
 
 import catalogue001 from './migrations/catalogue/001_init.sql?raw'
+import catalogue002 from './migrations/catalogue/002_printings.sql?raw'
 import collection001 from './migrations/collection/001_init.sql?raw'
 
 export interface Migration {
@@ -16,7 +17,8 @@ export interface Migration {
  * caso siempre se puede borrar y volver a sincronizar.
  */
 export const CATALOGUE_MIGRATIONS: Migration[] = [
-  { version: 1, name: 'init', sql: catalogue001 }
+  { version: 1, name: 'init', sql: catalogue001 },
+  { version: 2, name: 'printings', sql: catalogue002 }
 ]
 
 /**

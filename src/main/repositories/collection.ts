@@ -21,8 +21,11 @@ export function stats(): PortfolioStats {
         distinct_cards: number | null
       }
     >(
+      // El valor sale del precio de la IMPRESIÓN que se tiene, no de un precio
+      // genérico por carta: en el Set Base la diferencia entre unlimited y
+      // primera edición es de seis veces.
       `SELECT
-         COALESCE(SUM(ci.qty * COALESCE(p.trend_cents, 0)), 0) AS total_cents,
+         COALESCE(SUM(ci.qty * COALESCE(v.trend_cents, 0)), 0) AS total_cents,
          COALESCE((
            SELECT SUM(m.qty_delta * COALESCE(m.unit_cents, 0) + m.fees_cents)
            FROM movements m WHERE m.kind IN ('buy', 'trade_in')
@@ -31,11 +34,8 @@ export function stats(): PortfolioStats {
          COUNT(DISTINCT ck.card_id) AS distinct_cards
        FROM collection_items ci
        JOIN card_keys ck ON ck.id = ci.card_key_id
-       LEFT JOIN (
-         SELECT card_key_id, trend_cents,
-                ROW_NUMBER() OVER (PARTITION BY card_key_id ORDER BY day DESC) AS rn
-         FROM price_points WHERE source = 0
-       ) p ON p.card_key_id = ck.id AND p.rn = 1
+       LEFT JOIN cat.card_variant_price v
+         ON v.card_id = ck.card_id AND v.variant = ck.variant
        WHERE ci.qty > 0`
     )
     .get()
@@ -92,27 +92,18 @@ export function topMovers(limit: number): { gainers: CardListItem[]; losers: Car
   const db = getDb()
   const rows = db
     .prepare<{ limit: number }, { card_id: string; delta: number }>(
-      `WITH ranked AS (
-         SELECT ck.card_id AS card_id, pp.trend_cents, pp.day,
-                ROW_NUMBER() OVER (PARTITION BY ck.card_id ORDER BY pp.day DESC) AS rn
-         FROM price_points pp
-         JOIN card_keys ck ON ck.id = pp.card_key_id
-         JOIN collection_items ci ON ci.card_key_id = ck.id AND ci.qty > 0
-         WHERE pp.source = 0
-       ),
-       latest AS (SELECT card_id, trend_cents, day FROM ranked WHERE rn = 1),
-       prev AS (
-         SELECT r.card_id, MIN(r.rn) AS rn
-         FROM ranked r JOIN latest l ON l.card_id = r.card_id
-         WHERE r.day <= l.day - 7
-         GROUP BY r.card_id
-       )
-       SELECT l.card_id AS card_id,
-              ROUND((l.trend_cents - rp.trend_cents) * 100.0 / rp.trend_cents, 1) AS delta
-       FROM latest l
-       JOIN prev p ON p.card_id = l.card_id
-       JOIN ranked rp ON rp.card_id = l.card_id AND rp.rn = p.rn
-       WHERE rp.trend_cents > 0
+      // La variación sale de comparar la tendencia con la media de siete días,
+      // ambas de Cardmarket y ya presentes en el catálogo. No hace falta
+      // esperar a acumular histórico local para que esto tenga algo que decir.
+      `SELECT ck.card_id AS card_id,
+              ROUND((pr.trend_cents - pr.avg7_cents) * 100.0 / pr.avg7_cents, 1) AS delta
+       FROM card_keys ck
+       JOIN collection_items ci ON ci.card_key_id = ck.id AND ci.qty > 0
+       JOIN cat.card_printings p ON p.card_id = ck.card_id AND p.is_default = 1
+       JOIN cat.printing_prices pr
+         ON pr.card_id = p.card_id AND pr.printing_id = p.printing_id AND pr.source = 0
+       WHERE pr.avg7_cents IS NOT NULL AND pr.avg7_cents > 0
+       GROUP BY ck.card_id
        ORDER BY delta DESC`
     )
     .all({ limit })

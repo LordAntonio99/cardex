@@ -158,7 +158,29 @@ que la actualices, en vez de importar a medias algo que no comprende.
       "imagePath": "sv/sv03/015",
       "variants": ["holo"],
       "langs": ["es", "en"],
-      "packs": ["sv03-booster"]
+      "packs": ["sv03-booster"],
+      "printings": [
+        {
+          "id": "4ffrmhcfiaejakhepqdkx7o",
+          "kind": "holo",
+          "subtype": "unlimited",
+          "stamp": [],
+          "label": "Holo · Unlimited",
+          "variant": "holo",
+          "sortKey": 0,
+          "prices": [
+            {
+              "source": "cardmarket",
+              "currency": "EUR",
+              "lowCents": 10200,
+              "trendCents": 59115,
+              "avg7Cents": 62329,
+              "avg30Cents": 55696,
+              "updatedAt": "2026-09-11T11:36:57.016Z"
+            }
+          ]
+        }
+      ]
     }
   ],
   "packs": []
@@ -185,6 +207,43 @@ Detalles que importan:
 - **`packs`** en una carta es opcional. Sin él se entiende que puede salir en cualquier sobre
   de su set, que es el caso normal: sólo las cartas con distribución especial necesitan la
   relación explícita.
+
+### Impresiones: por qué `printings` importa
+
+`variants` da el eje grueso (normal, holo, reverse, 1ª edición) y `printings` la realidad
+completa. En las cartas antiguas la diferencia no es un matiz:
+
+| Charizard, Set Base, nº 4 | Precio (Cardmarket) |
+|---|---|
+| Holo · Unlimited | 591 € |
+| Holo · Shadowless | 3.567 € |
+| **Holo · Shadowless · 1ª edición** | **3.567 €** |
+| Holo · Copyright 1999-2000 | sin precio |
+
+Cada impresión trae su `id` estable de TCGdex, su etiqueta, a qué eje grueso pertenece y sus
+precios. La aplicación:
+
+- valora lo que tienes con el precio de **tu** impresión, no con uno genérico;
+- enseña como precio de referencia el de la impresión **corriente** (la primera con precio,
+  sin sello y que no sea de 1ª edición). Poner el precio de 1ª edición en todas las cartas del
+  Set Base daría una idea completamente falsa de lo que vale;
+- saca la variación a siete días de comparar `trendCents` con `avg7Cents`, así que hay dato
+  desde el primer día sin esperar a acumular histórico local.
+
+Un aviso sobre los datos de origen: Cardmarket comparte identificador de producto entre
+«shadowless» y «shadowless 1ª edición», así que en muchas cartas el precio de ambas sale
+idéntico. Es una limitación de la fuente, no del catálogo.
+
+### El idioma de la ficha se decide por set
+
+El generador prefiere el español, pero **se queda con el primer idioma que tenga cartas de
+verdad**. El Set Base nunca se imprimió en español: TCGdex tiene el set traducido
+(«Edición Básica») pero con cero cartas, así que la ficha sale del inglés y queda anotado en
+`set.sourceLang`.
+
+`langs` dice en qué idiomas existe cada carta, y la aplicación pide la imagen en uno de ellos.
+Sin eso, todo el Set Base se quedaría con el marcador de posición, porque
+`assets.tcgdex.net/es/base/base1/...` devuelve 404.
 
 ### Los sobres son cosa tuya
 
