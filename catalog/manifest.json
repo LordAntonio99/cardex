@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
   "catalogVersion": "2026.09.11",
-  "generatedAt": "2026-09-11T20:04:35.117Z",
+  "generatedAt": "2026-09-11T20:06:54.893Z",
   "sets": [
     {
       "id": "base1",
       "file": "sets/base1.json",
-      "sha256": "6ed618a223a061776107e922da7158e00d4c211d433d2302230083981187ed89",
+      "sha256": "6dfc6580de10753c3431e7bb66b744072b5dbb677c136bd1deeb857fea5711cf",
       "cardCount": 102
     },
     {
       "id": "me05",
       "file": "sets/me05.json",
-      "sha256": "d84c783de2c056f97077af8fb7eabd52555cd9e72ac9e73b7e11227bc9d2017d",
+      "sha256": "a9c491a03ce31e3b1acb8997348c7bccdc23a1d6aa865f40996b5cc722c045a6",
       "cardCount": 120
     }
   ]
