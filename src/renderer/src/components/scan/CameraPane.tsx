@@ -85,9 +85,14 @@ export function CameraPane({
   const busyRef = useRef(busy)
   const autoRef = useRef(auto)
   const lastTickRef = useRef(0)
+  // El manejador llega como función nueva en cada renderizado. Guardado en una
+  // referencia, `fire` deja de cambiar y el bucle de vídeo no tiene que
+  // desmontarse y volver a registrarse cada vez que cambia un texto de ayuda.
+  const onCaptureRef = useRef(onCapture)
 
   busyRef.current = busy
   autoRef.current = auto
+  onCaptureRef.current = onCapture
 
   const stop = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop())
@@ -195,8 +200,8 @@ export function CameraPane({
     if (!jpeg) return
     setFlash(true)
     setTimeout(() => setFlash(false), 180)
-    onCapture(jpeg)
-  }, [grabFull, onCapture])
+    onCaptureRef.current(jpeg)
+  }, [grabFull])
 
   /**
    * El bucle de vigilancia.
