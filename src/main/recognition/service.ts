@@ -78,13 +78,26 @@ function threadCount(): number {
   return Math.min(4, Math.max(1, availableParallelism() - 2))
 }
 
+/**
+ * Reinicia la cuenta atrás de inactividad.
+ *
+ * Se llama al arrancar el motor, no sólo al reconocer: abrir el escáner y no
+ * escanear nada es un caso perfectamente normal, y sin esto el proceso se
+ * quedaba vivo indefinidamente con el modelo cargado.
+ */
 function touchIdle(): void {
   if (idleTimer) clearTimeout(idleTimer)
   idleTimer = setTimeout(() => {
-    if (pending.size === 0) {
-      log.info('Reconocedor parado por inactividad')
-      stop()
+    idleTimer = null
+    // Con una petición en vuelo no se para, pero tampoco se abandona la cuenta:
+    // se vuelve a mirar más tarde. Si no, bastaría una coincidencia para que el
+    // motor se quedara cargado para siempre.
+    if (pending.size > 0) {
+      touchIdle()
+      return
     }
+    log.info('Reconocedor parado por inactividad')
+    stop()
   }, IDLE_MS)
 }
 
@@ -268,7 +281,10 @@ export function start(): Promise<void> {
           })
           reject(e instanceof Error ? e : new Error(String(e)))
         }
-      } else if (data.type === 'refs:ack') resolve()
+      } else if (data.type === 'refs:ack') {
+        touchIdle()
+        resolve()
+      }
     })
     proc.on('exit', (code) => {
       handleExit(code)
