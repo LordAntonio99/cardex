@@ -10,6 +10,7 @@ import {
   type ScanStatus,
   type Variant
 } from '@shared/types'
+import { app } from 'electron'
 import { getDb } from '../db'
 import { broadcast } from '../events'
 import { refreshOwnedPrices } from '../catalog/sync'
@@ -137,6 +138,32 @@ const emptyResult = (status: ScanStatus, thumbnail: string | null, evidence: Sca
   evidence
 })
 
+/**
+ * Guarda la captura para calibrar, si se ha pedido por entorno.
+ *
+ * `CARDEX_CAPTURES=<carpeta> npm run dev` deja ahí cada fotograma con el nombre
+ * de la carta que se ha reconocido. Corregir a mano los pocos que fallen es
+ * mucho menos trabajo que etiquetar cincuenta fotos desde cero, y de ahí salen
+ * los umbrales de `thresholds.ts`, que no se pueden afinar sin fotos de verdad.
+ *
+ * Sólo en desarrollo: una aplicación instalada no escribe fotogramas a disco.
+ */
+async function saveForCalibration(jpeg: Buffer, result: ScanResult): Promise<void> {
+  const dir = process.env['CARDEX_CAPTURES']
+  if (!dir || app.isPackaged) return
+  try {
+    const { mkdir, writeFile } = await import('node:fs/promises')
+    const nodePath = await import('node:path')
+    await mkdir(dir, { recursive: true })
+    const card = result.detection?.cardId ?? result.status
+    const lang = result.detection?.lang ?? 'xx'
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-')
+    await writeFile(nodePath.join(dir, `${card}__${lang}__${stamp}.jpg`), jpeg)
+  } catch (e) {
+    log.warn(`No se ha podido guardar la captura de calibración: ${e instanceof Error ? e.message : e}`)
+  }
+}
+
 export async function identify(imageDataUrl: string): Promise<ScanResult> {
   const jpeg = decodeDataUrl(imageDataUrl)
   if (!jpeg || jpeg.byteLength === 0) return emptyResult('no_card', null, null)
@@ -153,7 +180,9 @@ export async function identify(imageDataUrl: string): Promise<ScanResult> {
 
   const { status, confidence } = decide(raw)
   if (status !== 'match' && status !== 'confirm') {
-    return emptyResult(status, raw.thumbnail, evidence)
+    const rejected = emptyResult(status, raw.thumbnail, evidence)
+    await saveForCalibration(jpeg, rejected)
+    return rejected
   }
 
   // Se hidratan todas las candidatas: el selector de confirmación las necesita,
@@ -166,7 +195,7 @@ export async function identify(imageDataUrl: string): Promise<ScanResult> {
   const matchedLang = raw.candidates[0]?.lang ?? 'en'
   if (!best) return emptyResult('unknown', raw.thumbnail, evidence)
 
-  return {
+  const result: ScanResult = {
     status,
     detection: {
       id: `det_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
@@ -187,6 +216,8 @@ export async function identify(imageDataUrl: string): Promise<ScanResult> {
     thumbnail: raw.thumbnail,
     evidence
   }
+  await saveForCalibration(jpeg, result)
+  return result
 }
 
 /**

@@ -319,6 +319,69 @@ sobre, que es exactamente lo que el diseño ya preveía.
 
 ---
 
+## Datos de reconocimiento
+
+El escáner compara lo que ve la cámara con una **huella visual** de cada carta: 384 números que
+salen de pasar la imagen de referencia por un modelo de visión. Esas huellas se calculan al
+generar el catálogo y viajan con él.
+
+```bash
+npm run build            # el generador usa el MISMO código que el escáner
+npm run models:fetch     # y el mismo modelo
+node scripts/build-catalog.mjs --sets base1,me05 --recognition
+```
+
+Salen a `catalog/recog/<setId>.<modelo>.bin` y se listan en el manifiesto:
+
+```json
+"recognition": [
+  {
+    "id": "me05",
+    "file": "recog/me05.dinov2s-u8-224-cls-v1.bin",
+    "sha256": "fc6e9287…",
+    "model": "dinov2s-u8-224-cls-v1",
+    "dims": 384,
+    "dtype": "f32",
+    "count": 239
+  }
+]
+```
+
+**En ficheros aparte y no dentro del JSON del set**, porque cambian a ritmos distintos: el JSON
+se republica cada vez que se mueven los precios, y las huellas sólo cuando cambian las cartas o
+el modelo. Juntos, un cambio de céntimos obligaría a recalcular lo caro y a que todo el mundo
+se lo bajara otra vez.
+
+**Una huella por carta y por idioma.** La misma carta impresa en español y en inglés son dos
+imágenes distintas, y comparar con las dos mejora el acierto. Los sets anteriores a Blanco y
+Negro no tienen imágenes en español en TCGdex; ahí sólo se publica la inglesa, que es la misma
+ilustración.
+
+### El identificador de modelo importa
+
+`dinov2s-u8-224-cls-v1` nombra el modelo **y su preproceso**. Va escrito dentro del fichero y se
+comprueba al importar: unas huellas calculadas con otro modelo, otro recorte u otro tamaño de
+entrada no son comparables con las que saca la cámara, y el fallo sería **silencioso** —
+reconocería peor, sin dar ningún error—. Por eso:
+
+- la aplicación sólo importa las entradas cuyo `model` entiende, y si no hay ninguna lo dice
+  («sin datos de reconocimiento») en vez de escanear a ciegas;
+- el nombre del fichero lleva el modelo, así que pueden convivir dos en la rama `catalog`
+  mientras se solapan versiones de la aplicación;
+- cambiar el modelo, el tamaño de entrada o el recorte obliga a **subir el identificador**
+  (`RECOG_MODEL_ID`, en `src/main/recognition/format.ts`) y a republicar.
+
+No hace falta tocar `schemaVersion`: una aplicación anterior a esta función ignora la clave
+`recognition` y sigue importando los sets con normalidad.
+
+### Las imágenes siguen sin publicarse
+
+Para calcular las huellas hay que descargar las imágenes, y eso se hace a `.cache/images/`, en
+la máquina de quien genera el catálogo. Ahí se quedan. Lo que se publica es el vector, que es un
+dato derivado del que no se puede reconstruir la ilustración.
+
+---
+
 ## Imágenes y derechos
 
 El catálogo publica **metadatos**, que es lo que cubre la licencia MIT de TCGdex.

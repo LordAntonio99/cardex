@@ -58,6 +58,20 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
+      # Los modelos de reconocimiento no se versionan: pesan decenas de megas y
+      # no son código. Se descargan aquí, fijados por sha256 en
+      # scripts/models.lock.json, y electron-builder los empaqueta como
+      # `extraResources`. Sin este paso el escáner sale del instalador sin
+      # motor.
+      - name: Caché de modelos
+        uses: actions/cache@v4
+        with:
+          path: resources/models
+          key: models-${{ hashFiles('scripts/models.lock.json') }}
+
+      - name: Descargar modelos
+        run: npm run models:fetch
+
       # `npm run build` es comprobar tipos + electron-vite build, y es quien
       # genera out/. Sin este paso, electron-builder empaqueta un asar vacío y
       # muere con «Application entry file out/main/index.js ... was not found».

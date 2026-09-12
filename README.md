@@ -6,7 +6,7 @@ sin servidor: todo vive en tu equipo.
 - **Colección** — lo que tienes, con su valor y su variación.
 - **Explorador** — el catálogo entero; las que te faltan salen en gris.
 - **Sets y sobres** — progreso por set y los sobres en los que puede salir cada carta.
-- **Escáner** — escaneo por lotes con la webcam y confirmación en bloque.
+- **Escáner** — reconoce tus cartas con la webcam y las mete en el inventario.
 - **Mercado** — valor de la colección, histórico y las que más se mueven.
 
 ## Estado
@@ -20,10 +20,10 @@ imágenes, sus sobres y precios de Cardmarket. Tu colección arranca vacía.
 
 Lo que **todavía no** hace:
 
-- El **reconocimiento automático de cartas** del escáner está simulado. La cámara, la cola y la
-  confirmación son reales: «Simular detección» mete una carta del catálogo en el lote para que
-  puedas recorrer el flujo entero. El reconocimiento de verdad (hash perceptual contra
-  `cards.phash`, y OCR del número después) entra detrás de la misma interfaz.
+- El escáner **no distingue una holográfica de su versión normal**. Ninguna fuente publica una
+  imagen por variante, así que propone la más probable de las que la carta admite y tú la
+  corriges con un clic antes de confirmar el lote. Lo mismo con la 1ª edición, que nunca se
+  propone sola.
 - **Los precios no se refrescan solos.** Llegan con el catálogo, así que se actualizan cuando se
   publica uno nuevo. El histórico de tu colección sí crece: cada sincronización anota el precio
   del día de lo que tienes.
@@ -35,6 +35,29 @@ Lo que **todavía no** hace:
 ## Requisitos
 
 Node 22 o superior.
+
+## El escáner
+
+Pon la carta delante de la webcam: se reconoce sola, cae al lote y confirmas todo de una vez al
+final. Funciona **sin conexión y sin cuenta**: el reconocimiento corre en tu equipo.
+
+Para que acierte:
+
+- **Fondo liso y mate** que contraste con el borde de la carta. Oscuro para las de borde
+  amarillo (hasta Espada y Escudo), de tono medio para las grises de Escarlata y Púrpura en
+  adelante.
+- **Luz difusa y lateral.** El reflejo de una holográfica tapa la ilustración; si la carta sale
+  velada, el escáner lo dice en vez de inventarse una respuesta.
+- **Sin funda**, o al menos sin funda reflectante.
+- La **carta entera** dentro del encuadre, con su borde visible.
+
+Lo que reconoce sin dudar entra marcado en verde. Lo que no las tiene todas consigo entra en
+ámbar con las otras candidatas a un clic, y lo que no reconoce no entra: preferimos preguntar
+que colarte una carta equivocada en la colección.
+
+El reconocimiento compara lo que ve con una huella visual de cada carta que viaja en el
+catálogo. Si el escáner dice **«sin datos de reconocimiento»**, es que el catálogo instalado es
+anterior a esta función: sincronízalo.
 
 ## Desarrollo
 
@@ -65,6 +88,42 @@ En PowerShell: `$env:CARDEX_CATALOG_BASE="http://localhost:8787"; npm run dev`
 
 La variable sólo se atiende en desarrollo.
 
+### Los modelos del escáner
+
+No se versionan: pesan decenas de megas y no son código. Se descargan fijados por revisión y
+comprobados por sha256:
+
+```bash
+npm run models:fetch
+```
+
+Hace falta una sola vez, y antes de empaquetar (en CI se hace solo). Lo que se versiona es
+`scripts/models.lock.json`, que dice de qué revisión sale cada fichero.
+
+### Calibrar el escáner
+
+Los umbrales que deciden si una carta se acepta sola o se pregunta viven en
+`src/main/recognition/core/thresholds.ts`, y **no se pueden afinar con imágenes de catálogo**:
+el problema real son los reflejos, el desenfoque y la perspectiva de una webcam concreta. Hacen
+falta fotos de verdad.
+
+```bash
+CARDEX_CAPTURES=./calib npm run dev
+```
+
+Escanea tus cartas como lo harías normalmente. Cada fotograma se guarda en `./calib` con el
+nombre de lo que se reconoció (`base1-4__en__<fecha>.jpg`); repasa la carpeta y corrige el
+prefijo de las que estén mal. Los rechazos (`no_card__…`, `blurry__…`) también cuentan: son la
+mitad de la calibración.
+
+```bash
+npm run recog:eval -- ./calib
+```
+
+Dice qué acierta, con qué margen, y cuántas entrarían mal con los umbrales actuales. **Ese
+último número tiene que ser cero**: una confirmación de más cuesta un clic, una carta mal
+metida en la colección cuesta encontrarla y arreglarla.
+
 ### Comprobaciones
 
 ```bash
@@ -78,7 +137,8 @@ npm run build:win     # instalador NSIS en release/<versión>
 
 ```
 data/collection.db    TU COLECCIÓN. Lo único irreemplazable: respalda este fichero.
-data/catalogue.db     catálogo descargado. Se puede borrar y volver a sincronizar.
+data/catalogue.db     catálogo descargado, incluidas las huellas del escáner.
+                      Se puede borrar y volver a sincronizar.
 images/               caché de imágenes de carta
 logs/main.log         registro
 settings.json         idioma, tema, efecto 3D y tamaño de la ventana
@@ -98,8 +158,24 @@ src/
 ├── shared/      modelo de dominio y contrato IPC (el único punto de contacto)
 ├── preload/     puente con lista blanca de canales
 ├── main/        ventana, base de datos, catálogo, escáner, autoactualización
+│   └── recognition/  el motor del escáner y el proceso donde corre
 └── renderer/    React: vistas, design system y la carta holográfica
 ```
+
+### El escáner corre en su propio proceso
+
+Reconocer una carta lleva unas décimas de segundo de trabajo intensivo. En el proceso principal
+congelaría la ventana, porque ahí todo el SQLite es síncrono; y en el renderer no cabe, porque
+su CSP no permite WebAssembly y no se va a relajar por esto. Así que vive en un `utilityProcess`
+aparte (`src/main/recognition/process.ts`), que además se puede parar por inactividad para
+recuperar los cientos de megas del modelo, y cuya caída no se lleva la aplicación por delante.
+
+`src/main/recognition/pipeline.ts` es el núcleo de visión, **sin `electron`**, y es una entrada
+de compilación propia. No es capricho: lo cargan el proceso reconocedor, el generador de
+catálogo y el evaluador de umbrales. Que los tres compartan ese código es lo único que
+garantiza que la imagen de referencia y la foto de tu webcam pasan por exactamente el mismo
+preproceso. Si se duplicara, el día que alguien cambie un filtro en un sitio y no en el otro el
+reconocimiento se degradaría en silencio.
 
 El renderer no habla nunca con SQLite ni con la red: todo pasa por
 `src/shared/ipc-contract.ts`, que es una lista cerrada de operaciones con tipos. No se expone
@@ -164,6 +240,12 @@ quien ya la tenga instalada.
 ## Créditos
 
 Interfaz diseñada en Claude Design. Datos de [TCGdex](https://tcgdex.dev).
+
+El escáner se apoya en [ONNX Runtime](https://onnxruntime.ai) (MIT),
+[DINOv2](https://github.com/facebookresearch/dinov2) (Apache-2.0, en la conversión a ONNX de
+[Xenova](https://huggingface.co/Xenova/dinov2-small)), [OpenCV](https://opencv.org)
+(Apache-2.0) y [sharp](https://sharp.pixelplumbing.com) (Apache-2.0). Todo corre en local: no
+se envía ninguna imagen a ningún servidor.
 
 Pokémon y las cartas del JCC Pokémon son propiedad de The Pokémon Company, Nintendo, Creatures
 y GAME FREAK. Este proyecto no está afiliado ni respaldado por ninguna de ellas.
