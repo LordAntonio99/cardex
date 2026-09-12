@@ -1,4 +1,4 @@
-import type { CatalogManifest, CatalogManifestSet } from '@shared/types'
+import type { CatalogManifest, CatalogManifestRecognition, CatalogManifestSet } from '@shared/types'
 
 /**
  * Formato del catálogo publicado en GitHub.
@@ -105,10 +105,7 @@ export function parseManifest(raw: unknown): CatalogManifest {
     const file = entry['file']
     const sha256 = entry['sha256']
     if (!isStr(id) || !isStr(file) || !isStr(sha256)) continue
-    // Nada de rutas que se escapen del directorio del catálogo.
-    if (file.includes('..') || file.startsWith('/') || /^[a-z]+:/i.test(file)) {
-      throw new Error(`Ruta de set no permitida en el manifiesto: ${file}`)
-    }
+    assertSafePath(file)
     sets.push({
       id,
       file,
@@ -117,11 +114,46 @@ export function parseManifest(raw: unknown): CatalogManifest {
     })
   }
 
+  // Los vectores de reconocimiento son opcionales: un catálogo publicado antes
+  // del escáner simplemente no trae la clave, y eso no es un error.
+  const recognition: CatalogManifestRecognition[] = []
+  if (Array.isArray(raw['recognition'])) {
+    for (const entry of raw['recognition']) {
+      if (!isObj(entry)) continue
+      const id = entry['id']
+      const file = entry['file']
+      const sha256 = entry['sha256']
+      const model = entry['model']
+      if (!isStr(id) || !isStr(file) || !isStr(sha256) || !isStr(model)) continue
+      assertSafePath(file)
+      const dims = Number(entry['dims'])
+      if (!Number.isInteger(dims) || dims < 1 || dims > 4096) continue
+      if (entry['dtype'] !== 'f32') continue
+      recognition.push({
+        id,
+        file,
+        sha256: sha256.toLowerCase(),
+        model,
+        dims,
+        dtype: 'f32',
+        count: Number(entry['count']) || 0
+      })
+    }
+  }
+
   return {
     schemaVersion,
     catalogVersion: raw['catalogVersion'],
     generatedAt: isStr(raw['generatedAt']) ? raw['generatedAt'] : '',
-    sets
+    sets,
+    recognition
+  }
+}
+
+/** Nada de rutas que se escapen del directorio del catálogo. */
+function assertSafePath(file: string): void {
+  if (file.includes('..') || file.startsWith('/') || /^[a-z]+:/i.test(file)) {
+    throw new Error(`Ruta no permitida en el manifiesto: ${file}`)
   }
 }
 

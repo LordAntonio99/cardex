@@ -335,7 +335,7 @@ function pickDefaultPrinting(printings: CatalogPrinting[]): string | null {
  * grande no se dispara: no tiene sentido guardar 90 días de precio de 20.000
  * cartas que no son suyas.
  */
-function refreshOwnedPrices(): number {
+export function refreshOwnedPrices(): number {
   const db = getDb()
   const today = Math.floor(Date.now() / 86400000)
   const r = db

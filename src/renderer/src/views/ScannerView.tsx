@@ -84,7 +84,8 @@ export function ScannerView({
       canvas.getContext('2d')?.drawImage(video, 0, 0)
       dataUrl = canvas.toDataURL('image/jpeg', 0.8)
     }
-    const detection = await call('scan:identify', { imageDataUrl: dataUrl })
+    const result = await call('scan:identify', { imageDataUrl: dataUrl })
+    const detection = result.detection
     if (detection) setQueue((q) => [...q, detection])
   }
 

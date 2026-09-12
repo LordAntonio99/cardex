@@ -4,6 +4,7 @@ import type { Db } from './connection'
 import catalogue001 from './migrations/catalogue/001_init.sql?raw'
 import catalogue002 from './migrations/catalogue/002_printings.sql?raw'
 import catalogue003 from './migrations/catalogue/003_variant_price.sql?raw'
+import catalogue004 from './migrations/catalogue/004_recognition.sql?raw'
 import collection001 from './migrations/collection/001_init.sql?raw'
 
 export interface Migration {
@@ -20,7 +21,8 @@ export interface Migration {
 export const CATALOGUE_MIGRATIONS: Migration[] = [
   { version: 1, name: 'init', sql: catalogue001 },
   { version: 2, name: 'printings', sql: catalogue002 },
-  { version: 3, name: 'variant_price', sql: catalogue003 }
+  { version: 3, name: 'variant_price', sql: catalogue003 },
+  { version: 4, name: 'recognition', sql: catalogue004 }
 ]
 
 /**

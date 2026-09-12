@@ -20,7 +20,9 @@ import type {
   PortfolioSnapshot,
   PortfolioStats,
   PricePoint,
-  ScanDetection,
+  ScanCommitItem,
+  ScanEngineStatus,
+  ScanResult,
   SetProgress,
   ThemeSource,
   UpdateStatus
@@ -94,16 +96,32 @@ export interface IpcRequests {
   }
 
   // Escáner ───────────────────────────────────────────────────────────────────
-  /** Reconocimiento de una captura. De momento devuelve una detección simulada. */
+  /**
+   * Reconoce una captura.
+   *
+   * No lanza porque no haya carta: eso es un resultado más, y viaja en
+   * `status`. Sólo lanza si el motor falla de verdad.
+   */
   'scan:identify': {
     req: { imageDataUrl: string }
-    res: ScanDetection | null
+    res: ScanResult
   }
   /** Confirma el lote: escribe las detecciones aceptadas en la colección. */
   'scan:commit': {
-    req: { detections: ScanDetection[] }
+    req: { detections: ScanCommitItem[] }
     res: { added: number }
   }
+  /** Estado del motor ahora mismo. Los eventos se pierden si llegan antes de montar. */
+  'scan:engineStatus': { req: void; res: ScanEngineStatus }
+  /**
+   * Arranca el motor sin pedirle nada.
+   *
+   * Cargar modelo y librerías lleva un segundo largo. Si se hace al encender la
+   * cámara, para cuando el usuario coloca la primera carta ya está listo.
+   */
+  'scan:warmup': { req: void; res: ScanEngineStatus }
+  /** Suelta el motor y su memoria al salir de la vista. */
+  'scan:release': { req: void; res: void }
 
   // Imágenes ──────────────────────────────────────────────────────────────────
   /**
@@ -161,6 +179,9 @@ export const IPC_CHANNELS = [
   'collection:topMovers',
   'scan:identify',
   'scan:commit',
+  'scan:engineStatus',
+  'scan:warmup',
+  'scan:release',
   'images:resolve',
   'update:status',
   'update:check',
@@ -183,6 +204,8 @@ export interface IpcEvents {
   'db:changed': { scopes: ('cards' | 'collection' | 'sets' | 'prices' | 'catalog')[] }
   /** El menú nativo pide cambiar de vista (aceleradores Ctrl/Cmd+1..5). */
   'nav:go': { view: string }
+  /** El motor de reconocimiento ha cambiado de estado. */
+  'scan:engine': ScanEngineStatus
 }
 
 export type IpcEventName = keyof IpcEvents
@@ -192,5 +215,6 @@ export const IPC_EVENTS = [
   'catalog:progress',
   'update:changed',
   'db:changed',
-  'nav:go'
+  'nav:go',
+  'scan:engine'
 ] as const satisfies readonly IpcEventName[]

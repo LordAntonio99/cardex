@@ -1,0 +1,21 @@
+{
+  "comment": "Modelos de reconocimiento. Fijados a una revisión concreta y verificados por sha256. Se descargan con `npm run models:fetch`; NO se versionan (resources/models/ está en .gitignore).",
+  "models": [
+    {
+      "id": "dinov2-small",
+      "dir": "dinov2-small",
+      "purpose": "Embedding visual de la carta (384-d) para recuperar la candidata en el catálogo.",
+      "license": "Apache-2.0",
+      "source": "https://huggingface.co/Xenova/dinov2-small",
+      "revision": "c2bb04a51fab207c420665f1946016107bffc701",
+      "files": [
+        {
+          "path": "model.onnx",
+          "remote": "onnx/model_uint8.onnx",
+          "sha256": "6d10d812e13012b8a0c9f29c04db0b06d6704270649cea734443ed0a9c764312",
+          "bytes": 22393453
+        }
+      ]
+    }
+  ]
+}

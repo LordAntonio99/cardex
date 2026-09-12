@@ -6,6 +6,20 @@ directories:
   buildResources: resources
   output: release/${version}
 
+# CUIDADO al tocar esto: electron-builder construye DOS listas de patrones a
+# partir de aquí, y no se comportan igual.
+#
+#  - Los ficheros de la APLICACIÓN salen de la sección de plataforma (`win.files`
+#    y equivalentes). Si ahí sólo hay exclusiones, electron-builder antepone
+#    `**/*` y se empaqueta el proyecto ENTERO: código fuente, catálogo generado
+#    y hasta las carpetas `release/` de compilaciones anteriores. Por eso las
+#    inclusiones positivas están repetidas abajo, en cada plataforma.
+#  - Los ficheros de `node_modules` salen de esta lista de aquí, y sólo se
+#    atienden las exclusiones.
+#
+# Se puede comprobar cuál es cuál en `release/<versión>/builder-debug.yml`:
+# `firstOrDefaultFilePatterns` es la aplicación y `nodeModuleFilePatterns` las
+# dependencias.
 files:
   - out/**
   - package.json
@@ -13,11 +27,35 @@ files:
   # Lo demás (fuentes C++, amalgama de SQLite, documentación) son ~10 MB que no
   # se usan en tiempo de ejecución.
   - '!node_modules/better-sqlite3/{build,deps,src,docs,benchmark,.github}/**'
+  # onnxruntime-node: en ejecución sólo se usan `dist/` y el binario de la
+  # plataforma. El script de instalación y las pruebas no pintan nada.
+  - '!node_modules/onnxruntime-node/{script,test}/**'
+  # opencv-js publica también sus fuentes TypeScript y miles de ficheros de
+  # tipos. Lo único que se carga es `dist/opencv.js`.
+  - '!node_modules/@techstark/opencv-js/{src,dist/src}/**'
+  # sharp trae una variante WebAssembly como red de seguridad. Con el binario
+  # nativo de Windows presente no se usa nunca, y son 9 MB.
+  - '!node_modules/@img/sharp-wasm32/**'
 
 asar: true
 # Un .node no se puede cargar desde dentro del asar: tiene que quedar en disco.
+#
+# Y no basta con el .node: Electron extrae a un temporal el fichero suelto que
+# se carga, pero no sus DLL vecinas. onnxruntime_binding.node necesita
+# onnxruntime.dll a su lado, y sharp necesita libvips: si sólo se desempaquetara
+# el .node, ambos fallarían al cargar en la aplicación instalada y sólo ahí.
 asarUnpack:
   - '**/node_modules/better-sqlite3/**'
+  - '**/node_modules/onnxruntime-node/**'
+  - '**/node_modules/sharp/**'
+  - '**/node_modules/@img/**'
+
+# Los modelos de reconocimiento van fuera del asar: onnxruntime los abre por
+# ruta de disco, no a través de `fs` de Node, así que dentro del archivo no los
+# encontraría. Se descargan con `npm run models:fetch` antes de empaquetar.
+extraResources:
+  - from: resources/models
+    to: models
 
 # better-sqlite3 13 es N-API y trae binarios precompilados para las ocho
 # combinaciones de plataforma/arquitectura. No hace falta node-gyp, ni Python,
@@ -39,9 +77,21 @@ win:
       arch: [x64]
   artifactName: ${productName}-${version}-${arch}.${ext}
   files:
+    # Las dos líneas siguientes NO son redundantes: son las que impiden que se
+    # empaquete el proyecto entero. Ver la nota de `files` arriba.
+    - out/**
+    - package.json
     # Los prebuilds son ficheros sueltos (win32-x64.node, darwin-arm64.node...),
     # 17 MB en total. Sin este filtro se empaquetan los ocho.
     - '!node_modules/better-sqlite3/prebuilds/!(win32-x64).node'
+    # onnxruntime trae los binarios de las seis plataformas dentro del paquete:
+    # 220 MB que no se usan aquí.
+    - '!node_modules/onnxruntime-node/bin/napi-v6/!(win32)/**'
+    - '!node_modules/onnxruntime-node/bin/napi-v6/win32/!(x64)/**'
+    # DirectML es el proveedor de GPU. El reconocimiento va por CPU —basta de
+    # sobra y evita depender de un componente en mantenimiento—, así que sus
+    # tres DLL son 38 MB de instalador que nadie carga.
+    - '!node_modules/onnxruntime-node/bin/napi-v6/win32/x64/{DirectML,dxcompiler,dxil}.dll'
 
 nsis:
   oneClick: false
@@ -60,6 +110,8 @@ mac:
   category: public.app-category.utilities
   hardenedRuntime: true
   files:
+    - out/**
+    - package.json
     - '!node_modules/better-sqlite3/prebuilds/!(darwin-*).node'
   extendInfo:
     NSCameraUsageDescription: Cardex usa la cámara para escanear tus cartas.
@@ -68,6 +120,8 @@ linux:
   target: [AppImage, deb]
   category: Utility
   files:
+    - out/**
+    - package.json
     - '!node_modules/better-sqlite3/prebuilds/!(linux*).node'
 
 publish:

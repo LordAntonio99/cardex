@@ -19,3 +19,6 @@ Thumbs.db
 
 # Caché incremental de TypeScript
 *.tsbuildinfo
+/resources/models/
+/.cache/
+/calib/

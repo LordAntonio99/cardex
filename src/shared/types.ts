@@ -272,6 +272,45 @@ export interface FilterOptions {
 
 // ── Escáner ───────────────────────────────────────────────────────────────────
 
+/**
+ * Qué ha pasado con una captura.
+ *
+ * Los tres primeros son resultados del reconocimiento; los tres últimos son
+ * problemas de la foto, y se distinguen a propósito: decirle a alguien «no he
+ * reconocido la carta» cuando el problema es que la estaba moviendo no ayuda a
+ * corregir nada.
+ */
+export type ScanStatus = 'match' | 'confirm' | 'unknown' | 'no_card' | 'blurry' | 'glare'
+
+/** Una carta candidata, con lo justo para pintarla en el selector. */
+export interface ScanCandidate {
+  cardId: string
+  name: string
+  numberLabel: string
+  setId: string
+  setCode: string | null
+  setName: string
+  imagePath: string | null
+  variantMask: number
+  langs: CardLang[]
+  priceCents: number | null
+  /** Parecido con la captura, 0-100. */
+  score: number
+}
+
+/** En qué se ha basado la decisión. Sirve para depurar y para calibrar. */
+export interface ScanEvidence {
+  /** Coseno con la mejor referencia, 0-1. */
+  cosineTop1: number
+  /** Distancia hasta la siguiente carta distinta. Es la señal fuerte. */
+  cosineMargin: number
+  /** Las mejores candidatas comparten ilustración. */
+  ambiguous: boolean
+  sharpness: number
+  glare: number
+  ms: number
+}
+
 export interface ScanDetection {
   id: string
   cardId: string
@@ -283,6 +322,40 @@ export interface ScanDetection {
   priceCents: number | null
   /** 0-100. */
   confidence: number
+  /** Variantes que admite la carta, para las fichas del lote. */
+  variantMask: number
+  /** Idiomas en los que existe la impresión. */
+  langs: CardLang[]
+  /** `data:image/webp;base64,…` de la carta ya enderezada. */
+  thumbnail: string | null
+  /** 'confirm' = la candidata todavía necesita el visto bueno del usuario. */
+  status: 'match' | 'confirm'
+}
+
+/** Respuesta completa de una captura. */
+export interface ScanResult {
+  status: ScanStatus
+  detection: ScanDetection | null
+  /** Alternativas ordenadas. Vacío salvo cuando hay algo que elegir. */
+  alternatives: ScanCandidate[]
+  thumbnail: string | null
+  evidence: ScanEvidence | null
+}
+
+/** Lo único que necesita `scan:commit`; `ScanDetection` encaja aquí. */
+export type ScanCommitItem = Pick<
+  ScanDetection,
+  'cardId' | 'variant' | 'lang' | 'name' | 'numberLabel'
+>
+
+export type ScanEngineState = 'off' | 'loading' | 'ready' | 'error' | 'unavailable'
+
+export interface ScanEngineStatus {
+  state: ScanEngineState
+  /** Vectores cargados. 0 = el catálogo no trae reconocimiento para este modelo. */
+  refCount: number
+  model: string | null
+  message?: string
 }
 
 // ── Catálogo remoto ───────────────────────────────────────────────────────────
@@ -294,11 +367,31 @@ export interface CatalogManifestSet {
   cardCount: number
 }
 
+/**
+ * Fichero de vectores de reconocimiento de un set.
+ *
+ * Va aparte del JSON del set porque son datos binarios que cambian en otro
+ * ritmo: el JSON se republica cada vez que se mueven los precios, y los
+ * vectores sólo cuando cambian las cartas o el modelo.
+ */
+export interface CatalogManifestRecognition {
+  id: string
+  file: string
+  sha256: string
+  /** Identificador de modelo y preproceso. Sólo se importa el que se entiende. */
+  model: string
+  dims: number
+  dtype: 'f32'
+  count: number
+}
+
 export interface CatalogManifest {
   schemaVersion: number
   catalogVersion: string
   generatedAt: string
   sets: CatalogManifestSet[]
+  /** Ausente en catálogos anteriores al escáner. */
+  recognition: CatalogManifestRecognition[]
 }
 
 export interface CatalogInstalled {
@@ -329,6 +422,20 @@ export interface AppSettings {
   /** Descargar imágenes de carta bajo demanda. Apagado = sólo texto. */
   downloadImages: boolean
   reduceMotion: boolean
+  /** Cámara elegida para el escáner. */
+  cameraId: string | null
+  /**
+   * Nombre de esa cámara.
+   *
+   * El identificador de dispositivo no es estable entre arranques ni al
+   * cambiar de puerto USB; con el nombre se puede recuperar la elección del
+   * usuario cuando el identificador ya no vale.
+   */
+  cameraLabel: string | null
+  /** Idioma de las cartas que se escanean. null = el de la interfaz. */
+  scanLang: CardLang | null
+  /** Disparar solo al detectar una carta quieta en el marco. */
+  scanAutoCapture: boolean
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -336,7 +443,11 @@ export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'system',
   effect3d: 'prism',
   downloadImages: true,
-  reduceMotion: false
+  reduceMotion: false,
+  cameraId: null,
+  cameraLabel: null,
+  scanLang: null,
+  scanAutoCapture: true
 }
 
 // ── Estado de la actualización de la aplicación ───────────────────────────────

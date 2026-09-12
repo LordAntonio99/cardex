@@ -12,6 +12,7 @@ import * as collection from '../repositories/collection'
 import * as catalog from '../catalog/sync'
 import * as images from '../catalog/images'
 import * as scan from '../repositories/scan'
+import * as recognizer from '../recognition/service'
 import * as updater from '../updater'
 
 /**
@@ -96,6 +97,18 @@ export function registerIpc(): void {
   // ── Escáner ────────────────────────────────────────────────────────────────
   handle('scan:identify', ({ imageDataUrl }) => scan.identify(imageDataUrl))
   handle('scan:commit', ({ detections }) => scan.commit(detections))
+  handle('scan:engineStatus', () => recognizer.engineStatus())
+  handle('scan:warmup', async () => {
+    // Un fallo al calentar no es un error que deba subir al renderer: el estado
+    // ya lo cuenta, y la vista lo pinta.
+    try {
+      await recognizer.start()
+    } catch (e) {
+      log.warn(`No se ha podido arrancar el reconocedor: ${e instanceof Error ? e.message : e}`)
+    }
+    return recognizer.engineStatus()
+  })
+  handle('scan:release', () => recognizer.stop())
 
   // ── Imágenes ───────────────────────────────────────────────────────────────
   handle('images:resolve', ({ kind, path: assetPath, lang, quality }) =>

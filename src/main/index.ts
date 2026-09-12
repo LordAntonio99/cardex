@@ -4,6 +4,7 @@ import { registerImageProtocol, registerImageScheme } from './catalog/images'
 import { scheduleBackgroundSync } from './catalog/sync'
 import { initDatabases, shutdownDatabases } from './db'
 import { registerIpc } from './ipc'
+import { registerCatalogWatch, stop as stopRecognizer } from './recognition/service'
 import { buildMenu } from './menu'
 import { log } from './log'
 import { initUpdater } from './updater'
@@ -47,7 +48,12 @@ if (!app.requestSingleInstanceLock()) {
     mainWindow = createWindow()
     buildMenu(() => mainWindow)
 
-    if (dbReady) scheduleBackgroundSync()
+    if (dbReady) {
+      scheduleBackgroundSync()
+      // El reconocedor tiene que enterarse de que hay vectores nuevos cuando el
+      // catálogo se reimporta; si no, seguiría comparando contra los antiguos.
+      registerCatalogWatch()
+    }
     initUpdater()
 
     // El tema del sistema puede cambiar con la aplicación abierta.
@@ -74,6 +80,9 @@ if (!app.requestSingleInstanceLock()) {
   })
 
   app.on('before-quit', () => {
+    // Primero el proceso auxiliar: dejarlo huérfano mantendría vivo un proceso
+    // con el modelo cargado después de cerrar la ventana.
+    stopRecognizer()
     shutdownDatabases()
   })
 

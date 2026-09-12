@@ -2,10 +2,12 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from '
 import path from 'node:path'
 import { app } from 'electron'
 import {
+  CARD_LANGS,
   DEFAULT_SETTINGS,
   EFFECTS_3D,
   UI_LANGS,
   type AppSettings,
+  type CardLang,
   type Effect3d,
   type ThemeSource,
   type UiLang
@@ -62,7 +64,14 @@ function coerce(raw: unknown): Persisted {
       downloadImages:
         typeof s.downloadImages === 'boolean' ? s.downloadImages : DEFAULT_SETTINGS.downloadImages,
       reduceMotion:
-        typeof s.reduceMotion === 'boolean' ? s.reduceMotion : DEFAULT_SETTINGS.reduceMotion
+        typeof s.reduceMotion === 'boolean' ? s.reduceMotion : DEFAULT_SETTINGS.reduceMotion,
+      cameraId: typeof s.cameraId === 'string' && s.cameraId ? s.cameraId : null,
+      cameraLabel: typeof s.cameraLabel === 'string' && s.cameraLabel ? s.cameraLabel : null,
+      scanLang: CARD_LANGS.includes(s.scanLang as CardLang) ? (s.scanLang as CardLang) : null,
+      scanAutoCapture:
+        typeof s.scanAutoCapture === 'boolean'
+          ? s.scanAutoCapture
+          : DEFAULT_SETTINGS.scanAutoCapture
     },
     bounds: {
       x: typeof b.x === 'number' ? b.x : undefined,
