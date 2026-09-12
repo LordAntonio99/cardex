@@ -10,6 +10,7 @@ import type {
   FilterOptions,
   PortfolioSnapshot,
   PortfolioStats,
+  ScanEngineStatus,
   SetProgress,
   UpdateStatus
 } from '@shared/types'
@@ -43,6 +44,7 @@ export const keys = {
   cardHistory: (id: string) => ['cards', 'history', id] as const,
   sets: ['sets'] as const,
   collection: ['collection'] as const,
+  scanEngine: ['scan', 'engine'] as const,
   update: ['update'] as const
 }
 
@@ -57,6 +59,16 @@ export const useCatalogStatus = (): UseQueryResult<CatalogStatus> =>
 
 export const useFilterOptions = (): UseQueryResult<FilterOptions> =>
   useQuery({ queryKey: keys.filters, queryFn: () => call('catalog:filters', undefined) })
+
+/**
+ * Estado del motor de reconocimiento.
+ *
+ * Se consulta al montar la vista y se refresca con el evento `scan:engine`: los
+ * eventos que llegan antes de montar se pierden, así que hace falta pedirlo una
+ * vez además de escucharlo.
+ */
+export const useScanEngine = (): UseQueryResult<ScanEngineStatus> =>
+  useQuery({ queryKey: keys.scanEngine, queryFn: () => call('scan:engineStatus', undefined) })
 
 export const useCardPage = (query: CardQuery, enabled = true): UseQueryResult<CardPage> =>
   useQuery({
