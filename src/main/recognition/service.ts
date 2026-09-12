@@ -138,7 +138,7 @@ function handleExit(code: number): void {
   refsDirty = true
 
   if (!wasRunning || code === 0) {
-    setStatus({ state: 'off', refCount: 0 })
+    setStatus({ state: 'off', refCount: 0, message: undefined })
     return
   }
 
@@ -155,7 +155,7 @@ function handleExit(code: number): void {
     })
     return
   }
-  setStatus({ state: 'off', refCount: 0 })
+  setStatus({ state: 'off', refCount: 0, message: undefined })
 }
 
 /**
@@ -253,8 +253,22 @@ export function start(): Promise<void> {
       // Se considera arrancado cuando tiene los vectores dentro, no cuando ha
       // cargado el modelo: entre una cosa y otra no sabría reconocer nada, y
       // quien llame a `warmup` se llevaría un estado que no es el definitivo.
-      if (data.type === 'ready') sendReferences(proc)
-      else if (data.type === 'refs:ack') resolve()
+      if (data.type === 'ready') {
+        // Pasa por la base de datos, y esto corre dentro de un manejador de
+        // evento: sin capturar, un fallo aquí sería una excepción no atrapada
+        // en el proceso principal, no un escáner que no arranca.
+        try {
+          sendReferences(proc)
+        } catch (e) {
+          log.error('No se han podido cargar los vectores de reconocimiento', e)
+          setStatus({
+            state: 'error',
+            refCount: 0,
+            message: 'No se han podido leer los datos de reconocimiento del catálogo.'
+          })
+          reject(e instanceof Error ? e : new Error(String(e)))
+        }
+      } else if (data.type === 'refs:ack') resolve()
     })
     proc.on('exit', (code) => {
       handleExit(code)
@@ -312,7 +326,7 @@ export function stop(): void {
   const proc = child
   child = null
   if (!proc) {
-    setStatus({ state: 'off', refCount: 0 })
+    setStatus({ state: 'off', refCount: 0, message: undefined })
     return
   }
   try {
@@ -328,13 +342,18 @@ export function stop(): void {
       // Nada que hacer.
     }
   }, 1000)
-  setStatus({ state: 'off', refCount: 0 })
+  setStatus({ state: 'off', refCount: 0, message: undefined })
 }
 
 /** Al reimportar catálogo hay vectores nuevos: hay que volver a mandarlos. */
 export function registerCatalogWatch(): void {
   mainBus.on('catalog:imported', () => {
     refsDirty = true
-    if (child) sendReferences(child)
+    if (!child) return
+    try {
+      sendReferences(child)
+    } catch (e) {
+      log.error('No se han podido recargar los vectores de reconocimiento', e)
+    }
   })
 }

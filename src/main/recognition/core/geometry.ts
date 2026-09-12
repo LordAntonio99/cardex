@@ -107,32 +107,39 @@ export async function findCardQuad(frame: Rgba): Promise<Quad | null> {
       const hierarchy = keep(new cv.Mat())
       cv.findContours(edges, contours, hierarchy, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
 
+      // Una escena con textura da miles de contornos, y cada uno es memoria del
+      // montón de WebAssembly. Se liberan dentro del bucle, no al final: si no,
+      // el pico de un solo fotograma puede tumbar el proceso.
       for (let i = 0; i < contours.size(); i += 1) {
-        const contour = keep(contours.get(i))
-        const area = cv.contourArea(contour, false)
-        // Ni motas ni el fotograma entero.
-        if (area < frameArea * 0.04 || area > frameArea * 0.98) continue
+        const candidate = usingMats<Candidate | null>((keepInner) => {
+          const contour = keepInner(contours.get(i))
+          const area = cv.contourArea(contour, false)
+          // Ni motas ni el fotograma entero.
+          if (area < frameArea * 0.04 || area > frameArea * 0.98) return null
 
-        const hull = keep(new cv.Mat())
-        cv.convexHull(contour, hull, false, true)
-        const approx = keep(new cv.Mat())
-        // 2 % del perímetro: suficiente para que las esquinas redondeadas del
-        // troquel colapsen en un vértice y no en un arco de puntos.
-        cv.approxPolyDP(hull, approx, 0.02 * cv.arcLength(hull, true), true)
-        if (approx.rows !== 4 || !cv.isContourConvex(approx)) continue
+          const hull = keepInner(new cv.Mat())
+          cv.convexHull(contour, hull, false, true)
+          const approx = keepInner(new cv.Mat())
+          // 2 % del perímetro: suficiente para que las esquinas redondeadas del
+          // troquel colapsen en un vértice y no en un arco de puntos.
+          cv.approxPolyDP(hull, approx, 0.02 * cv.arcLength(hull, true), true)
+          if (approx.rows !== 4 || !cv.isContourConvex(approx)) return null
 
-        const pts: Point[] = []
-        for (let p = 0; p < 4; p += 1) {
-          pts.push({ x: approx.intAt(p, 0), y: approx.intAt(p, 1) })
-        }
-        const quad = orderCorners(pts)
+          const pts: Point[] = []
+          for (let p = 0; p < 4; p += 1) {
+            pts.push({ x: approx.intAt(p, 0), y: approx.intAt(p, 1) })
+          }
+          const quad = orderCorners(pts)
 
-        if (Math.abs(aspectOf(quad) - ASPECT) > ASPECT_TOLERANCE) continue
-        // Área del polígono frente a la del contorno: descarta formas con
-        // mordiscos, que es lo que produce una mano tapando un lado.
-        if (polygonArea(quad) < area * 0.9) continue
+          if (Math.abs(aspectOf(quad) - ASPECT) > ASPECT_TOLERANCE) return null
+          // Área del polígono frente a la del contorno: descarta formas con
+          // mordiscos, que es lo que produce una mano tapando un lado.
+          if (polygonArea(quad) < area * 0.9) return null
 
-        if (!best || area > best.area) best = { quad, area }
+          return { quad, area }
+        })
+
+        if (candidate && (!best || candidate.area > best.area)) best = candidate
       }
 
       if (best) break
