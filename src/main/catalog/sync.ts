@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 import { app } from 'electron'
 import type { CatalogInstalled, CatalogStatus } from '@shared/types'
 import { getDb } from '../db'
-import { broadcast } from '../events'
+import { broadcast, mainBus } from '../events'
 import { log } from '../log'
 import {
   SUPPORTED_SCHEMA,
@@ -13,6 +13,7 @@ import {
   type CatalogPrinting,
   type CatalogSetFile
 } from './format'
+import { RECOG_MODEL_ID, decodeSidecar, type Sidecar } from '../recognition/format'
 
 /**
  * Canal de contenido: el catálogo se publica en el repositorio y la aplicación
@@ -104,7 +105,75 @@ async function fetchJson(url: string): Promise<{ json: unknown; raw: string }> {
   return { json: JSON.parse(raw) as unknown, raw }
 }
 
+/** Igual, para ficheros binarios: los vectores de reconocimiento. */
+async function fetchBytes(url: string): Promise<Buffer> {
+  const res = await fetch(url, {
+    headers: { 'User-Agent': 'Cardex' },
+    signal: AbortSignal.timeout(60_000)
+  })
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText} al pedir ${url}`)
+  return Buffer.from(await res.arrayBuffer())
+}
+
 const sha256 = (s: string): string => createHash('sha256').update(s, 'utf8').digest('hex')
+const sha256Bytes = (b: Buffer): string => createHash('sha256').update(b).digest('hex')
+
+/**
+ * Importa los vectores de reconocimiento de un set.
+ *
+ * Va en su propia transacción y NO dentro de `importSet`, porque los dos
+ * ficheros cambian a ritmos distintos: el JSON del set se republica cada vez que
+ * se mueven los precios, y los vectores sólo cuando cambian las cartas o el
+ * modelo. Meterlos juntos obligaría a rehacer el trabajo caro por un cambio de
+ * céntimos.
+ */
+function importRecognition(sidecar: Sidecar, file: string, hash: string): number {
+  const db = getDb()
+  const now = Date.now()
+
+  const del = db.prepare('DELETE FROM cat.card_recognition WHERE set_id = @setId AND model = @model')
+  const ins = db.prepare(
+    `INSERT INTO cat.card_recognition (set_id, card_id, lang, model, embedding)
+     VALUES (@setId, @cardId, @lang, @model, @embedding)
+     ON CONFLICT (card_id, lang, model) DO UPDATE SET
+       set_id = excluded.set_id, embedding = excluded.embedding`
+  )
+  const source = db.prepare(
+    `INSERT INTO cat.recognition_sources (set_id, model, file, sha256, count, imported_at)
+     VALUES (@setId, @model, @file, @sha256, @count, @now)
+     ON CONFLICT (set_id, model) DO UPDATE SET
+       file = excluded.file, sha256 = excluded.sha256,
+       count = excluded.count, imported_at = excluded.imported_at`
+  )
+
+  const run = db.transaction(() => {
+    del.run({ setId: sidecar.setId, model: sidecar.model })
+    let n = 0
+    for (const [i, entry] of sidecar.entries.entries()) {
+      const from = i * sidecar.dims
+      const slice = sidecar.vectors.subarray(from, from + sidecar.dims)
+      ins.run({
+        setId: sidecar.setId,
+        cardId: entry.cardId,
+        lang: entry.lang,
+        model: sidecar.model,
+        embedding: Buffer.from(slice.buffer, slice.byteOffset, slice.byteLength)
+      })
+      n += 1
+    }
+    source.run({
+      setId: sidecar.setId,
+      model: sidecar.model,
+      file,
+      sha256: hash,
+      count: n,
+      now
+    })
+    return n
+  })
+
+  return run()
+}
 
 /**
  * Importa un fichero de set. Se ejecuta entero dentro de una transacción: si
@@ -431,7 +500,22 @@ export async function sync(opts: { force: boolean }): Promise<CatalogStatus> {
       ? manifest.sets
       : manifest.sets.filter((s) => known.get(s.id) !== s.sha256)
 
-    if (!pending.length) {
+    // Los vectores de reconocimiento van por su cuenta: sólo interesan los del
+    // modelo que entiende esta versión, y su fichero cambia mucho menos a
+    // menudo que el del set.
+    const knownRecog = new Map(
+      db
+        .prepare<{ model: string }, { set_id: string; sha256: string }>(
+          'SELECT set_id, sha256 FROM cat.recognition_sources WHERE model = @model'
+        )
+        .all({ model: RECOG_MODEL_ID })
+        .map((r) => [r.set_id, r.sha256] as const)
+    )
+    const pendingRecog = manifest.recognition
+      .filter((r) => r.model === RECOG_MODEL_ID)
+      .filter((r) => opts.force || knownRecog.get(r.id) !== r.sha256)
+
+    if (!pending.length && !pendingRecog.length) {
       setMeta('catalogVersion', manifest.catalogVersion)
       emit({ state: 'idle' })
       log.info(`Catálogo ya al día (v${manifest.catalogVersion})`)
@@ -462,6 +546,29 @@ export async function sync(opts: { force: boolean }): Promise<CatalogStatus> {
       done += 1
     }
 
+    for (const entry of pendingRecog) {
+      try {
+        const bytes = await fetchBytes(`${BASE}/${entry.file}`)
+        const hash = sha256Bytes(bytes)
+        if (hash !== entry.sha256) {
+          throw new Error(
+            `El hash de ${entry.file} no coincide con el manifiesto (esperado ${entry.sha256.slice(0, 12)}…, obtenido ${hash.slice(0, 12)}…)`
+          )
+        }
+        const sidecar: Sidecar = decodeSidecar(bytes, entry.id)
+        if (sidecar.model !== RECOG_MODEL_ID) {
+          throw new Error(`Los vectores son del modelo ${sidecar.model} y aquí se usa ${RECOG_MODEL_ID}`)
+        }
+        const n = importRecognition(sidecar, entry.file, hash)
+        log.info(`  ${entry.id}: ${n} vector(es) de reconocimiento`)
+      } catch (e) {
+        // Igual que con los sets: uno roto no tumba la sincronización, y al no
+        // registrar su hash se reintenta la próxima vez. El escáner funciona
+        // con lo que haya; si no hay nada, lo dice.
+        log.error(`No se han podido importar los vectores de ${entry.id}`, e)
+      }
+    }
+
     // El índice de búsqueda se reconstruye una vez al final, no por set.
     getDb().exec("INSERT INTO cat.cards_fts(cards_fts) VALUES('rebuild')")
     getDb().exec("INSERT INTO cat.cards_fts_cjk(cards_fts_cjk) VALUES('rebuild')")
@@ -481,6 +588,9 @@ export async function sync(opts: { force: boolean }): Promise<CatalogStatus> {
 
     emit({ state: 'idle' })
     broadcast('db:changed', { scopes: ['catalog', 'cards', 'sets'] })
+    // El reconocedor tiene sus vectores en memoria: hay que decirle que hay
+    // material nuevo. No vale `broadcast`, que sólo llega al renderer.
+    mainBus.emit('catalog:imported')
     return status()
   } catch (e) {
     lastError = e instanceof Error ? e.message : String(e)

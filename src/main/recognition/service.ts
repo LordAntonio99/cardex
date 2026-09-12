@@ -16,7 +16,7 @@ import { getDb } from '../db'
 import { broadcast, mainBus } from '../events'
 import { log } from '../log'
 import type { FromRecognizer, RawResult, ToRecognizer } from './protocol'
-import { EMBED_DIMS, RECOG_MODEL_ID } from './pipeline'
+import { EMBED_DIMS, RECOG_MODEL_ID } from './format'
 
 /** Se para solo tras este rato sin escanear; son cientos de megas. */
 const IDLE_MS = 3 * 60 * 1000
@@ -250,10 +250,11 @@ export function start(): Promise<void> {
 
     proc.on('message', (data: FromRecognizer) => {
       handleMessage(data)
-      if (data.type === 'ready') {
-        sendReferences(proc)
-        resolve()
-      }
+      // Se considera arrancado cuando tiene los vectores dentro, no cuando ha
+      // cargado el modelo: entre una cosa y otra no sabría reconocer nada, y
+      // quien llame a `warmup` se llevaría un estado que no es el definitivo.
+      if (data.type === 'ready') sendReferences(proc)
+      else if (data.type === 'refs:ack') resolve()
     })
     proc.on('exit', (code) => {
       handleExit(code)

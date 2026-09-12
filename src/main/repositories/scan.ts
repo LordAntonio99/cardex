@@ -13,7 +13,7 @@ import {
 import { getDb } from '../db'
 import { broadcast } from '../events'
 import { refreshOwnedPrices } from '../catalog/sync'
-import { THRESHOLDS } from '../recognition/pipeline'
+import { THRESHOLDS } from '../recognition/core/thresholds'
 import type { RawResult } from '../recognition/protocol'
 import * as recognizer from '../recognition/service'
 import { getSettings } from '../settings'

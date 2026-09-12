@@ -15,12 +15,11 @@
  */
 
 import type { InferenceSession, Tensor } from 'onnxruntime-node'
+import { EMBED_DIMS } from '../format'
 import { resizeRgba, type Rgba } from './image'
 
 /** Lado de la entrada del modelo. */
 export const EMBED_SIZE = 224
-/** Dimensiones del vector resultante. */
-export const EMBED_DIMS = 384
 
 /** Normalización de ImageNet, la que espera DINOv2 (su `preprocessor_config.json`). */
 const MEAN = [0.485, 0.456, 0.406] as const

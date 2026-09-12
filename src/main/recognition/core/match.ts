@@ -10,7 +10,7 @@
  * mejor resultado; a esta escala no compra nada.
  */
 
-import { EMBED_DIMS } from './embed'
+import { EMBED_DIMS } from '../format'
 
 export interface RefIndexEntry {
   cardId: string

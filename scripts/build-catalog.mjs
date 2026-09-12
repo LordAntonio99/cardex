@@ -44,7 +44,7 @@ const PREFERRED = 'es'
 // ── Argumentos ───────────────────────────────────────────────────────────────
 
 function parseArgs(argv) {
-  const args = { sets: [], series: null, langs: ['es', 'en'], limit: 0, out: 'catalog', packs: 'catalog-packs', concurrency: 8 }
+  const args = { sets: [], series: null, langs: ['es', 'en'], limit: 0, out: 'catalog', packs: 'catalog-packs', concurrency: 8, recognition: false }
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]
     const next = () => argv[++i]
@@ -55,6 +55,7 @@ function parseArgs(argv) {
     else if (a === '--out') args.out = next()
     else if (a === '--packs') args.packs = next()
     else if (a === '--concurrency') args.concurrency = Number(next()) || 8
+    else if (a === '--recognition') args.recognition = true
     else if (a === '--help' || a === '-h') args.help = true
   }
   if (!args.langs.includes(PREFERRED)) args.langs.unshift(PREFERRED)
@@ -367,6 +368,8 @@ Opciones:
   --out dir         directorio de salida (por defecto: catalog)
   --packs dir       sobres mantenidos a mano (por defecto: catalog-packs)
   --concurrency N   peticiones en paralelo (por defecto: 8)
+  --recognition     calcula además los vectores del escáner (requiere
+                    'npm run build' y 'npm run models:fetch')
 `)
     process.exit(args.help ? 0 : 1)
   }
@@ -404,6 +407,8 @@ Opciones:
   console.log(`Generando ${setIds.length} set(s) en ${outDir}`)
 
   const entries = []
+  /** Cartas ya construidas por set, para la pasada de reconocimiento. */
+  const byId = new Map()
   for (const setId of setIds) {
     const built = await buildSet(setId, args.langs, args.limit, args.concurrency)
     if (!built) continue
@@ -433,6 +438,34 @@ Opciones:
       sha256: createHash('sha256').update(body, 'utf8').digest('hex'),
       cardCount: built.cards.length
     })
+    byId.set(setId, built.cards)
+  }
+
+  // ── Vectores de reconocimiento ────────────────────────────────────────────
+  // Van en ficheros aparte, uno por set y modelo, y no dentro del JSON: son
+  // binarios y cambian mucho menos a menudo que los precios.
+  const recognition = []
+  if (args.recognition) {
+    const { loadPipeline, openEmbedder, buildRecognition, writeSidecar } = await import('./recognition.mjs')
+    const P = loadPipeline()
+    console.log(`
+Calculando vectores de reconocimiento (${P.RECOG_MODEL_ID})`)
+    const embedder = await openEmbedder(P)
+    try {
+      for (const [setId, cards] of byId) {
+        const started = Date.now()
+        const sidecar = await buildRecognition(P, embedder, setId, cards)
+        if (!sidecar) {
+          console.warn(`  ${setId}: sin imágenes, no se publican vectores`)
+          continue
+        }
+        recognition.push(await writeSidecar(P, outDir, sidecar))
+        const s = ((Date.now() - started) / 1000).toFixed(1)
+        console.log(`  ${setId}: ${sidecar.entries.length} vector(es) en ${s}s`)
+      }
+    } finally {
+      await embedder.close()
+    }
   }
 
   const manifest = {
@@ -440,7 +473,8 @@ Opciones:
     // Versión por fecha: legible y ordenable.
     catalogVersion: new Date().toISOString().slice(0, 10).replaceAll('-', '.'),
     generatedAt: new Date().toISOString(),
-    sets: entries
+    sets: entries,
+    recognition
   }
   await writeFile(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2), 'utf8')
 
