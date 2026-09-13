@@ -358,6 +358,56 @@ export interface ScanEngineStatus {
   message?: string
 }
 
+// ── El móvil como cámara ──────────────────────────────────────────────────────
+
+/**
+ * Una dirección por la que el móvil podría llegar al PC.
+ *
+ * Se enseñan todas las candidatas porque desde dentro de la máquina no hay
+ * forma de saber cuál es la buena: un PC con Ethernet al router y Wi-Fi a la
+ * vez tiene dos, y sólo una está en la misma red que el móvil.
+ */
+export interface PhoneAddress {
+  address: string
+  /** Nombre de la interfaz tal cual lo da el sistema. */
+  iface: string
+  /** Es por la que sale el tráfico a internet. La mejor pista que hay. */
+  isDefaultRoute: boolean
+}
+
+export type PhoneState = 'off' | 'starting' | 'listening' | 'error'
+
+export interface PhoneSession {
+  state: PhoneState
+  /** Exactamente lo que va dentro del QR. Sólo en 'listening'. */
+  url: string | null
+  address: string | null
+  candidates: PhoneAddress[]
+  port: number | null
+  /** Ha llegado algo del móvil hace poco. */
+  connected: boolean
+  lastSeenAt: number | null
+  /** Capturas recibidas en esta sesión. */
+  captureCount: number
+  /** Sólo en 'error'. */
+  message?: string
+}
+
+/**
+ * Lo que el móvil recibe tras subir una captura.
+ *
+ * Deliberadamente flaco: el usuario está mirando el móvil, no el PC, así que
+ * necesita saber si la carta ha entrado, pero el lote entero con sus
+ * miniaturas y alternativas se queda en el ordenador, que es donde se revisa.
+ */
+export interface PhoneCaptureAck {
+  status: ScanStatus
+  name: string | null
+  numberLabel: string | null
+  /** Cartas que este móvil ha metido en el lote desde la última confirmación. */
+  accepted: number
+}
+
 // ── Catálogo remoto ───────────────────────────────────────────────────────────
 
 export interface CatalogManifestSet {
@@ -447,6 +497,16 @@ export interface AppSettings {
   scanLang: CardLang | null
   /** Disparar solo al detectar una carta quieta en el marco. */
   scanAutoCapture: boolean
+  /**
+   * Puerto del servidor que sirve la página del móvil.
+   *
+   * Fijo y recordado, no efímero: tanto la excepción de certificado como el
+   * permiso de cámara los guarda el navegador por host Y puerto. Con un puerto
+   * distinto cada sesión, el móvil volvería a preguntar las dos cosas cada vez.
+   */
+  phonePort: number
+  /** IP elegida a mano para el QR. null = la que se decida sola. */
+  phoneAddress: string | null
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -458,7 +518,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   cameraId: null,
   cameraLabel: null,
   scanLang: null,
-  scanAutoCapture: true
+  scanAutoCapture: true,
+  phonePort: 8770,
+  phoneAddress: null
 }
 
 // ── Estado de la actualización de la aplicación ───────────────────────────────

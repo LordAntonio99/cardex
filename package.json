@@ -48,8 +48,10 @@
     "electron": "^44.3.0",
     "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",
+    "qrcode-generator": "^2.0.4",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
+    "selfsigned": "^5.5.0",
     "typescript": "~5.9.3",
     "vite": "^7.3.6",
     "zustand": "^5.0.15"

@@ -6,7 +6,8 @@ sin servidor: todo vive en tu equipo.
 - **Colección** — lo que tienes, con su valor y su variación.
 - **Explorador** — el catálogo entero; las que te faltan salen en gris.
 - **Sets y sobres** — progreso por set y los sobres en los que puede salir cada carta.
-- **Escáner** — reconoce tus cartas con la webcam y las mete en el inventario.
+- **Escáner** — reconoce tus cartas con la webcam, o con la cámara del móvil, y las mete en
+  el inventario.
 - **Mercado** — valor de la colección, histórico y las que más se mueven.
 
 ## Estado
@@ -64,6 +65,45 @@ El reconocimiento compara lo que ve con una huella visual de cada carta que viaj
 catálogo. Si el escáner dice **«sin datos de reconocimiento»**, es que el catálogo instalado es
 anterior a esta función: sincronízalo.
 
+### Escanear con el móvil
+
+La cámara de un móvil es mucho mejor que una webcam corriente, y eso se nota en cuántas cartas
+se reconocen a la primera. En el escáner, **«Usar el móvil»** levanta un servidor en tu propio
+ordenador y enseña un código QR: lo escaneas con la cámara del móvil, se abre una página y ya
+estás capturando. No hay que instalar nada, y las fotos no salen de tu red: el reconocimiento
+sigue ocurriendo en el ordenador.
+
+El móvil sólo aporta la imagen. El lote se revisa y se confirma en el ordenador, igual que
+siempre, y las cartas van apareciendo ahí según las capturas.
+
+Hay dos formas de capturar, y se eligen en el propio móvil:
+
+- **Cámara en vivo** — pones la carta, se dispara sola y pasas a la siguiente. Es lo cómodo para
+  un sobre entero.
+- **Foto a foto** — abre la cámara del móvil y disparas tú. Son más toques, pero la foto sale
+  con toda la resolución y el autofoco de verdad, así que reconoce mejor. También puedes
+  fotografiar un montón de cartas con la app de cámara y subirlas luego todas de golpe.
+
+La página elige el modo vivo cuando el navegador se lo permite y cae al modo foto cuando no.
+En iPhone puede no haber modo vivo: Safari es estricto con la cámara en un sitio cuyo
+certificado no reconoce, y el modo foto funciona igual de bien.
+
+Dos cosas que te va a preguntar el sistema la primera vez:
+
+- **Windows**, si Cardex puede aceptar conexiones de tu red. Marca **Redes privadas** y acepta.
+  Si lo cancelas, Windows crea una regla de bloqueo y ya no vuelve a preguntar; el panel del
+  escáner trae el comando para arreglarlo.
+- **El móvil**, que la conexión no es de fiar. Es normal y no hay forma de evitarlo: la cámara
+  del navegador exige HTTPS, ninguna autoridad firma certificados para una dirección de red
+  local, y el que usa Cardex se lo genera él. Continúa y concede la cámara.
+
+Si el móvil no carga la página, casi siempre es una de cuatro: el firewall, la red marcada como
+«Pública», el móvil en datos móviles en vez del Wi-Fi, o el router con aislamiento de clientes.
+El panel de ayuda del escáner las repasa todas.
+
+Quien vea el código QR puede mandar cartas a tu lote mientras esté encendido, así que no lo
+enseñes en una pantalla compartida. El enlace muere al apagar el servidor o al cerrar Cardex.
+
 ## Desarrollo
 
 ```bash
@@ -74,7 +114,11 @@ npm run dev
 Atajos: `Ctrl+1` a `Ctrl+5` cambian de vista.
 
 El catálogo se descarga solo al arrancar, así que en desarrollo ya tienes cartas con las que
-trabajar. Para meter algunas en tu colección: Escáner → «Simular detección» → «Confirmar lote».
+trabajar. Para meter algunas en tu colección basta con escanearlas y confirmar el lote.
+
+Para afinar el disparo automático del móvil sin poder abrir la consola en él, añade `?debug=1`
+al final de la dirección del QR: la página pinta textura y movimiento en pantalla, que son los
+dos números de los que salen los umbrales de `src/shared/scan-tuning.ts`.
 
 ### Probar un catálogo antes de publicarlo
 

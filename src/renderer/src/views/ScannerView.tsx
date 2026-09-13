@@ -3,9 +3,19 @@ import { useQueryClient } from '@tanstack/react-query'
 import type { AppSettings, ScanStatus, UiLang } from '@shared/types'
 import { BatchList } from '../components/scan/BatchList'
 import { CameraPane } from '../components/scan/CameraPane'
-import { call, keys, useCatalogStatus, useIpcEvent, useScanEngine, useSettings } from '../lib/api'
+import { PhonePanel } from '../components/scan/PhonePanel'
+import { PhoneReview } from '../components/scan/PhoneReview'
+import {
+  call,
+  keys,
+  useCatalogStatus,
+  useIpcEvent,
+  usePhoneSession,
+  useScanEngine,
+  useSettings
+} from '../lib/api'
 import type { Strings } from '../i18n'
-import { useScanStore } from '../state/scan'
+import { enqueueResult, useScanStore } from '../state/scan'
 import { useStore } from '../state/store'
 
 /**
@@ -30,16 +40,20 @@ export function ScannerView({
   const catalog = useCatalogStatus()
   const engine = useScanEngine()
   const settings = useSettings()
+  const phone = usePhoneSession()
   const setView = useStore((s) => s.setView)
   const mirrorSettings = useStore((s) => s.setSettings)
 
   const queue = useScanStore((s) => s.queue)
-  const enqueue = useScanStore((s) => s.enqueue)
   const choose = useScanStore((s) => s.choose)
   const setVariant = useScanStore((s) => s.setVariant)
   const setLang = useScanStore((s) => s.setLang)
   const remove = useScanStore((s) => s.remove)
   const clear = useScanStore((s) => s.clear)
+  const review = useScanStore((s) => s.review)
+  const acceptReview = useScanStore((s) => s.acceptReview)
+  const rejectReview = useScanStore((s) => s.rejectReview)
+  const dismissReview = useScanStore((s) => s.dismissReview)
 
   const [busy, setBusy] = useState(false)
   const [committing, setCommitting] = useState(false)
@@ -75,9 +89,7 @@ export function ScannerView({
       try {
         const result = await call('scan:identify', { imageDataUrl })
         setLastStatus(result.status)
-        if (result.detection) {
-          enqueue({ ...result.detection, alternatives: result.alternatives })
-        }
+        enqueueResult(result)
       } catch {
         // El motor informa de su estado por su cuenta; aquí basta con no dejar
         // la vista colgada en «reconociendo».
@@ -86,7 +98,7 @@ export function ScannerView({
         setBusy(false)
       }
     },
-    [enqueue]
+    []
   )
 
   const commit = useCallback(async (): Promise<void> => {
@@ -140,21 +152,44 @@ export function ScannerView({
         overflow: 'hidden'
       }}
     >
-      <CameraPane
-        strings={strings}
-        engine={engine.data}
-        hasCatalog={hasCatalog}
-        auto={settings.data?.scanAutoCapture ?? true}
-        onToggleAuto={(next) => void patchSettings({ scanAutoCapture: next })}
-        onCapture={(jpeg) => void capture(jpeg)}
-        busy={busy}
-        lastStatus={lastStatus}
-        cameraId={settings.data?.cameraId ?? null}
-        cameraLabel={settings.data?.cameraLabel ?? null}
-        onPickCamera={(device) =>
-          void patchSettings({ cameraId: device.id, cameraLabel: device.label || null })
-        }
-      />
+      {/* Escaneando con el móvil, el panel de la webcam es espacio muerto: la
+          cámara está apagada y la carta recién reconocida sólo se ve en la ficha
+          del lote, que es donde peor se juzga si ha acertado. Mientras haya algo
+          del móvil que revisar, este sitio lo ocupa la carta en grande. */}
+      {review ? (
+        <PhoneReview
+          review={review}
+          item={review.id ? queue.find((q) => q.id === review.id) : undefined}
+          strings={strings}
+          lang={lang}
+          onAccept={acceptReview}
+          onReject={rejectReview}
+          onChoose={(candidate) => {
+            if (review.id) choose(review.id, candidate)
+            dismissReview()
+          }}
+          onDismiss={dismissReview}
+        />
+      ) : (
+        <CameraPane
+          strings={strings}
+          engine={engine.data}
+          hasCatalog={hasCatalog}
+          // Con el móvil capturando, la webcam deja de dispararse sola: dos
+          // fuentes automáticas sobre el mismo lote sólo producen duplicados. El
+          // botón de capturar a mano sigue funcionando.
+          auto={(settings.data?.scanAutoCapture ?? true) && !phone.data?.connected}
+          onToggleAuto={(next) => void patchSettings({ scanAutoCapture: next })}
+          onCapture={(jpeg) => void capture(jpeg)}
+          busy={busy}
+          lastStatus={lastStatus}
+          cameraId={settings.data?.cameraId ?? null}
+          cameraLabel={settings.data?.cameraLabel ?? null}
+          onPickCamera={(device) =>
+            void patchSettings({ cameraId: device.id, cameraLabel: device.label || null })
+          }
+        />
+      )}
 
       <div
         style={{
@@ -191,6 +226,8 @@ export function ScannerView({
             </span>
           </button>
         ) : null}
+
+        <PhonePanel strings={strings} />
 
         <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
           <BatchList

@@ -13,6 +13,7 @@ import * as catalog from '../catalog/sync'
 import * as images from '../catalog/images'
 import * as scan from '../repositories/scan'
 import * as recognizer from '../recognition/service'
+import * as phone from '../phone/server'
 import * as updater from '../updater'
 
 /**
@@ -100,7 +101,13 @@ export function registerIpc(): void {
 
   // ── Escáner ────────────────────────────────────────────────────────────────
   handle('scan:identify', ({ imageDataUrl }) => scan.identify(imageDataUrl))
-  handle('scan:commit', ({ detections }) => scan.commit(detections))
+  handle('scan:commit', ({ detections }) => {
+    const result = scan.commit(detections)
+    // El móvil lleva su propia cuenta de lo que ha aportado, y el lote que
+    // contaba acaba de vaciarse.
+    phone.batchCommitted()
+    return result
+  })
   handle('scan:engineStatus', () => recognizer.engineStatus())
   handle('scan:warmup', async () => {
     // Un fallo al calentar no es un error que deba subir al renderer: el estado
@@ -112,7 +119,19 @@ export function registerIpc(): void {
     }
     return recognizer.engineStatus()
   })
-  handle('scan:release', () => recognizer.stop())
+  handle('scan:release', () => {
+    // Salir de la vista del escáner no puede apagar el motor si hay un móvil
+    // capturando: lo normal es irse a mirar una carta a la colección y volver, y
+    // mientras tanto las capturas siguen entrando.
+    if (phone.isActive()) return
+    recognizer.stop()
+  })
+
+  // ── El móvil como cámara ───────────────────────────────────────────────────
+  handle('phone:status', () => phone.session())
+  handle('phone:start', () => phone.start())
+  handle('phone:stop', () => phone.stop())
+  handle('phone:useAddress', ({ address }) => phone.useAddress(address))
 
   // ── Imágenes ───────────────────────────────────────────────────────────────
   handle('images:resolve', ({ kind, path: assetPath, lang, quality }) =>

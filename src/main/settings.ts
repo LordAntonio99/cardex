@@ -47,6 +47,9 @@ function file(): string {
 
 const THEMES: ThemeSource[] = ['system', 'light', 'dark']
 
+/** Sólo para no guardar cualquier cosa como dirección del QR. */
+const IPV4 = /^(?:\d{1,3}\.){3}\d{1,3}$/
+
 /** Nunca confiamos en el JSON del disco: puede venir de una versión anterior. */
 function coerce(raw: unknown): Persisted {
   const obj = (raw ?? {}) as Partial<Persisted>
@@ -71,7 +74,19 @@ function coerce(raw: unknown): Persisted {
       scanAutoCapture:
         typeof s.scanAutoCapture === 'boolean'
           ? s.scanAutoCapture
-          : DEFAULT_SETTINGS.scanAutoCapture
+          : DEFAULT_SETTINGS.scanAutoCapture,
+      phonePort:
+        typeof s.phonePort === 'number' &&
+        Number.isInteger(s.phonePort) &&
+        s.phonePort >= 1024 &&
+        s.phonePort <= 65535
+          ? s.phonePort
+          : DEFAULT_SETTINGS.phonePort,
+      // No se comprueba que la dirección siga existiendo: puede ser la de una
+      // red a la que el portátil todavía no se ha conectado hoy. El panel del
+      // escáner ya avisa cuando la elegida no está entre las candidatas.
+      phoneAddress:
+        typeof s.phoneAddress === 'string' && IPV4.test(s.phoneAddress) ? s.phoneAddress : null
     },
     bounds: {
       x: typeof b.x === 'number' ? b.x : undefined,

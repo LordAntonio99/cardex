@@ -21,6 +21,7 @@ import {
   useSettings,
   useSystemInfo
 } from './lib/api'
+import { reviewFromPhone } from './state/scan'
 import { useStore } from './state/store'
 
 export function App(): React.JSX.Element {
@@ -82,6 +83,14 @@ export function App(): React.JSX.Element {
   useIpcEvent(
     'catalog:progress',
     useCallback((next) => qc.setQueryData(keys.catalog, next), [qc])
+  )
+  // Las capturas del móvil se escuchan aquí y no en la vista del escáner. El
+  // lote sobrevive al cambio de pantalla a propósito, y lo que el móvil capture
+  // mientras el usuario está mirando la colección tiene que entrar igual; con la
+  // suscripción dentro de la vista se perdería en silencio.
+  useIpcEvent(
+    'phone:scan',
+    useCallback(({ result }) => reviewFromPhone(result), [])
   )
 
   const strings = t(settings.uiLang)

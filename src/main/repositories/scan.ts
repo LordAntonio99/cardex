@@ -164,9 +164,18 @@ async function saveForCalibration(jpeg: Buffer, result: ScanResult): Promise<voi
   }
 }
 
-export async function identify(imageDataUrl: string): Promise<ScanResult> {
-  const jpeg = decodeDataUrl(imageDataUrl)
-  if (!jpeg || jpeg.byteLength === 0) return emptyResult('no_card', null, null)
+/**
+ * Reconoce una captura ya decodificada.
+ *
+ * Es el camino que comparten las dos cámaras. La webcam del ordenador manda un
+ * `data:` por IPC porque es lo que sabe producir un lienzo del renderer; el
+ * móvil manda el JPEG en crudo por HTTPS, que evita el tercio de más que cuesta
+ * base64 en una foto de varios megas. A partir de aquí no hay diferencia, y es
+ * importante que no la haya: los umbrales de `thresholds.ts` están calibrados
+ * contra un único preproceso.
+ */
+export async function identifyBuffer(jpeg: Buffer): Promise<ScanResult> {
+  if (jpeg.byteLength === 0) return emptyResult('no_card', null, null)
 
   const raw = await recognizer.identify(jpeg)
   const evidence: ScanEvidence = {
@@ -218,6 +227,13 @@ export async function identify(imageDataUrl: string): Promise<ScanResult> {
   }
   await saveForCalibration(jpeg, result)
   return result
+}
+
+/** La captura de la webcam, tal como la manda el renderer. */
+export async function identify(imageDataUrl: string): Promise<ScanResult> {
+  const jpeg = decodeDataUrl(imageDataUrl)
+  if (!jpeg) return emptyResult('no_card', null, null)
+  return identifyBuffer(jpeg)
 }
 
 /**

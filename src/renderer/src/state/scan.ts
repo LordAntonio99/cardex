@@ -1,5 +1,12 @@
 import { create } from 'zustand'
-import type { CardLang, ScanCandidate, ScanDetection, Variant } from '@shared/types'
+import type {
+  CardLang,
+  ScanCandidate,
+  ScanDetection,
+  ScanResult,
+  ScanStatus,
+  Variant
+} from '@shared/types'
 
 /**
  * El lote del escáner.
@@ -20,9 +27,36 @@ export interface QueueItem extends ScanDetection {
   alternatives: ScanCandidate[]
 }
 
+/**
+ * La última captura del móvil, esperando el visto bueno en el ordenador.
+ *
+ * Cuando se escanea con el móvil, el panel de la webcam del ordenador se queda
+ * vacío y la carta recién reconocida sólo aparece en la ficha diminuta del lote,
+ * que es donde peor se juzga si el reconocimiento ha acertado. Esto es lo que
+ * hace falta para poder pintarla en grande.
+ *
+ * Guarda también las capturas que NO entraron en el lote: saber por qué ha
+ * fallado una —movida, con brillo, desconocida— vale tanto como ver un acierto.
+ */
+export interface PhoneReview {
+  status: ScanStatus
+  /** La carta ya recortada y enderezada, tal como la vio el reconocedor. */
+  thumbnail: string | null
+  /** Su identificador en el lote. null cuando la captura no llegó a entrar. */
+  id: string | null
+  at: number
+}
+
 interface ScanState {
   queue: QueueItem[]
+  review: PhoneReview | null
   enqueue(item: QueueItem): void
+  /** Da por buena la carta propuesta: deja de pedir revisión y cierra el panel. */
+  acceptReview(): void
+  /** La descarta del lote y cierra el panel. */
+  rejectReview(): void
+  /** Cierra el panel sin tocar el lote. */
+  dismissReview(): void
   /** Cambia la carta elegida por una de las alternativas. */
   choose(id: string, candidate: ScanCandidate): void
   setVariant(id: string, variant: Variant): void
@@ -33,8 +67,25 @@ interface ScanState {
 
 export const useScanStore = create<ScanState>((set) => ({
   queue: [],
+  review: null,
 
   enqueue: (item) => set((s) => ({ queue: [...s.queue, item] })),
+
+  acceptReview: () =>
+    set((s) => ({
+      review: null,
+      queue: s.review?.id
+        ? s.queue.map((it) => (it.id === s.review?.id ? { ...it, status: 'match' as const } : it))
+        : s.queue
+    })),
+
+  rejectReview: () =>
+    set((s) => ({
+      review: null,
+      queue: s.review?.id ? s.queue.filter((it) => it.id !== s.review?.id) : s.queue
+    })),
+
+  dismissReview: () => set({ review: null }),
 
   choose: (id, candidate) =>
     set((s) => ({
@@ -70,6 +121,37 @@ export const useScanStore = create<ScanState>((set) => ({
 
   clear: () => set({ queue: [] })
 }))
+
+/**
+ * Encola el resultado de una captura, venga de donde venga.
+ *
+ * Existe porque hay dos cámaras y dos sitios que lo llaman: la vista del
+ * escáner para la webcam, y `App` para lo que llega del móvil. Aplanar un
+ * `ScanResult` en un `QueueItem` por duplicado es justo el tipo de detalle que
+ * se desincroniza a la tercera vez que se toca.
+ */
+export function enqueueResult(result: ScanResult): void {
+  if (!result.detection) return
+  useScanStore.getState().enqueue({ ...result.detection, alternatives: result.alternatives })
+}
+
+/**
+ * Lo mismo, pero dejando la captura a la vista para revisarla en grande.
+ *
+ * Sólo para lo que llega del móvil: con la webcam ya estás mirando la pantalla
+ * del ordenador, y el lote a la derecha basta. Con el móvil en la mano, no.
+ */
+export function reviewFromPhone(result: ScanResult): void {
+  enqueueResult(result)
+  useScanStore.setState({
+    review: {
+      status: result.status,
+      thumbnail: result.thumbnail ?? result.detection?.thumbnail ?? null,
+      id: result.detection?.id ?? null,
+      at: Date.now()
+    }
+  })
+}
 
 /** La variante más parecida que la carta admita de verdad. */
 function fitVariant(wanted: Variant, mask: number): Variant {
