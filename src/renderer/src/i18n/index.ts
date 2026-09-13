@@ -256,6 +256,7 @@ const es = {
   // Catálogo
   catalog: 'CATÁLOGO',
   catalogSync: 'Sincronizar catálogo',
+  noCatalogYet: 'SIN CATÁLOGO TODAVÍA',
   catalogSyncing: 'Sincronizando…',
   catalogChecking: 'Comprobando…',
   catalogUpToDate: 'Catálogo al día',
@@ -525,6 +526,7 @@ const en: typeof es = {
 
   catalog: 'CATALOGUE',
   catalogSync: 'Sync catalogue',
+  noCatalogYet: 'NO CATALOGUE YET',
   catalogSyncing: 'Syncing…',
   catalogChecking: 'Checking…',
   catalogUpToDate: 'Catalogue up to date',

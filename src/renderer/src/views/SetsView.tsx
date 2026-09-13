@@ -12,6 +12,51 @@ const GAME_LABEL: Record<GameId, keyof Strings> = {
 }
 
 /**
+ * Estado del catálogo instalado, y el botón para traer lo que haya nuevo.
+ *
+ * Enseña qué tienes —versión, sets y cartas— porque es lo que se quiere saber
+ * antes de decidir si sincronizar sirve de algo. Mientras trae, el propio
+ * progreso sustituye al recuento.
+ */
+function CatalogSync({ strings }: { strings: Strings }): React.JSX.Element {
+  const catalog = useCatalogStatus()
+  const status = catalog.data
+  const syncing = status?.state === 'syncing' || status?.state === 'checking'
+  const p = status?.progress
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
+      <span
+        className="font-code text-faint tabular"
+        style={{ fontSize: 9.5, letterSpacing: '.12em', textAlign: 'right' }}
+      >
+        {syncing && p
+          ? `${p.done}/${p.total} · ${p.currentSet}`
+          : status?.installed.version
+            ? `v${status.installed.version} · ${status.installed.setCount} sets · ${status.installed.cardCount} cartas`
+            : strings.noCatalogYet}
+      </span>
+      <Button
+        variant="brand"
+        size="sm"
+        disabled={syncing}
+        onClick={() => void call('catalog:sync', { force: false })}
+      >
+        {syncing ? strings.catalogSyncing : strings.catalogSync}
+      </Button>
+      {status?.state === 'error' && status.message ? (
+        <span
+          className="font-code"
+          style={{ fontSize: 9, color: 'oklch(.62 .17 25)', maxWidth: '32ch', textAlign: 'right' }}
+        >
+          {status.message}
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
+/**
  * Sets y sobres.
  *
  * El arte de los sobres no está en ninguna API pública, así que hasta que
@@ -39,19 +84,34 @@ export function SetsView({ strings, lang }: { strings: Strings; lang: UiLang }):
       <div
         style={{
           display: 'flex',
-          flexDirection: 'column',
-          gap: 9,
+          alignItems: 'flex-end',
+          justifyContent: 'space-between',
+          gap: 24,
           padding: 26,
-          borderBottom: '1px solid var(--rule)'
+          borderBottom: '1px solid var(--rule)',
+          flexWrap: 'wrap'
         }}
       >
-        <Eyebrow tone="brand">{strings.setsEyebrow}</Eyebrow>
-        <h1 className="type-h3 text-ink" style={{ margin: 0 }}>
-          {strings.setsTitle}
-        </h1>
-        <p className="type-body-sm text-soft" style={{ margin: 0, maxWidth: '60ch', textWrap: 'pretty' }}>
-          {strings.setsSub}
-        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+          <Eyebrow tone="brand">{strings.setsEyebrow}</Eyebrow>
+          <h1 className="type-h3 text-ink" style={{ margin: 0 }}>
+            {strings.setsTitle}
+          </h1>
+          <p
+            className="type-body-sm text-soft"
+            style={{ margin: 0, maxWidth: '60ch', textWrap: 'pretty' }}
+          >
+            {strings.setsSub}
+          </p>
+        </div>
+
+        {/* Sincronizar el catálogo a mano.
+         *
+         * Antes sólo existía dentro del estado vacío, es decir mientras no
+         * hubiera ni un set: en cuanto había catálogo, la única forma de traer
+         * uno nuevo era esperar a la comprobación diaria. Publicar un set y no
+         * poder pedirlo es justo el caso en el que hace falta. */}
+        <CatalogSync strings={strings} />
       </div>
 
       {rows.length === 0 ? (
