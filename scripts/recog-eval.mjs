@@ -119,6 +119,18 @@ async function main() {
     }
     const card = await P.warpCard(frame, quad)
     const quality = await P.measureQuality(card)
+
+    // Los mismos filtros que aplica el escáner antes de gastar la inferencia.
+    // Sin esto el informe enseñaría fallos que en la aplicación ni llegan al
+    // comparador, y se calibrarían los umbrales contra un problema que no
+    // existe.
+    const gate =
+      quality.sharpness < P.THRESHOLDS.minSharpness
+        ? 'blurry'
+        : quality.glare > P.THRESHOLDS.maxGlare
+          ? 'glare'
+          : null
+
     const vector = await embedder.embed(card)
     const hits = P.search(index, vector, 5)
     const best = hits[0]
@@ -127,7 +139,8 @@ async function main() {
     rows.push({
       file,
       label,
-      outcome: 'candidates',
+      outcome: gate ?? 'candidates',
+      gate,
       top1: best?.cardId ?? '',
       lang: best?.lang ?? '',
       cos: best?.score ?? 0,
@@ -144,7 +157,8 @@ async function main() {
   console.log('captura'.padEnd(34), 'esperada'.padEnd(12), 'obtenida'.padEnd(12), '  coseno  margen nitidez brillo')
   for (const r of rows) {
     if (r.outcome !== 'candidates') {
-      console.log(path.basename(r.file).slice(0, 33).padEnd(34), r.label.card.padEnd(12), '(sin carta)')
+      const why = r.outcome === 'no_card' ? '(sin carta)' : `(descartada: ${r.outcome})`
+      console.log(path.basename(r.file).slice(0, 33).padEnd(34), r.label.card.padEnd(12), why)
       continue
     }
     const ok = r.top1 === r.label.card
@@ -163,6 +177,7 @@ async function main() {
   // ── Resumen ───────────────────────────────────────────────────────────────
   const real = rows.filter((r) => !REJECTS.has(r.label.card))
   const scored = real.filter((r) => r.outcome === 'candidates')
+  const gated = real.filter((r) => r.gate)
   const right = scored.filter((r) => r.top1 === r.label.card)
   const wrong = scored.filter((r) => r.top1 !== r.label.card)
 
@@ -170,7 +185,10 @@ async function main() {
   console.log(`cartas etiquetadas     ${real.length}`)
   console.log(`  acierto en la 1ª     ${right.length} (${((right.length / Math.max(1, real.length)) * 100).toFixed(1)}%)`)
   console.log(`  acierto en las 3     ${scored.filter((r) => r.inTop3).length}`)
-  console.log(`  sin cuadrilátero     ${real.length - scored.length}`)
+  console.log(`  descartadas antes    ${real.length - scored.length} (sin cuadrilátero, movidas o con brillo)`)
+  if (gated.length) {
+    console.log(`    por calidad        ${gated.map((r) => r.gate).join(', ')}`)
+  }
   console.log(`tiempo medio           ${Math.round(rows.reduce((a, r) => a + r.ms, 0) / Math.max(1, rows.length))} ms`)
 
   if (right.length) {
