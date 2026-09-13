@@ -1,0 +1,12 @@
+# Esta rama es datos publicados, no código, y su integridad se comprueba por
+# sha256 en la aplicación: cualquier conversión de finales de línea rompería el
+# hash y el fichero se rechazaría al sincronizar.
+#
+# Los vectores del escáner son binarios. Git los detecta solo porque llevan
+# bytes nulos, pero eso es una heurística sobre los primeros 8 KB y no algo en
+# lo que convenga confiar para un fichero que se valida por hash.
+*.bin binary
+
+# Los JSON se generan con LF y sin salto final, a propósito: así el sha256 sólo
+# cambia cuando cambia el contenido de verdad.
+*.json text eol=lf

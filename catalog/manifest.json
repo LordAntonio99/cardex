@@ -1,19 +1,54 @@
 {
   "schemaVersion": 1,
-  "catalogVersion": "2026.09.11",
-  "generatedAt": "2026-09-11T20:06:54.893Z",
+  "catalogVersion": "2026.09.13",
+  "generatedAt": "2026-09-13T10:27:20.389Z",
   "sets": [
     {
       "id": "base1",
       "file": "sets/base1.json",
-      "sha256": "6dfc6580de10753c3431e7bb66b744072b5dbb677c136bd1deeb857fea5711cf",
+      "sha256": "311c333ec00fd06cd80e3e3384463970562b326adc6286b10e1a750b80436051",
       "cardCount": 102
     },
     {
       "id": "me05",
       "file": "sets/me05.json",
-      "sha256": "a9c491a03ce31e3b1acb8997348c7bccdc23a1d6aa865f40996b5cc722c045a6",
+      "sha256": "4779d139db34e3e0447f83791437fa63d1ef1cc020709ab7b733053e70bc1868",
       "cardCount": 120
+    },
+    {
+      "id": "sv09",
+      "file": "sets/sv09.json",
+      "sha256": "ecfe23b9590b24d92349e5e5cead4d4a8cd6650a432720266a5b64279e55cd0f",
+      "cardCount": 190
+    }
+  ],
+  "recognition": [
+    {
+      "id": "base1",
+      "file": "recog/base1.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "255ca01ce3faf05a4af792f2dcde73b6f1965b63070d92e68a042c56ddc53bda",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 102
+    },
+    {
+      "id": "me05",
+      "file": "recog/me05.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "fc6e928768af60c7bd5a78fbff3a852cbc0406295eebd80187af908ae2332f69",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 239
+    },
+    {
+      "id": "sv09",
+      "file": "recog/sv09.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "b4f92830d77a51f19ee5d8d30b837f6b7473f59de6e7fab28593424220d53012",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 380
     }
   ]
 }
