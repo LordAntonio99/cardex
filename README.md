@@ -11,16 +11,20 @@ sin servidor: todo vive en tu equipo.
 
 ## Estado
 
-**Versión 0.1.1.** Instalador para Windows en
+**Versión 0.2.0.** Instalador para Windows en
 [Releases](https://github.com/LordAntonio99/cardex/releases).
 
-Al abrirla por primera vez se descarga el catálogo publicado: de momento el **Set Base** (102
-cartas, con la 1ª edición como impresión propia), **Juntos de Aventuras** (190 cartas) y
-**Oscuridad Absoluta** (120 cartas), con sus imágenes, sus sobres, precios de Cardmarket y las
-huellas visuales que usa el escáner. Tu colección arranca vacía.
+La novedad es que **el escáner reconoce cartas de verdad**, en tu equipo y sin conexión.
+
+Al abrirla por primera vez se descarga el catálogo publicado: diez sets y 1.407 cartas, con sus
+imágenes, sus sobres, precios de Cardmarket y las huellas visuales que usa el escáner. Mientras
+llega verás una pantalla con el progreso. Tu colección arranca vacía.
 
 Lo que **todavía no** hace:
 
+- El escáner **no reconoce las colecciones de McDonald's**. TCGdex tiene sus datos pero ninguna
+  imagen de carta, y sin imagen de referencia no hay con qué comparar. Se coleccionan igual, a
+  mano.
 - El escáner **no distingue una holográfica de su versión normal**. Ninguna fuente publica una
   imagen por variante, así que propone la más probable de las que la carta admite y tú la
   corriges con un clic antes de confirmar el lote. Lo mismo con la 1ª edición, que nunca se
