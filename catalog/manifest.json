@@ -1,67 +1,403 @@
 {
   "schemaVersion": 1,
   "catalogVersion": "2026.09.13",
-  "generatedAt": "2026-09-13T11:26:20.710Z",
+  "generatedAt": "2026-09-13T16:35:27.672Z",
   "sets": [
     {
       "id": "base1",
       "file": "sets/base1.json",
-      "sha256": "e8247581447f93718a907cb4159c176e40aca3bb11240005f2f2605f9321fb79",
+      "sha256": "cee8a01983b520efb9147983dde3fde67e0b4f89d3c6cfa8e5915cda45607e1e",
       "cardCount": 102
+    },
+    {
+      "id": "me01",
+      "file": "sets/me01.json",
+      "sha256": "d05d6afd705af87404b3db4cc872da44dff10575b3fbc5ae35425e926960170a",
+      "cardCount": 188
     },
     {
       "id": "me05",
       "file": "sets/me05.json",
-      "sha256": "addf6746d5c53b1556d00ebc4966afe9581e3a1f53bbb7df393ce978b6948c9b",
+      "sha256": "457853eb68fe795675856c2e3511228f3df642c8b44422a22657224ea895afbb",
       "cardCount": 120
-    },
-    {
-      "id": "sv09",
-      "file": "sets/sv09.json",
-      "sha256": "f07133c7aca4dfc5a979a6d90abb8422805454f3c30fc64c38fe7a571efd803d",
-      "cardCount": 190
-    },
-    {
-      "id": "sv10.5b",
-      "file": "sets/sv10.5b.json",
-      "sha256": "c0282c0df5cf3d9fe0e3d68c2eba5632158fa8fb01cba72b249a40a2678bcff9",
-      "cardCount": 172
-    },
-    {
-      "id": "sv10.5w",
-      "file": "sets/sv10.5w.json",
-      "sha256": "4568a3c48ade2ff9289a9bf192fb60958c594141406a306955f006272878e36c",
-      "cardCount": 173
     },
     {
       "id": "sv08",
       "file": "sets/sv08.json",
-      "sha256": "54f605df2ca16cbe8a981055983b5b5253ce2641baf3d1b31377e438fe265208",
+      "sha256": "8f3842866b2456047425114ad4dc9ae38b18a6b6480f61bd5be42a3bc4d10425",
       "cardCount": 252
     },
     {
       "id": "sv08.5",
       "file": "sets/sv08.5.json",
-      "sha256": "acd7bf12e2daa30d67fc25a32b8f4e60ff9cd337d8dbeacede46de0a9625ad79",
+      "sha256": "f5873a5bfcdd589a9c0709cc4f1ef880d1ec8cb8b7c5e9651ed69a72b2315e8d",
       "cardCount": 180
     },
     {
-      "id": "me01",
-      "file": "sets/me01.json",
-      "sha256": "c7d03f55061bd9150f42a7a31b7422f68dc6a9b5dcc45d3d3d5c854e6b8d5ae8",
-      "cardCount": 188
+      "id": "sv09",
+      "file": "sets/sv09.json",
+      "sha256": "1d03e86af2de8d69e7191b96ca80eb71e63a4be7be6cf356ec1eaf197f09da27",
+      "cardCount": 190
+    },
+    {
+      "id": "sv10.5b",
+      "file": "sets/sv10.5b.json",
+      "sha256": "9a9e7cfde6c4f33842bd150241fbf4afc83838ed5a4e7f39ee3cb2a062c700a5",
+      "cardCount": 172
+    },
+    {
+      "id": "sv10.5w",
+      "file": "sets/sv10.5w.json",
+      "sha256": "ebd5ef35f473845c97c19ff25de3c77605b8baf7742795d51747ebce8e6ce45d",
+      "cardCount": 173
     },
     {
       "id": "2022swsh",
       "file": "sets/2022swsh.json",
-      "sha256": "59e9416b2d031960f49a9406f2d8a3af7698a5c98fb3610ca888ce2fb185f8c5",
+      "sha256": "7145760fcf7cd5e56288c4e5eb70274b6e3d14a78b6d09062bbc3ceb96dd0559",
       "cardCount": 15
     },
     {
       "id": "2024sv",
       "file": "sets/2024sv.json",
-      "sha256": "3506b7481187e847edc4000d5956dcc118f8c0da3ac01f7b7ad2e334f757be95",
+      "sha256": "159e13f70452999dd1b3ca48d63685137377481f29b87323c700d5b0148df2c4",
       "cardCount": 15
+    },
+    {
+      "id": "neo1",
+      "file": "sets/neo1.json",
+      "sha256": "3b7e2bfa368e5ce9bbdcef7c47927ca957172aeb4b08122b681e181c58b4786e",
+      "cardCount": 111
+    },
+    {
+      "id": "neo2",
+      "file": "sets/neo2.json",
+      "sha256": "c827bf289c14403b0cb95215c9b4647f482049b26a53fecc1c18e4665c70054e",
+      "cardCount": 75
+    },
+    {
+      "id": "neo3",
+      "file": "sets/neo3.json",
+      "sha256": "261c0aefcb8fe956e68ec8d2ecf005dffff0902e6cfec49cac4834345dea3ea6",
+      "cardCount": 66
+    },
+    {
+      "id": "neo4",
+      "file": "sets/neo4.json",
+      "sha256": "c237f89ed609e1c80baa9ac1d35680fb164043bb384d1fb75e7f114499decf6c",
+      "cardCount": 113
+    },
+    {
+      "id": "xy2",
+      "file": "sets/xy2.json",
+      "sha256": "114946233cdd1a90a71284eef8ef35667db4b0579555752a03c3771a940d454f",
+      "cardCount": 110
+    },
+    {
+      "id": "xy3",
+      "file": "sets/xy3.json",
+      "sha256": "f5bd05c77aff0d2f1a398d6b1bec93b76c202ca442de9dcb40719d6f3c0db611",
+      "cardCount": 114
+    },
+    {
+      "id": "xy4",
+      "file": "sets/xy4.json",
+      "sha256": "c9761c193d5b4ded30eaf5123de252a93fdce170ac1cd05d14e5fa2badbf2894",
+      "cardCount": 124
+    },
+    {
+      "id": "xy6",
+      "file": "sets/xy6.json",
+      "sha256": "080f5b60bb73318aa1697dc547cb7be28525f23b3842b9f61f18c68044d7222f",
+      "cardCount": 112
+    },
+    {
+      "id": "xy7",
+      "file": "sets/xy7.json",
+      "sha256": "4213499d47ac6f246be7c229f076fcaf1dd5ba97e21264c15aa471b44973f43a",
+      "cardCount": 101
+    },
+    {
+      "id": "xy9",
+      "file": "sets/xy9.json",
+      "sha256": "ead845bebe2506968f8186ce5d0658d0140de226c3328286297c3fa4891d619e",
+      "cardCount": 126
+    },
+    {
+      "id": "xy10",
+      "file": "sets/xy10.json",
+      "sha256": "c9e3985d47fde663f3426d7c351815caba80fc123b7b6b4be91c80f3aebd18b6",
+      "cardCount": 129
+    },
+    {
+      "id": "sm1",
+      "file": "sets/sm1.json",
+      "sha256": "b82815eeb994b1c28c4d11ae6cb91b40af7b255b6a25be28397abef6777209a8",
+      "cardCount": 163
+    },
+    {
+      "id": "sm2",
+      "file": "sets/sm2.json",
+      "sha256": "7bdf628397a18dab75a35e178c842ccf5c681e7f931ca135ac2840abefcee67c",
+      "cardCount": 169
+    },
+    {
+      "id": "sm3",
+      "file": "sets/sm3.json",
+      "sha256": "cf4c0cc269e94589133a8ab922ea55b2425f3886f59c1358b88b4f92cebcb138",
+      "cardCount": 167
+    },
+    {
+      "id": "sm4",
+      "file": "sets/sm4.json",
+      "sha256": "b35a4d961709d1eee1d3a6fbf2e642a95eaf5b8875a836e4aa968784a06aeae4",
+      "cardCount": 124
+    },
+    {
+      "id": "sm5",
+      "file": "sets/sm5.json",
+      "sha256": "e15e11fa0c78772fa33bde15b70c09e03d1f0113f621f6eb49fa943bf752f60d",
+      "cardCount": 173
+    },
+    {
+      "id": "sm6",
+      "file": "sets/sm6.json",
+      "sha256": "b279c09d4755f15f2db18d41d9c78638a7851f0275d704b55a360c17fa1527c2",
+      "cardCount": 146
+    },
+    {
+      "id": "sm7",
+      "file": "sets/sm7.json",
+      "sha256": "add4cfe8be2d78d0ac7d6f5157d0c5b04367fa2479db9bd4a8c46c0cfceefebd",
+      "cardCount": 183
+    },
+    {
+      "id": "sm8",
+      "file": "sets/sm8.json",
+      "sha256": "1d64487d9655afa63ef6f38e5631eb9b7731953410b7cd41f6ad091196fd168a",
+      "cardCount": 236
+    },
+    {
+      "id": "sm9",
+      "file": "sets/sm9.json",
+      "sha256": "76be2b712c41e99fb197ac15aebebfa57458f697476b78472c57f73d911e5ad4",
+      "cardCount": 196
+    },
+    {
+      "id": "sm10",
+      "file": "sets/sm10.json",
+      "sha256": "599e5a40aca9c8fa2d608c0b6cf5fbaca34f648cbc9516011ce69d3f2d491590",
+      "cardCount": 234
+    },
+    {
+      "id": "sm11",
+      "file": "sets/sm11.json",
+      "sha256": "c1e4e2b506604bf55098d53110ff29f83e6d6bd505996bae0f838fbb19e477f5",
+      "cardCount": 258
+    },
+    {
+      "id": "sm12",
+      "file": "sets/sm12.json",
+      "sha256": "e48d0f536edcaaaef9cff47175326f964c293b2019b1207ff58237df70339b92",
+      "cardCount": 271
+    },
+    {
+      "id": "S12a",
+      "file": "sets/S12a.json",
+      "sha256": "1a0649279d2a5059b2213d431e1774ca82303a88c8c1329c0d11605687ea82d4",
+      "cardCount": 258
+    },
+    {
+      "id": "S9a",
+      "file": "sets/S9a.json",
+      "sha256": "320cbe0710803004e03d6403b7740103d0945a3630537ac01a599912e2852be5",
+      "cardCount": 93
+    },
+    {
+      "id": "S10a",
+      "file": "sets/S10a.json",
+      "sha256": "4fa4c09878aeb2df3caeb830568f66f694774f63072c6c0896ef4e423555c666",
+      "cardCount": 99
+    },
+    {
+      "id": "S11",
+      "file": "sets/S11.json",
+      "sha256": "4162ca2bb29f15ba6c890df3d86d3b4fbb97dcf59b2572b2191a3b6ba3a460b0",
+      "cardCount": 127
+    },
+    {
+      "id": "S11a",
+      "file": "sets/S11a.json",
+      "sha256": "514836d75b5863e3c62954ef084fe908af79884910b1ef4b6a699effc15a06a2",
+      "cardCount": 94
+    },
+    {
+      "id": "S9",
+      "file": "sets/S9.json",
+      "sha256": "499679e717d484bc35bb8021bc3c52d3b4f855db432b3b9066477b91589db040",
+      "cardCount": 127
+    },
+    {
+      "id": "S12",
+      "file": "sets/S12.json",
+      "sha256": "f6dfdfa1eb4ef4a34022ba8c272f4dfb061846206288e70c3196f9f2772e1231",
+      "cardCount": 125
+    },
+    {
+      "id": "S10P",
+      "file": "sets/S10P.json",
+      "sha256": "7315882fb1e4281d0cce4232b5977c6d7b76da04ccaf693616f529451e565edc",
+      "cardCount": 88
+    },
+    {
+      "id": "SV1V",
+      "file": "sets/SV1V.json",
+      "sha256": "5c7b909fe07f98fbfe9b0baa903bcfc8cb074b86f90f9384ad9a445cdf6af673",
+      "cardCount": 108
+    },
+    {
+      "id": "SV9",
+      "file": "sets/SV9.json",
+      "sha256": "834184bcc4ea75d309dc10e036e698bf60f5b7eb8c6080d69f86768a174bcbd2",
+      "cardCount": 132
+    },
+    {
+      "id": "SV4M",
+      "file": "sets/SV4M.json",
+      "sha256": "2c993cbf92556290d53392bcce8dcc79b44650f974177269bf2ed676a0906d72",
+      "cardCount": 95
+    },
+    {
+      "id": "SV4a",
+      "file": "sets/SV4a.json",
+      "sha256": "68ab7782ea953b2fca41415021a985feac32459726e1d7b54f734064741822a4",
+      "cardCount": 320
+    },
+    {
+      "id": "SV6",
+      "file": "sets/SV6.json",
+      "sha256": "aac699d35e1ccaa2601b64f6ca20071f72c8054bf63cade076cf91ac8dfd83e3",
+      "cardCount": 133
+    },
+    {
+      "id": "SV3a",
+      "file": "sets/SV3a.json",
+      "sha256": "aa71e20872682eaea84c13405a366dde00abcbc528d38cb596bd736a48551605",
+      "cardCount": 92
+    },
+    {
+      "id": "SV6a",
+      "file": "sets/SV6a.json",
+      "sha256": "2165b42040c80393d655a1c8854ffedf561c96bc2fba7132cee3d60eba36f1b9",
+      "cardCount": 94
+    },
+    {
+      "id": "SV9a",
+      "file": "sets/SV9a.json",
+      "sha256": "3c7ec20e362465b15733ffd4fa7dff15ee28eaba2b1abf8cd755e051f0a2552d",
+      "cardCount": 92
+    },
+    {
+      "id": "SV3",
+      "file": "sets/SV3.json",
+      "sha256": "e10ca8d18716461077465d372bb8c89028f09d31316d8e771942ea797d2e57c0",
+      "cardCount": 141
+    },
+    {
+      "id": "SV5a",
+      "file": "sets/SV5a.json",
+      "sha256": "e2b0ee152e7ba88b5186ddecc8fb3a18aa8b37b86c6a3906e0abeb32065ae634",
+      "cardCount": 96
+    },
+    {
+      "id": "SV8a",
+      "file": "sets/SV8a.json",
+      "sha256": "f49ccbbd5a5d6976e845d75b55759e63175d0ef82812540d91e68b4b17110b7e",
+      "cardCount": 237
+    },
+    {
+      "id": "SV1a",
+      "file": "sets/SV1a.json",
+      "sha256": "3d7a731bbdf9a8e9775d1482d6c039ef81b11f39a3b6fdb2a8350732d7088997",
+      "cardCount": 103
+    },
+    {
+      "id": "SVLN",
+      "file": "sets/SVLN.json",
+      "sha256": "0520ed959b055f8784284f175bec40c7c240fc3394a450160491c295a3edae9b",
+      "cardCount": 22
+    },
+    {
+      "id": "SVLS",
+      "file": "sets/SVLS.json",
+      "sha256": "653aa7c185abc71016d6cecb6259369abefad9c993c88de59927dcd928b798fb",
+      "cardCount": 22
+    },
+    {
+      "id": "SVK",
+      "file": "sets/SVK.json",
+      "sha256": "333606c176ca7882264702bf266a4d21655a4bbe62ac0d49bf4b25e4ca143522",
+      "cardCount": 44
+    },
+    {
+      "id": "SV2P",
+      "file": "sets/SV2P.json",
+      "sha256": "4b6c4dc93377cc7c042b07d636f6c72cf71fbd010c5ff85eb4029f7ed5f897ee",
+      "cardCount": 99
+    },
+    {
+      "id": "SV7",
+      "file": "sets/SV7.json",
+      "sha256": "57a9a7cc1aabd3e23c64be9c8c342895044dca5da2700c30e5c0674e460beec4",
+      "cardCount": 135
+    },
+    {
+      "id": "SV2a",
+      "file": "sets/SV2a.json",
+      "sha256": "310326160e118c81909720b7da58ef636691b7a43d58d514d21ca5d40b008e81",
+      "cardCount": 210
+    },
+    {
+      "id": "sv10",
+      "file": "sets/sv10.json",
+      "sha256": "dce59b06c31df961507bf3574ff148c4c7509b8cffc3df391759c4357987ac07",
+      "cardCount": 244
+    },
+    {
+      "id": "SV8",
+      "file": "sets/SV8.json",
+      "sha256": "406454aaf9eb451ddd1785a5f3798bbb9a713602a8fe12ab175a11531d8c1703",
+      "cardCount": 138
+    },
+    {
+      "id": "SV7a",
+      "file": "sets/SV7a.json",
+      "sha256": "626a278b165980a8aa81345e0634e7aee2e33efa66b0d021fb345a34a456ab09",
+      "cardCount": 94
+    },
+    {
+      "id": "SV1S",
+      "file": "sets/SV1S.json",
+      "sha256": "842bc2e3d878f59e03d7aed9e29ee97646e09d91dc34c6d4ff2ca7b2772b3215",
+      "cardCount": 108
+    },
+    {
+      "id": "SV4K",
+      "file": "sets/SV4K.json",
+      "sha256": "6ef1f1be46387d4e99a56c4c1108b7843ad0940a4ccf2eae7f65a7d0ae7ecfbc",
+      "cardCount": 95
+    },
+    {
+      "id": "SV2D",
+      "file": "sets/SV2D.json",
+      "sha256": "c1caf7a7f56a3afc47c99e330aa9942fde384c2ea401233f3db6913049ef4a08",
+      "cardCount": 99
+    },
+    {
+      "id": "SV5K",
+      "file": "sets/SV5K.json",
+      "sha256": "d70e26fe6182a8ae2d9c73291ae18375c3f91fec93ff1ca0c2a93d2123405f25",
+      "cardCount": 100
     }
   ],
   "recognition": [
@@ -75,6 +411,15 @@
       "count": 102
     },
     {
+      "id": "me01",
+      "file": "recog/me01.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "8ce6149b39e7fb7efa44062bf4f0b349c0c66320c731e76095aa15a11207506a",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 376
+    },
+    {
       "id": "me05",
       "file": "recog/me05.dinov2s-u8-224-cls-v1.bin",
       "sha256": "fc6e928768af60c7bd5a78fbff3a852cbc0406295eebd80187af908ae2332f69",
@@ -82,6 +427,24 @@
       "dims": 384,
       "dtype": "f32",
       "count": 239
+    },
+    {
+      "id": "sv08",
+      "file": "recog/sv08.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "9cc2c9feda27b9aeac8789be75024a431adee468e8e4ddd23eff8f9be0e6c370",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 504
+    },
+    {
+      "id": "sv08.5",
+      "file": "recog/sv08.5.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "054fa637d72826d85e609b078e6bf3e128968b8e7c71a0bf5d4f175ea7012e95",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 360
     },
     {
       "id": "sv09",
@@ -111,31 +474,508 @@
       "count": 346
     },
     {
-      "id": "sv08",
-      "file": "recog/sv08.dinov2s-u8-224-cls-v1.bin",
-      "sha256": "9cc2c9feda27b9aeac8789be75024a431adee468e8e4ddd23eff8f9be0e6c370",
+      "id": "neo1",
+      "file": "recog/neo1.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "cf5403d700b765aecfbf918480d03983f5295db99bae4f7f5151e4180f2b037f",
       "model": "dinov2s-u8-224-cls-v1",
       "dims": 384,
       "dtype": "f32",
-      "count": 504
+      "count": 111
     },
     {
-      "id": "sv08.5",
-      "file": "recog/sv08.5.dinov2s-u8-224-cls-v1.bin",
-      "sha256": "054fa637d72826d85e609b078e6bf3e128968b8e7c71a0bf5d4f175ea7012e95",
+      "id": "neo2",
+      "file": "recog/neo2.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "1aba713d4fb81265c280c816d2e4d6adb65f45a3ea5e139de3db705cfa63e304",
       "model": "dinov2s-u8-224-cls-v1",
       "dims": 384,
       "dtype": "f32",
-      "count": 360
+      "count": 75
     },
     {
-      "id": "me01",
-      "file": "recog/me01.dinov2s-u8-224-cls-v1.bin",
-      "sha256": "8ce6149b39e7fb7efa44062bf4f0b349c0c66320c731e76095aa15a11207506a",
+      "id": "neo3",
+      "file": "recog/neo3.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "8c0d89afd1d9d7fa4381128595d81f62454f6969df493f99594c7d4fb27af95c",
       "model": "dinov2s-u8-224-cls-v1",
       "dims": 384,
       "dtype": "f32",
-      "count": 376
+      "count": 66
+    },
+    {
+      "id": "neo4",
+      "file": "recog/neo4.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "ae9feb9a70df244aaadb436fc7ff658b487e0ec8b317cfdae42eb1d86a4844bb",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 113
+    },
+    {
+      "id": "xy2",
+      "file": "recog/xy2.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "d74024b8bbdb2a467b99c8e561e9d4cb1ac782ca6f97735a518fc2542fa59aa3",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 220
+    },
+    {
+      "id": "xy3",
+      "file": "recog/xy3.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "c55b4fb8cb68b262041f48d65c9af21065c1d9ec89a917a4707a088f47944e65",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 227
+    },
+    {
+      "id": "xy4",
+      "file": "recog/xy4.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "6e3ccf331e3532d703b6622f5e80aa38a42728d22dc8c234223624aeff740448",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 248
+    },
+    {
+      "id": "xy6",
+      "file": "recog/xy6.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "7c0aa6ef603b48d3bc76cab2fe202f2632791c10c0079aae70123a810848cf51",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 224
+    },
+    {
+      "id": "xy7",
+      "file": "recog/xy7.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "60b9812854c5abda6fb8a225c4cec59bf179fdfcddc560611b4185a16d6c367d",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 202
+    },
+    {
+      "id": "xy9",
+      "file": "recog/xy9.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "bc5bd63aa0674dfd6b0b151c89fcd6b6c955d272aa6f2aeadb0f3b732b1b0225",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 252
+    },
+    {
+      "id": "xy10",
+      "file": "recog/xy10.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "af2cf832522a3d366c01095282ea0825ebb7c0c6012b901c55e09568ebcf2dc2",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 258
+    },
+    {
+      "id": "sm1",
+      "file": "recog/sm1.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "dace0a03a01b59636563cd6cf31ea97d0e7965a055153b26b768040c801dbfc6",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 325
+    },
+    {
+      "id": "sm2",
+      "file": "recog/sm2.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "77ae112be608a53660e8cc82a07a7af71922a0ed77aa4f5c0e65e80bbb53f30b",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 337
+    },
+    {
+      "id": "sm3",
+      "file": "recog/sm3.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "d8b96c52d4aa1169b08026e6421124e0e81e16a48e19f1e744b4d9c38c5a2573",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 328
+    },
+    {
+      "id": "sm4",
+      "file": "recog/sm4.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "caf0c01a0759a8b5157497f40c4995f9e1383457618ad8bfc01aaab7a8393e82",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 248
+    },
+    {
+      "id": "sm5",
+      "file": "recog/sm5.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "4ea6437354817109dc072e293ee54b760abfb86cad37defedc1457c17e4ed706",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 346
+    },
+    {
+      "id": "sm6",
+      "file": "recog/sm6.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "47048619480389b051ab02df759bcb14457562aef8e21b1d79070eb44496b62a",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 286
+    },
+    {
+      "id": "sm7",
+      "file": "recog/sm7.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "1a6fe334945a9fd0f4b524f470045e81750a2d84c6caa7872d44ea8dd586fb03",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 366
+    },
+    {
+      "id": "sm8",
+      "file": "recog/sm8.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "6f95ed01ec2f2e496d48c84275ae695a0cd468fd9633e160155aada123cedef6",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 472
+    },
+    {
+      "id": "sm9",
+      "file": "recog/sm9.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "90de110d118282e9f4a4b84c380486ec767d2affd1fcdf39399a312e99b4bdab",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 392
+    },
+    {
+      "id": "sm10",
+      "file": "recog/sm10.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "9313c6847b06d5a9d83a5c4403fda22b9552087964f5b122bf63776ee95f098f",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 468
+    },
+    {
+      "id": "sm11",
+      "file": "recog/sm11.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "67de3ab21b8b007f52dcf068dffc66e0a11d129afc869fec2017bba5f8dc1ec3",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 516
+    },
+    {
+      "id": "sm12",
+      "file": "recog/sm12.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "7f80b483be51c206295102345b89fc77cc58921387e3b6e573a05bd2a1f68997",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 542
+    },
+    {
+      "id": "S12a",
+      "file": "recog/S12a.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "1312df1c1c04e6ec045783c61a0b9d619c8c73739c1b9cc6516dac3c8fb47a5e",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 254
+    },
+    {
+      "id": "S9a",
+      "file": "recog/S9a.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "fda177cb9b0014d641200ca9e2fa05f68a422cfcec736c8a9386724fa800f665",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 93
+    },
+    {
+      "id": "S10a",
+      "file": "recog/S10a.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "72d85947bed8e334b34527700c3f37858a401d04f1e1302f50ea8cbef78e2ff2",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 99
+    },
+    {
+      "id": "S11",
+      "file": "recog/S11.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "d6cacf99a1dafb92878036349212097b26e2499f6ff9c5171069684e17d3dfc8",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 127
+    },
+    {
+      "id": "S11a",
+      "file": "recog/S11a.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "bc3cbd3b8f3375205821d7154737ee36c5f8fe67728de1918145b9b7334eaedb",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 94
+    },
+    {
+      "id": "S9",
+      "file": "recog/S9.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "4505b5146199a3b33fb29027e81cb6abb9262303ecb355220e04363ffe10aca3",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 127
+    },
+    {
+      "id": "S12",
+      "file": "recog/S12.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "fdb2c27626f3458273dfc32b80be713bfe130323e9c07a9c5758a78dfbdd1117",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 125
+    },
+    {
+      "id": "S10P",
+      "file": "recog/S10P.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "2b9ad0b4d7923e2e6fa0a756283f8b98c9e9e88ea583cd745c7805ec90d4695c",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 88
+    },
+    {
+      "id": "SV1V",
+      "file": "recog/SV1V.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "6c0e1becf7dae26464907593f25293cb8e4582d79923d751511cca1dfe1e7aba",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 108
+    },
+    {
+      "id": "SV9",
+      "file": "recog/SV9.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "71ffb90524334a70ffc556b7210a16297039891ca6a8f74d719610dfab32ba60",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 132
+    },
+    {
+      "id": "SV4M",
+      "file": "recog/SV4M.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "df87fb9393d64d8e118a24e826b427d4352b5e866c834976259ac17519dc235f",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 95
+    },
+    {
+      "id": "SV4a",
+      "file": "recog/SV4a.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "ed1a3d0dc58dacf528b38669d0d788989d33ff6fd3e53ce2a6c472f88e454aef",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 320
+    },
+    {
+      "id": "SV6",
+      "file": "recog/SV6.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "e6ec01d74928b65ccb4e122dbf3f7081ad39e8409d0dc496ca2404cd039117f5",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 133
+    },
+    {
+      "id": "SV3a",
+      "file": "recog/SV3a.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "61be1edb7da2c99b23a65a27a2e854317206f5720e938701e42c6746ab0ca02a",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 92
+    },
+    {
+      "id": "SV6a",
+      "file": "recog/SV6a.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "34425574b36250db14e1ba947d7e7fe4520b383d5b24c0626ed6090328745eda",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 94
+    },
+    {
+      "id": "SV9a",
+      "file": "recog/SV9a.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "9e3a41569b2bfcde3ddfc52699e62f41bce6758ab6eb0e35693d78c4a60e1426",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 92
+    },
+    {
+      "id": "SV3",
+      "file": "recog/SV3.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "66e4ec8b3c6206ab468bed1c38e6bce5f46c635521087370c28a236dfcfdc833",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 141
+    },
+    {
+      "id": "SV5a",
+      "file": "recog/SV5a.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "e7c8b188d850bf6965d82cfeb900b3ce3bace74ebb18003ee3c9feb92e31dff5",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 96
+    },
+    {
+      "id": "SV8a",
+      "file": "recog/SV8a.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "6512ac621d9467fe916b79f8ebe9af782d7d5678e9840e94889abc01896e6d72",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 237
+    },
+    {
+      "id": "SV1a",
+      "file": "recog/SV1a.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "43f4fd26ac677d28465c84449c754e7fd9e02efffd158c0935179da9f07337e8",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 103
+    },
+    {
+      "id": "SVLN",
+      "file": "recog/SVLN.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "60c05ddef922f2969f6960ebe9c23ccc623501b061aa06c5513903d01220b1d0",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 22
+    },
+    {
+      "id": "SVLS",
+      "file": "recog/SVLS.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "c17e4052f4c010f0cf7251e767bdcf08f7aa8b60965f1b8e7ac85a2b401bc7bc",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 22
+    },
+    {
+      "id": "SVK",
+      "file": "recog/SVK.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "b2e173715f57170ae4b2b61c64fd1ab1a1f00840b1a36d7ff49134a903decdab",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 44
+    },
+    {
+      "id": "SV2P",
+      "file": "recog/SV2P.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "fa9e7fb71199556ca2f890ff81897c0a0be139fd4d826db64f7806ed8fcd8449",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 99
+    },
+    {
+      "id": "SV7",
+      "file": "recog/SV7.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "05565d9662aaa4862561b5f1a6f4b3714c225ef7ef94971d7810517e67218d7b",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 135
+    },
+    {
+      "id": "SV2a",
+      "file": "recog/SV2a.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "bac1ffc8c3d5b065bb73dc8412b438815a30e85056c71d51fc4a4ba817e33bdf",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 210
+    },
+    {
+      "id": "sv10",
+      "file": "recog/sv10.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "a5090d865537cb21b15dad10e81b8dfc90fc29833dc0364be1e30d62b7da66a7",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 488
+    },
+    {
+      "id": "SV8",
+      "file": "recog/SV8.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "1629bcc3f9a664dd133d2d488064bb1d5e62076ddd4fd3fd9a9fa34d1ad4f6c1",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 106
+    },
+    {
+      "id": "SV7a",
+      "file": "recog/SV7a.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "4f3745c2464f9165c6f20fbab4388ad01fed047a04a647fc3318371889eff53e",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 94
+    },
+    {
+      "id": "SV1S",
+      "file": "recog/SV1S.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "cbb91b5ab34a5e799a2f81816d31d1a5a099ceb904365e70036696962aed3851",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 108
+    },
+    {
+      "id": "SV4K",
+      "file": "recog/SV4K.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "05a0c52baedf3889100cda6f3b0b57e9ae689066b58c105be7d75ef4cf46e512",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 95
+    },
+    {
+      "id": "SV2D",
+      "file": "recog/SV2D.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "7967dc7ed2e283b04b2d001466c89a55d9e13eafebb1350b5275fb4335997a2c",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 99
+    },
+    {
+      "id": "SV5K",
+      "file": "recog/SV5K.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "9b82d06dc09d434801d7fbf0954a48dbf558ecb60f317d2f0f46dededea4fafa",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 100
     }
   ]
 }
