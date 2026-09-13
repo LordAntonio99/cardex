@@ -296,7 +296,12 @@
   /* Con transición el giro acompaña a los atajos de teclado y al botón de
      media vuelta; mientras se arrastra estorba, así que se quita. */
   transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.3, 1);
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6);
+  /* La sombra se mueve con la carta: al inclinarla, se desplaza al contrario
+     que el reflejo y se abre. Una sombra fija delata que es una imagen plana.
+     `box-shadow` NO es propiedad de agrupación, así que puede estar aquí sin
+     aplanar el contexto 3D. */
+  box-shadow: var(--shadow-x, 0px) var(--shadow-y, 30px) var(--shadow-blur, 70px)
+    rgba(0, 0, 0, var(--shadow-a, 0.6));
   /* El radio también aquí, aunque este nodo no pinte nada: la sombra se dibuja
      con la silueta de SU caja, y sin redondear asomaría en escuadra por debajo
      de las esquinas ya redondeadas de la carta. `border-radius` no es una
@@ -331,6 +336,56 @@
 .card-viewer-face {
   border-radius: var(--corner-x) / var(--corner-y);
   border: 1px solid rgba(237, 234, 227, 0.18);
+  /* El canto. Una carta tiene tres décimas de milímetro de grosor y eso se ve
+     como una línea clara arriba y oscura abajo, no como un borde plano. */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+}
+
+/* ── La luz del visor ──────────────────────────────────────────────────────
+ *
+ * Lo que hace que una carta parezca estar ahí, y no ser una foto pegada, es que
+ * la luz se mueva cuando tú la mueves. Son tres cosas, y ninguna cuesta nada:
+ *
+ *   1. un reflejo especular que barre la cara al girarla;
+ *   2. una caída de luz hacia el borde que se aleja, que es lo que da volumen;
+ *   3. una sombra proyectada que se desplaza al contrario que el reflejo.
+ *
+ * Nada de esto puede vivir en `.card-viewer-card`: ese nodo lleva el
+ * `preserve-3d` y cualquier propiedad de agrupación lo aplanaría en silencio
+ * (ver la cabecera de este fichero). Por eso va en un pseudoelemento de la
+ * CARA, que es hoja del árbol 3D y se puede ensuciar sin consecuencias.
+ * `box-shadow` sí puede ir en el nodo 3D —no es de agrupación— y de hecho ya
+ * estaba ahí.
+ *
+ * Los valores los escribe `CardViewer.apply()` a partir del ángulo, en el mismo
+ * `requestAnimationFrame` que ya mueve la carta.
+ */
+.card-viewer-face::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    /* El reflejo: una banda ancha y suave, no un destello. */
+    linear-gradient(
+      100deg,
+      transparent calc(var(--sheen-pos, 50%) - 27%),
+      rgba(255, 255, 255, calc(var(--sheen, 0) * 0.45)) calc(var(--sheen-pos, 50%) - 12%),
+      rgba(255, 255, 255, var(--sheen, 0)) var(--sheen-pos, 50%),
+      rgba(255, 255, 255, calc(var(--sheen, 0) * 0.45)) calc(var(--sheen-pos, 50%) + 12%),
+      transparent calc(var(--sheen-pos, 50%) + 27%)
+    ),
+    /* La caída del borde que se va hacia atrás. El ángulo lo voltea el JS
+       según hacia dónde se esté girando. */
+    linear-gradient(
+      var(--fall-angle, 90deg),
+      rgba(0, 0, 0, var(--fall, 0)) 0%,
+      rgba(0, 0, 0, calc(var(--fall, 0) * 0.35)) 24%,
+      transparent 60%
+    );
 }
 
 .card-viewer-back {

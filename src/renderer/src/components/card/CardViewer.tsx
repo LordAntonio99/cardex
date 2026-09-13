@@ -9,15 +9,21 @@ import { useStore } from '../../state/store'
 /**
  * Visor de carta a tamaño grande.
  *
- * Sin efecto holográfico: se quitó porque ensuciaba la ilustración en lugar de
- * realzarla. Queda la carta limpia, grande y girable.
- *
  * Se gira arrastrando. El giro en Y es continuo a propósito, sin tope: pasando
  * de los 90° se ve el reverso, que es como se mira una carta de verdad, en vez
  * de tener un botón de «voltear».
  *
+ * **Sigue sin efecto holográfico**, que se quitó por ensuciar la ilustración en
+ * vez de realzarla. Lo que sí hay es LUZ: un reflejo que barre la cara al
+ * girarla, el borde que se aleja apagándose y una sombra que acompaña. Es otra
+ * cosa que el foil: no pinta colores encima de la carta, sólo la ilumina, y por
+ * eso de frente no se nota —que es cuando la carta hay que leerla— y aparece al
+ * inclinarla, que es cuando una carta de verdad devuelve la luz. Los números
+ * salen de `apply()` y los consume `card.css`.
+ *
  * Ojo con card.css: el nodo con `preserve-3d` no puede recibir ninguna
- * propiedad de agrupación o el giro colapsa a 2D sin avisar.
+ * propiedad de agrupación o el giro colapsa a 2D sin avisar. Por eso la luz vive
+ * en un pseudoelemento de la CARA, que es hoja del árbol 3D.
  */
 
 /**
@@ -106,7 +112,42 @@ export function CardViewer({ card, lang, cardLang, strings }: Props): React.JSX.
     // `backdrop-filter` del fondo del visor, por ejemplo— para que deje de
     // cumplirse. Con el ángulo en la mano no hay ambigüedad.
     const turn = (((rot.current.y % 360) + 360) % 360)
-    el.classList.toggle('is-back', turn > 90 && turn < 270)
+    const back = turn > 90 && turn < 270
+    el.classList.toggle('is-back', back)
+
+    // ── La luz ──────────────────────────────────────────────────────────────
+    //
+    // El foco se considera fijo, arriba y a la izquierda, y es la carta la que
+    // se mueve bajo él. De ahí sale todo: dónde cae el reflejo, qué borde se
+    // apaga y hacia dónde se va la sombra.
+    //
+    // `facing` es lo inclinada que está la cara que se ve respecto al
+    // observador, de -90 a 90. Se calcula aparte para la trasera porque esa
+    // cara viene ya girada 180°.
+    const facing = back ? turn - 180 : turn > 180 ? turn - 360 : turn
+    const tiltX = rot.current.x
+
+    // Cuánto se aparta de estar de frente, de 0 a 1. Una carta plana bajo una
+    // luz difusa apenas brilla; es al inclinarla cuando devuelve el reflejo.
+    const away = Math.min(1, Math.hypot(facing / 62, tiltX / 34))
+
+    // El reflejo barre la cara: al girar hacia un lado, la luz corre hacia el
+    // otro. Nunca llega a los bordes, que es donde delataría que es un
+    // degradado y no una superficie.
+    el.style.setProperty('--sheen-pos', `${(50 - facing * 0.42).toFixed(1)}%`)
+    el.style.setProperty('--sheen', (0.05 + away * 0.26).toFixed(3))
+
+    // El borde que se va hacia atrás se apaga. Con `rotateY` positivo el que se
+    // aleja es el derecho, así que el degradado arranca por ahí.
+    el.style.setProperty('--fall-angle', facing >= 0 ? '270deg' : '90deg')
+    el.style.setProperty('--fall', (away * 0.3).toFixed(3))
+
+    // Y la sombra acompaña: se desplaza al contrario que el reflejo y se abre
+    // conforme la carta se separa de estar de frente.
+    el.style.setProperty('--shadow-x', `${(facing * 0.5).toFixed(1)}px`)
+    el.style.setProperty('--shadow-y', `${(30 - tiltX * 0.45).toFixed(1)}px`)
+    el.style.setProperty('--shadow-blur', `${(70 + away * 26).toFixed(0)}px`)
+    el.style.setProperty('--shadow-a', (0.6 - away * 0.14).toFixed(3))
   }, [])
 
   const schedule = useCallback(() => {
