@@ -34,7 +34,22 @@ if (!existsSync(path.join(ROOT, 'manifest.json'))) {
 
 const manifest = leer('manifest.json')
 
-if (manifest.schemaVersion !== 1) anota('manifiesto', `schemaVersion = ${manifest.schemaVersion}`)
+/**
+ * Formatos que el importador entiende. Tiene que ir de la mano de
+ * `SUPPORTED_SCHEMA` (src/main/catalog/format.ts) y de `SCHEMA_VERSION`
+ * (build-catalog.mjs): un catálogo con un número mayor hace que la aplicación
+ * se plante entera y pida actualizarse.
+ *
+ *   v1  sólo Pokémon
+ *   v2  el set declara su juego
+ */
+const SCHEMAS = [1, 2]
+/** Los juegos que la aplicación conoce (GAMES, en src/shared/types.ts). */
+const GAMES = ['pokemon', 'riftbound']
+
+if (!SCHEMAS.includes(manifest.schemaVersion)) {
+  anota('manifiesto', `schemaVersion = ${manifest.schemaVersion}`)
+}
 if (typeof manifest.catalogVersion !== 'string') anota('manifiesto', 'sin catalogVersion')
 
 const ids = new Set()
@@ -60,6 +75,14 @@ for (const entrada of manifest.sets ?? []) {
   if (set.id !== id) anota('id desajustado', `${id} -> ${set.id}`)
   if (typeof set.name !== 'string') anota('sin nombre', id)
   if (typeof set.seriesId !== 'string') anota('sin seriesId', id)
+
+  // Ausente es válido: significa Pokémon, que es lo que eran todos los sets
+  // antes de la v2. Un valor que la aplicación no conozca, en cambio, entra
+  // como Pokémon sin decir nada, y el set acabaría pidiendo sus imágenes a
+  // TCGdex. Eso es justo lo que este script existe para no dejar pasar.
+  if (set.game !== undefined && !GAMES.includes(set.game)) {
+    anota('juego desconocido', `${id}: ${set.game}`)
+  }
 
   if (!Array.isArray(doc.cards)) {
     anota('sin lista de cartas', id)
