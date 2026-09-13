@@ -55,7 +55,7 @@ const PREFERRED = 'es'
 // ── Argumentos ───────────────────────────────────────────────────────────────
 
 function parseArgs(argv) {
-  const args = { sets: [], riftbound: [], series: null, langs: ['es', 'en'], limit: 0, out: 'catalog', packs: 'catalog-packs', concurrency: 8, recognition: false }
+  const args = { sets: [], riftbound: [], series: null, langs: ['es', 'en'], limit: 0, out: 'catalog', packs: 'catalog-packs', concurrency: 8, recognition: false, keep: false }
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]
     const next = () => argv[++i]
@@ -68,6 +68,7 @@ function parseArgs(argv) {
     else if (a === '--packs') args.packs = next()
     else if (a === '--concurrency') args.concurrency = Number(next()) || 8
     else if (a === '--recognition') args.recognition = true
+    else if (a === '--keep') args.keep = true
     else if (a === '--help' || a === '-h') args.help = true
   }
   if (!args.langs.includes(PREFERRED)) args.langs.unshift(PREFERRED)
@@ -416,11 +417,14 @@ Opciones:
   --concurrency N   peticiones en paralelo (por defecto: 8)
   --recognition     calcula además los vectores del escáner (requiere
                     'npm run build' y 'npm run models:fetch')
+  --keep            conserva en el índice los sets que ya estaban en --out y no
+                    se han regenerado, comprobando su sha256
 
 El manifiesto se reescribe ENTERO en cada ejecución, con los sets de esa
 ejecución y nada más. Hay que generar siempre todos los sets publicados a la
 vez, de los dos juegos, o una instalación nueva se quedará sólo con los de la
-última generación.
+última generación. La excepción es --keep, que conserva lo que ya había
+comprobando que sigue en su sitio y que no ha cambiado.
 `)
     process.exit(args.help ? 0 : 1)
   }
@@ -562,18 +566,101 @@ Calculando vectores de reconocimiento (${P.RECOG_MODEL_ID})`)
     }
   }
 
+  // Con --keep, lo que ya había en la salida y no se ha vuelto a generar sigue
+  // en el índice. Sin él, el manifiesto son sólo los sets de esta ejecución.
+  const finalSets = args.keep ? await keepPrevious(outDir, entries, recognition) : entries
+
   const manifest = {
     schemaVersion: SCHEMA_VERSION,
     // Versión por fecha: legible y ordenable.
     catalogVersion: new Date().toISOString().slice(0, 10).replaceAll('-', '.'),
     generatedAt: new Date().toISOString(),
-    sets: entries,
+    sets: finalSets,
     recognition
   }
   await writeFile(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2), 'utf8')
 
-  const cards = entries.reduce((a, e) => a + e.cardCount, 0)
-  console.log(`\nListo: ${entries.length} set(s), ${cards} cartas -> ${outDir}/manifest.json`)
+  const cards = finalSets.reduce((a, e) => a + e.cardCount, 0)
+  console.log(`\nListo: ${finalSets.length} set(s), ${cards} cartas -> ${outDir}/manifest.json`)
+}
+
+/**
+ * Conserva en el índice los sets que ya estaban publicados y no se han vuelto a
+ * generar en esta ejecución.
+ *
+ * Existe para no tener que regenerar setenta sets cada vez que se añade uno. La
+ * regla que protege el manifiesto —que no desaparezca un set del índice sin que
+ * nadie se entere— se mantiene por otra vía: en lugar de rehacer el fichero, se
+ * **comprueba** que sigue en disco y que su sha256 es el que decía el
+ * manifiesto. Si algo no cuadra, esto se planta en vez de publicar un índice que
+ * apunta a un fichero que ya no es el que dice ser.
+ *
+ * Muta `recognition` para añadirle los vectores conservados, y devuelve la lista
+ * de sets. El orden anterior se respeta y lo nuevo se añade al final: así el
+ * diff de una publicación enseña lo que ha cambiado y no un fichero entero
+ * reordenado.
+ */
+async function keepPrevious(outDir, entries, recognition) {
+  const manifestPath = path.join(outDir, 'manifest.json')
+  if (!existsSync(manifestPath)) {
+    console.warn(`\n  ! --keep, pero en ${outDir} no hay ningún manifest.json que conservar`)
+    return entries
+  }
+
+  const previous = JSON.parse(await readFile(manifestPath, 'utf8'))
+
+  /** Comprueba que un fichero conservado sigue siendo el que el índice dice. */
+  const verify = async (entry, what) => {
+    const abs = path.join(outDir, entry.file)
+    if (!existsSync(abs)) {
+      throw new Error(
+        `--keep quiere conservar ${what} ${entry.id}, pero ${entry.file} no está en la salida.\n` +
+          'Regenera ese set o quita --keep.'
+      )
+    }
+    const sha = createHash('sha256').update(await readFile(abs)).digest('hex')
+    if (sha !== entry.sha256) {
+      throw new Error(
+        `El sha256 de ${entry.file} no es el que declara el manifiesto.\n` +
+          'Alguien ha tocado ese fichero fuera del generador: regenera ese set o quita --keep.'
+      )
+    }
+  }
+
+  // Los sets: el recién generado manda; el que no se ha tocado se comprueba.
+  const fresh = new Map(entries.map((e) => [e.id, e]))
+  const sets = []
+  let kept = 0
+  for (const old of previous.sets ?? []) {
+    const regenerated = fresh.get(old.id)
+    if (regenerated) {
+      sets.push(regenerated)
+      fresh.delete(old.id)
+      continue
+    }
+    await verify(old, 'el set')
+    sets.push(old)
+    kept += 1
+  }
+  for (const e of fresh.values()) sets.push(e)
+
+  // Los vectores van por (set, modelo) y a otro ritmo que los precios: se
+  // conservan también los de un set que SÍ se ha regenerado sin --recognition.
+  // Las cartas que ya no existan se filtran al cargarlos, no aquí.
+  const ids = new Set(sets.map((e) => e.id))
+  const freshRecog = new Set(recognition.map((r) => `${r.id}|${r.model}`))
+  let keptRecog = 0
+  for (const old of previous.recognition ?? []) {
+    if (freshRecog.has(`${old.id}|${old.model}`) || !ids.has(old.id)) continue
+    await verify(old, 'los vectores de')
+    recognition.push(old)
+    keptRecog += 1
+  }
+
+  console.log(
+    `\nConservados del índice anterior: ${kept} set(s) y ${keptRecog} fichero(s) de vectores`
+  )
+  return sets
 }
 
 main().catch((e) => {
