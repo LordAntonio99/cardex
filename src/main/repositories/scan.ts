@@ -99,6 +99,38 @@ function resolveLang(langs: CardLang[], matched: CardLang): CardLang {
 }
 
 /**
+ * Entre impresiones de la misma ilustración, la del idioma que se declara.
+ *
+ * `resolveLang` ya explica por qué el idioma no se deduce mirando: la misma
+ * carta en español, en inglés o en japonés da cosenos casi idénticos, porque
+ * sólo cambian unas líneas de texto pequeño. Hasta ahora bastaba con
+ * reetiquetar, porque las tres eran la MISMA carta del catálogo.
+ *
+ * Con las impresiones japonesas deja de bastar: la japonesa es otra carta, de
+ * otro set y con otro número, así que hay que llegar a elegirla. Se reordena,
+ * no se filtra —si no hay candidata del idioma pedido se sigue proponiendo lo
+ * que mejor se parece— y sólo dentro de `autoMargin`, que es la distancia a
+ * partir de la cual el resto del código considera que ya son cartas distintas:
+ * más allá de ahí, promover por idioma sería cambiar una carta por otra.
+ *
+ * Se mira `scanLang` y no `preferredLang()`: sin una declaración explícita del
+ * usuario no hay nada que preferir, y el idioma de la interfaz no dice nada
+ * sobre qué cartas hay encima de la mesa.
+ */
+function preferDeclaredLang(candidates: ScanCandidate[]): ScanCandidate[] {
+  const wanted = getSettings().scanLang
+  const best = candidates[0]
+  if (!wanted || !best || best.langs.includes(wanted)) return candidates
+
+  const gap = THRESHOLDS.autoMargin * 100
+  const promoted = candidates.find((c) => c.langs.includes(wanted) && best.score - c.score <= gap)
+  if (!promoted) return candidates
+
+  log.info(`Se prefiere la impresión en ${wanted}: ${promoted.cardId} sobre ${best.cardId}`)
+  return [promoted, ...candidates.filter((c) => c !== promoted)]
+}
+
+/**
  * De las señales del reconocedor a una decisión.
  *
  * La regla es asimétrica a propósito: aceptar una carta equivocada cuesta
@@ -196,9 +228,11 @@ export async function identifyBuffer(jpeg: Buffer): Promise<ScanResult> {
 
   // Se hidratan todas las candidatas: el selector de confirmación las necesita,
   // y son como mucho cinco consultas por identificador primario.
-  const alternatives = raw.candidates
-    .map((c) => toCandidate(c.cardId, c.score))
-    .filter((c): c is ScanCandidate => c !== null)
+  const alternatives = preferDeclaredLang(
+    raw.candidates
+      .map((c) => toCandidate(c.cardId, c.score))
+      .filter((c): c is ScanCandidate => c !== null)
+  )
 
   const best = alternatives[0]
   const matchedLang = raw.candidates[0]?.lang ?? 'en'

@@ -168,6 +168,17 @@ function printingLabel(v) {
  * La 1ª edición manda sobre todo lo demás: es lo que separa un Charizard de
  * 590 € de uno de 3.500 €.
  */
+/**
+ * El sello, en la forma que usa el resto del código.
+ *
+ * TCGdex traduce este campo, y en los sets occidentales daba igual porque la
+ * forma estructural se toma siempre del inglés. En un set japonés no hay inglés
+ * del que tomarla, y el japonés escribe «1st edition» con espacio donde el
+ * inglés pone «1st-edition»: sin normalizar, una 1ª edición japonesa entraría
+ * en la colección como normal, que es la distinción que más mueve el precio.
+ */
+const canonicalStamp = (s) => String(s).toLowerCase().trim().replace(/\s+/g, '-')
+
 function coarseVariant(v) {
   if ((v.stamp ?? []).includes('1st-edition')) return 'first_ed'
   if (v.type === 'holo') return 'holo'
@@ -249,6 +260,12 @@ async function buildSet(setId, langs, limit, concurrency) {
   const names = {}
   for (const [lang, h] of Object.entries(heads)) if (h?.name) names[lang] = h.name
 
+  // Los idiomas en los que este set existe de verdad. La cabecera ya lo dice, y
+  // sin esto se pide cada carta en todos los idiomas aunque dos de ellos hayan
+  // venido vacíos: con los sets japoneses dentro son decenas de miles de
+  // peticiones perdidas contra una API pública y gratuita.
+  const present = langs.filter((l) => (heads[l]?.cards ?? []).length > 0)
+
   let briefs = head.cards ?? []
   if (limit > 0) briefs = briefs.slice(0, limit)
 
@@ -263,7 +280,7 @@ async function buildSet(setId, langs, limit, concurrency) {
     const cardNames = {}
     const availableLangs = []
     let english = null
-    for (const lang of langs) {
+    for (const lang of present) {
       const localized = lang === source ? full : await get(`${API}/${lang}/cards/${brief.id}`)
       if (lang === 'en') english = localized
       if (localized?.name) {
@@ -285,7 +302,8 @@ async function buildSet(setId, langs, limit, concurrency) {
       (english?.variants_detailed ?? []).filter((v) => v.variantId).map((v) => [v.variantId, v])
     )
     const printings = (full.variants_detailed ?? []).map((v, i) => {
-      const shape = canonical.get(v.variantId) ?? v
+      const raw = canonical.get(v.variantId) ?? v
+      const shape = { ...raw, stamp: (raw.stamp ?? []).map(canonicalStamp) }
       return {
         id: v.variantId ?? `${full.id}-p${i}`,
         kind: shape.type ?? 'normal',
