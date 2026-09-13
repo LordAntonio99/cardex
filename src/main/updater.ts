@@ -20,6 +20,14 @@ const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000
 
 let state: UpdateStatus = { state: 'idle' }
 
+/**
+ * Si la comprobación en curso la ha pedido el usuario.
+ *
+ * Sólo sirve para decidir si un fallo se enseña o se traga: ver el manejador de
+ * `error`.
+ */
+let manual = false
+
 function set(next: UpdateStatus): void {
   state = next
   broadcast('update:changed', next)
@@ -55,21 +63,43 @@ export function initUpdater(): void {
   )
   autoUpdater.on('update-downloaded', (info) => set({ state: 'ready', version: info.version }))
   autoUpdater.on('error', (err) => {
-    // Quedarse sin red no es un error que merezca molestar al usuario.
     log.warn(`[updater] ${err.message}`)
-    set({ state: 'idle' })
+    // Que una comprobación AUTOMÁTICA falle no merece molestar a nadie: lo
+    // normal es que sea no tener red. Pero si la ha pedido el usuario, callarse
+    // es peor: se queda mirando un control que no reacciona, sin saber si es
+    // que no hay versión nueva o que algo ha fallado.
+    set(manual ? { state: 'error', message: err.message } : { state: 'idle' })
   })
 
   setTimeout(() => void check(), 8000)
   setInterval(() => void check(), CHECK_INTERVAL_MS)
 }
 
-export async function check(): Promise<UpdateStatus> {
-  if (!app.isPackaged) return state
+/**
+ * Comprueba si hay versión nueva.
+ *
+ * `byUser` marca las que salen de pulsar el control de la cabecera, que son las
+ * únicas cuyo fallo se enseña.
+ */
+export async function check(byUser = false): Promise<UpdateStatus> {
+  // En desarrollo no hay nada que comprobar, y devolver 'idle' sin más dejaba
+  // pulsando un control que no hacía absolutamente nada. Se PUBLICA el estado,
+  // no sólo se devuelve: la cabecera se entera por el evento, no por el valor
+  // de retorno.
+  if (!app.isPackaged) {
+    if (byUser) {
+      set({ state: 'error', message: 'La autoactualización sólo funciona en la aplicación instalada' })
+    }
+    return state
+  }
+  manual = byUser
   try {
     await autoUpdater.checkForUpdates()
   } catch (e) {
     log.warn(`No se ha podido comprobar si hay actualizaciones: ${String(e)}`)
+    if (byUser) set({ state: 'error', message: String(e) })
+  } finally {
+    manual = false
   }
   return state
 }

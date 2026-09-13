@@ -83,6 +83,41 @@ a,
   padding-left: 74px;
 }
 
+/*
+ * La cabecera, cuando no cabe.
+ *
+ * Con el selector de juego y el estado del actualizador, a 1380 px —la anchura
+ * por defecto de la ventana— se pasaba 166 px y recortaba por la derecha el
+ * idioma y el indicador de base local. En vez de apretar la tipografía, se
+ * retira lo que es decoración, de menos a más necesario:
+ *
+ *   1. el indicador «BASE LOCAL», que dice algo que siempre es cierto;
+ *   2. los números 01-05 de la navegación, que acompañan a una etiqueta que ya
+ *      se lee.
+ *
+ * Lo que nunca se va: la marca, el juego activo, las cinco vistas, el valor de
+ * la colección y el estado del actualizador.
+ *
+ * Por debajo de unos 1.290 px la cabecera vuelve a quedarse corta. Ya pasaba
+ * antes de que existieran estos dos controles, y la ventana no baja de 1.040
+ * (`minWidth`, en window.ts); resolverlo de verdad pide replantear la cabecera,
+ * no otro apaño.
+ */
+@media (max-width: 1499px) {
+  /* `!important` porque el elemento lleva su `display: flex` en línea, como
+     todo el diseño de la cabecera, y una regla de hoja de estilos pierde contra
+     un atributo `style`. Es el caso para el que existe `!important`. */
+  .header-optional {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1319px) {
+  .header-navnum {
+    display: none;
+  }
+}
+
 /* ── Barra de desplazamiento ───────────────────────────────────────────────── */
 
 *::-webkit-scrollbar {

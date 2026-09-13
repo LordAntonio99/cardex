@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { VIEWS, type GameId, type UiLang, type ViewId } from '@shared/types'
-import { call, useCollectionStats, useFilterOptions, useUpdateStatus } from '../lib/api'
+import { call, useCollectionStats, useFilterOptions, useSystemInfo, useUpdateStatus } from '../lib/api'
 import { money } from '../lib/format'
 import type { Strings } from '../i18n'
 import { useStore } from '../state/store'
@@ -32,6 +33,99 @@ const NAV_LABEL: Record<ViewId, keyof Strings> = {
 const GAME_LABEL: Record<GameId, keyof Strings> = {
   pokemon: 'gamePokemon',
   riftbound: 'gameRiftbound'
+}
+
+/**
+ * El estado del autoactualizador, y la forma de pedirle que mire.
+ *
+ * Antes sólo se pintaba el estado `ready`, es decir cuando el instalador ya
+ * estaba descargado entero. Entre abrir la aplicación y ese momento no se movía
+ * nada: ni que estaba comprobando, ni que había encontrado una versión, ni el
+ * progreso de una descarga de 140 MB. Y no había manera de pedir la
+ * comprobación, así que quien no quisiera esperar a que saltara sola —a los 8
+ * segundos de arrancar, y luego cada seis horas— no tenía nada que hacer.
+ *
+ * Ahora se enseña siempre, y se puede pulsar. En reposo es la versión que estás
+ * usando, que además es el dato que uno busca cuando se pregunta si está al día.
+ */
+function UpdateBadge({ strings }: { strings: Strings }): React.JSX.Element | null {
+  const update = useUpdateStatus()
+  const system = useSystemInfo()
+  const [checking, setChecking] = useState(false)
+  /** Acaba de comprobarse y no había nada. Se enseña unos segundos y se va. */
+  const [checked, setChecked] = useState(false)
+
+  const status = update.data
+  if (!status) return null
+
+  const ready = status.state === 'ready'
+  const busy = checking || status.state === 'checking'
+  const working = status.state === 'downloading' || status.state === 'available' || busy
+
+  const label = (): string => {
+    if (ready) return strings.updateRestart
+    if (busy) return strings.updateChecking
+    if (status.state === 'downloading') return `${strings.updateDownloading} ${status.percent}%`
+    if (status.state === 'available') return strings.updateAvailable
+    if (status.state === 'error') return strings.updateFailed
+    // Una comprobación que no encuentra nada acaba en 'idle', igual que si nunca
+    // se hubiera pedido. Sin decirlo, pulsar parecía no hacer nada.
+    if (checked) return strings.updateUpToDate
+    // En reposo, la versión en marcha. Pulsar comprueba si hay otra.
+    return `v${system.data?.appVersion ?? ''}`
+  }
+
+  const hint = (): string => {
+    if (ready && status.state === 'ready') return `${strings.updateReady} · ${status.version}`
+    if (status.state === 'error') return status.message
+    return strings.updateCheckHint
+  }
+
+  const act = async (): Promise<void> => {
+    if (ready) {
+      void call('update:install', undefined)
+      return
+    }
+    if (working) return
+    setChecking(true)
+    setChecked(false)
+    try {
+      const next = await call('update:check', undefined)
+      if (next.state === 'idle') {
+        setChecked(true)
+        setTimeout(() => setChecked(false), 4000)
+      }
+    } finally {
+      setChecking(false)
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => void act()}
+      className="font-code no-drag"
+      title={hint()}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        padding: '6px 10px',
+        // Sólo llama la atención lo que pide acción: reiniciar para instalar.
+        // El resto es información, y se pinta como tal.
+        border: `1px solid ${ready ? 'var(--ac)' : 'var(--rule)'}`,
+        background: ready ? 'var(--ac-brand-wash)' : 'transparent',
+        color: ready ? 'var(--ac)' : 'var(--soft)',
+        cursor: working ? 'default' : 'pointer',
+        fontSize: 9.5,
+        letterSpacing: '.12em',
+        whiteSpace: 'nowrap',
+        flex: '0 0 auto'
+      }}
+    >
+      {label()}
+    </button>
+  )
 }
 
 /**
@@ -100,7 +194,6 @@ export function Header({ strings, lang }: { strings: Strings; lang: UiLang }): R
   const settings = useStore((s) => s.settings)
   const setSettings = useStore((s) => s.setSettings)
   const stats = useCollectionStats()
-  const update = useUpdateStatus()
 
   const switchLang = async (next: UiLang): Promise<void> => {
     setSettings(await call('settings:patch', { uiLang: next }))
@@ -135,7 +228,7 @@ export function Header({ strings, lang }: { strings: Strings; lang: UiLang }): R
           height: '100%',
           display: 'flex',
           alignItems: 'center',
-          gap: 28
+          gap: 18
           // Sin `padding` aquí: lo pone `.titlebar-inset`, que además reserva
           // el hueco de los botones de ventana. Un padding en línea lo pisaría.
         }}
@@ -197,7 +290,7 @@ export function Header({ strings, lang }: { strings: Strings; lang: UiLang }): R
                   letterSpacing: 'var(--type-nav-ls)'
                 }}
               >
-                <span className="font-code" style={{ fontSize: 9, opacity: 0.55 }}>
+                <span className="font-code header-navnum" style={{ fontSize: 9, opacity: 0.55 }}>
                   0{i + 1}
                 </span>
                 <span style={{ whiteSpace: 'nowrap' }}>{strings[NAV_LABEL[v]]}</span>
@@ -208,29 +301,7 @@ export function Header({ strings, lang }: { strings: Strings; lang: UiLang }): R
 
         <div style={{ flex: '1 1 40px' }} />
 
-        {/* Aviso de actualización, sólo cuando hay algo que decir. */}
-        {update.data?.state === 'ready' ? (
-          <button
-            type="button"
-            onClick={() => void call('update:install', undefined)}
-            className="font-code no-drag"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '6px 10px',
-              border: '1px solid var(--ac)',
-              background: 'var(--ac-brand-wash)',
-              color: 'var(--ac)',
-              cursor: 'pointer',
-              fontSize: 9.5,
-              letterSpacing: '.12em'
-            }}
-            title={`${strings.updateReady} · ${update.data.version}`}
-          >
-            {strings.updateRestart}
-          </button>
-        ) : null}
+        <UpdateBadge strings={strings} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 18, flex: '0 0 auto' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}>
@@ -275,6 +346,7 @@ export function Header({ strings, lang }: { strings: Strings; lang: UiLang }): R
           </div>
 
           <div
+            className="header-optional"
             style={{
               display: 'flex',
               alignItems: 'center',

@@ -270,8 +270,12 @@ const es = {
   catalogNotPublished: 'Todavía no hay catálogo publicado en el repositorio.',
 
   // Actualización
-  updateAvailable: 'Hay una versión nueva',
-  updateDownloading: 'Descargando actualización',
+  updateAvailable: 'VERSIÓN NUEVA',
+  updateDownloading: 'DESCARGANDO',
+  updateChecking: 'COMPROBANDO',
+  updateFailed: 'REINTENTAR',
+  updateUpToDate: 'AL DÍA',
+  updateCheckHint: 'Pulsa para comprobar si hay una versión nueva',
   updateReady: 'Actualización lista',
   updateRestart: 'REINICIAR',
 
@@ -534,8 +538,12 @@ const en: typeof es = {
   catalogOffline: 'Offline. The app runs on whatever you already have locally.',
   catalogNotPublished: 'No catalogue has been published to the repository yet.',
 
-  updateAvailable: 'A new version is out',
-  updateDownloading: 'Downloading update',
+  updateAvailable: 'NEW VERSION',
+  updateDownloading: 'DOWNLOADING',
+  updateChecking: 'CHECKING',
+  updateFailed: 'RETRY',
+  updateUpToDate: 'UP TO DATE',
+  updateCheckHint: 'Click to check for a new version',
   updateReady: 'Update ready',
   updateRestart: 'RESTART',
 

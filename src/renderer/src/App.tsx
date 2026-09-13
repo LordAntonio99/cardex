@@ -84,6 +84,14 @@ export function App(): React.JSX.Element {
     'catalog:progress',
     useCallback((next) => qc.setQueryData(keys.catalog, next), [qc])
   )
+  // Lo mismo con el autoactualizador. Sin esto nadie escuchaba `update:changed`:
+  // la cabecera sólo se enteraba de que había versión nueva cuando TanStack
+  // Query volvía a pedir el estado por su cuenta, así que la descarga entera
+  // transcurría sin que se moviera nada en pantalla.
+  useIpcEvent(
+    'update:changed',
+    useCallback((next) => qc.setQueryData(keys.update, next), [qc])
+  )
   // Las capturas del móvil se escuchan aquí y no en la vista del escáner. El
   // lote sobrevive al cambio de pantalla a propósito, y lo que el móvil capture
   // mientras el usuario está mirando la colección tiene que entrar igual; con la

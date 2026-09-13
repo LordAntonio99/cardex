@@ -149,7 +149,9 @@ export function registerIpc(): void {
 
   // ── Actualización ──────────────────────────────────────────────────────────
   handle('update:status', () => updater.status())
-  handle('update:check', () => updater.check())
+  // Esta comprobación siempre sale de que alguien pulse: por eso sus fallos se
+  // enseñan, a diferencia de las que dispara el temporizador.
+  handle('update:check', () => updater.check(true))
   handle('update:install', () => updater.install())
 
   log.info('Canales IPC registrados')
