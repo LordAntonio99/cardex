@@ -66,7 +66,7 @@ function parseArgs(argv) {
 
 const cache = new Map()
 
-async function get(url, tries = 3) {
+async function get(url, tries = 5) {
   if (cache.has(url)) return cache.get(url)
   for (let attempt = 1; attempt <= tries; attempt++) {
     try {
@@ -89,7 +89,12 @@ async function get(url, tries = 3) {
         return null
       }
       // La API de TCGdex devuelve 503 cuando va cargada; se espera y se repite.
-      await new Promise((r) => setTimeout(r, 400 * attempt))
+      // El retroceso se dobla en vez de crecer a pasos: en una generación de
+      // casi doscientos sets las sobrecargas vienen a rachas, y tres intentos
+      // separados por medio segundo se agotaban dentro de la misma racha. Una
+      // carta que agota los intentos no falla ruidosamente: entra sin su nombre
+      // traducido, y el catálogo sale peor que el que ya estaba publicado.
+      await new Promise((r) => setTimeout(r, 400 * 2 ** (attempt - 1)))
     }
   }
   return null
@@ -316,6 +321,14 @@ async function buildSet(setId, langs, limit, concurrency) {
       }
     })
 
+    // TCGdex devuelve a veces la misma impresión dos veces —pasa en la mitad de
+    // las cartas de los sets `e` japoneses— y son copias exactas, no
+    // impresiones distintas que compartan identificador. Se queda la primera:
+    // dejarlas pasar revienta la importación con un UNIQUE de `card_printings`,
+    // y eso tira el set entero, no sólo la carta.
+    const vistas = new Set()
+    const unicas = printings.filter((p) => (vistas.has(p.id) ? false : vistas.add(p.id)))
+
     process.stdout.write('.')
     return {
       id: full.id,
@@ -336,7 +349,7 @@ async function buildSet(setId, langs, limit, concurrency) {
       imagePath: imagePath(full.image),
       variants: variantList(full.variants),
       langs: availableLangs,
-      printings
+      printings: unicas
     }
   })
 
@@ -431,32 +444,43 @@ Opciones:
     const built = await buildSet(setId, args.langs, args.limit, args.concurrency)
     if (!built) continue
 
+    // Manda el identificador que declara la ficha, no el que se pidió. El
+    // listado japonés de TCGdex ofrece 'SM10' y 'SM1+', pero sus fichas dicen
+    // 'sm10' y 'sm1': el fichero se llamaba de una forma y se declaraba de otra,
+    // y el importador —con razón— rechazaba el set entero. Además dos entradas
+    // del listado pueden resolver al mismo set, así que se descarta la repetida.
+    const canonId = built.set.id
+    if (byId.has(canonId)) {
+      console.log(`    (${setId} es el mismo set que ${canonId}, ya generado)`)
+      continue
+    }
+
     // Superposición de sobres hecha a mano: TCGdex no los tiene, así que lo
     // que haya en packs/<setId>.json manda y sobrevive a la regeneración.
-    const overlay = path.join(packsDir, `${setId}.json`)
+    const overlay = path.join(packsDir, `${canonId}.json`)
     if (existsSync(overlay)) {
       try {
         const packs = JSON.parse(await readFile(overlay, 'utf8'))
         if (Array.isArray(packs)) built.packs = packs
-        console.log(`    + ${packs.length} sobre(s) de ${args.packs}/${setId}.json`)
+        console.log(`    + ${packs.length} sobre(s) de ${args.packs}/${canonId}.json`)
       } catch (e) {
-        console.warn(`    ! ${args.packs}/${setId}.json ilegible: ${e.message}`)
+        console.warn(`    ! ${args.packs}/${canonId}.json ilegible: ${e.message}`)
       }
     }
 
     // Sin saltos de línea al final y con claves estables: así el sha256 sólo
     // cambia cuando cambia el contenido de verdad.
     const body = JSON.stringify(built)
-    const file = `sets/${setId}.json`
+    const file = `sets/${canonId}.json`
     await writeFile(path.join(outDir, file), body, 'utf8')
 
     entries.push({
-      id: setId,
+      id: canonId,
       file,
       sha256: createHash('sha256').update(body, 'utf8').digest('hex'),
       cardCount: built.cards.length
     })
-    byId.set(setId, built.cards)
+    byId.set(canonId, built.cards)
   }
 
   // ── Vectores de reconocimiento ────────────────────────────────────────────
