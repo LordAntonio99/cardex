@@ -1,0 +1,52 @@
+[
+  {
+    "id": "sv10.5w-booster",
+    "name": "White Flare Booster Pack",
+    "names": {
+      "es": "Sobre Llama Blanca",
+      "en": "White Flare Booster Pack"
+    },
+    "kind": "booster",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/3/32/SV10.5_WHT_Booster_EN.png/300px-SV10.5_WHT_Booster_EN.png"
+  },
+  {
+    "id": "sv10.5w-etb",
+    "name": "White Flare Elite Trainer Box",
+    "names": {
+      "es": "Caja de Entrenador Élite Llama Blanca",
+      "en": "White Flare Elite Trainer Box"
+    },
+    "kind": "etb",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/e/e5/SV10.5_WHT_Elite_Trainer_Box.png/300px-SV10.5_WHT_Elite_Trainer_Box.png"
+  },
+  {
+    "id": "sv10.5w-bundle",
+    "name": "White Flare Booster Bundle",
+    "names": {
+      "es": "Pack de Sobres Llama Blanca",
+      "en": "White Flare Booster Bundle"
+    },
+    "kind": "bundle",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/a/a8/SV10.5_WHT_Booster_Bundle.jpg/440px-SV10.5_WHT_Booster_Bundle.jpg"
+  },
+  {
+    "id": "sv10.5w-binder",
+    "name": "White Flare Binder Collection",
+    "names": {
+      "es": "Colección con Archivador Llama Blanca",
+      "en": "White Flare Binder Collection"
+    },
+    "kind": "collection",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/5/5f/SV10.5_WHT_Binder_Collection.png/300px-SV10.5_WHT_Binder_Collection.png"
+  },
+  {
+    "id": "sv10.5w-tech-sticker",
+    "name": "White Flare Tech Sticker Collection",
+    "names": {
+      "es": "Colección con Pegatinas Llama Blanca",
+      "en": "White Flare Tech Sticker Collection"
+    },
+    "kind": "collection",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/6/6e/SV10.5_WHT_Tech_Sticker_Collection.jpg/440px-SV10.5_WHT_Tech_Sticker_Collection.jpg"
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "sv10.5b-booster",
+    "name": "Black Bolt Booster Pack",
+    "names": {
+      "es": "Sobre Fulgor Negro",
+      "en": "Black Bolt Booster Pack"
+    },
+    "kind": "booster",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/3/3f/SV10.5_BLK_Booster_EN.png/300px-SV10.5_BLK_Booster_EN.png"
+  },
+  {
+    "id": "sv10.5b-etb",
+    "name": "Black Bolt Elite Trainer Box",
+    "names": {
+      "es": "Caja de Entrenador Élite Fulgor Negro",
+      "en": "Black Bolt Elite Trainer Box"
+    },
+    "kind": "etb",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/b/b3/SV10.5_BLK_Elite_Trainer_Box.png/300px-SV10.5_BLK_Elite_Trainer_Box.png"
+  },
+  {
+    "id": "sv10.5b-bundle",
+    "name": "Black Bolt Booster Bundle",
+    "names": {
+      "es": "Pack de Sobres Fulgor Negro",
+      "en": "Black Bolt Booster Bundle"
+    },
+    "kind": "bundle",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/3/3c/SV10.5_BLK_Booster_Bundle.jpg/440px-SV10.5_BLK_Booster_Bundle.jpg"
+  },
+  {
+    "id": "sv10.5b-binder",
+    "name": "Black Bolt Binder Collection",
+    "names": {
+      "es": "Colección con Archivador Fulgor Negro",
+      "en": "Black Bolt Binder Collection"
+    },
+    "kind": "collection",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/9/9f/SV10.5_BLK_Binder_Collection.png/300px-SV10.5_BLK_Binder_Collection.png"
+  },
+  {
+    "id": "sv10.5b-tech-sticker",
+    "name": "Black Bolt Tech Sticker Collection",
+    "names": {
+      "es": "Colección con Pegatinas Fulgor Negro",
+      "en": "Black Bolt Tech Sticker Collection"
+    },
+    "kind": "collection",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/c/cb/SV10.5_BLK_Tech_Sticker_Collection.jpg/440px-SV10.5_BLK_Tech_Sticker_Collection.jpg"
+  }
+]

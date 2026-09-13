@@ -1,6 +1,8 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { VIEWS, type CardLang, type ViewId } from '@shared/types'
 import { CardViewer } from './components/card/CardViewer'
+import { CatalogUpdate } from './components/CatalogUpdate'
 import { DetailPanel } from './layout/DetailPanel'
 import { Header } from './layout/Header'
 import { Sidebar } from './layout/Sidebar'
@@ -10,6 +12,7 @@ import { ScannerView } from './views/ScannerView'
 import { SetsView } from './views/SetsView'
 import { t } from './i18n'
 import {
+  keys,
   useCatalogStatus,
   useDbInvalidation,
   useCard,
@@ -31,6 +34,7 @@ export function App(): React.JSX.Element {
   const viewCardId = useStore((s) => s.viewCardId)
   const filters = useStore((s) => s.filters)
 
+  const qc = useQueryClient()
   const loadedSettings = useSettings()
   const system = useSystemInfo()
   const filterOptions = useFilterOptions()
@@ -72,7 +76,13 @@ export function App(): React.JSX.Element {
     if ((VIEWS as readonly string[]).includes(next)) setView(next as ViewId)
   })
   // La sincronización de catálogo empuja su progreso; se refleja al momento.
-  useIpcEvent('catalog:progress', () => void catalog.refetch())
+  // El evento ya trae el estado completo. Antes se descartaba y se volvía a
+  // pedir por IPC, lo que perdía los avisos de progreso intermedios: llegaban
+  // más rápido de lo que tardaba la consulta en responder.
+  useIpcEvent(
+    'catalog:progress',
+    useCallback((next) => qc.setQueryData(keys.catalog, next), [qc])
+  )
 
   const strings = t(settings.uiLang)
   const cardLang: CardLang =
@@ -81,6 +91,8 @@ export function App(): React.JSX.Element {
 
   return (
     <>
+      <CatalogUpdate status={catalog.data} strings={strings} />
+
       <Header strings={strings} lang={settings.uiLang} />
 
       <div style={{ display: 'flex', alignItems: 'stretch', flex: 1, minHeight: 0, position: 'relative' }}>

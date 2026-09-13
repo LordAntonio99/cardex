@@ -52,6 +52,15 @@ export interface IpcRequests {
   'system:setTheme': { req: ThemeSource; res: 'light' | 'dark' }
   'system:openPath': { req: { what: 'userData' | 'images' | 'logs' }; res: void }
   'system:openExternal': { req: { url: string }; res: void }
+  /**
+   * Reinicia la aplicación.
+   *
+   * Lo pide la pantalla de actualización de catálogo: tras traer sets nuevos hay
+   * consultas cacheadas, vectores cargados en el reconocedor y una rejilla
+   * virtualizada a medio pintar. Invalidar todo eso pieza a pieza es más frágil
+   * que arrancar limpio, y arrancar es cosa de segundos.
+   */
+  'system:restart': { req: void; res: void }
 
   // Catálogo ──────────────────────────────────────────────────────────────────
   'catalog:status': { req: void; res: CatalogStatus }
@@ -164,6 +173,7 @@ export const IPC_CHANNELS = [
   'system:setTheme',
   'system:openPath',
   'system:openExternal',
+  'system:restart',
   'catalog:status',
   'catalog:sync',
   'catalog:filters',
