@@ -17,15 +17,21 @@ sin servidor: todo vive en tu equipo.
 
 La novedad es que **el escáner reconoce cartas de verdad**, en tu equipo y sin conexión.
 
-Al abrirla por primera vez se descarga el catálogo publicado: diez sets y 1.407 cartas, con sus
-imágenes, sus sobres, precios de Cardmarket y las huellas visuales que usa el escáner. Mientras
-llega verás una pantalla con el progreso. Tu colección arranca vacía.
+Al abrirla por primera vez se descarga el catálogo publicado: 66 sets y 8.972 cartas —4.072 de
+ellas japonesas— con sus imágenes, sus sobres, precios de Cardmarket y las 13.545 huellas
+visuales que usa el escáner. Son unos 27 MB, casi todo huellas. Mientras llega verás una
+pantalla con el progreso. Tu colección arranca vacía.
 
 Lo que **todavía no** hace:
 
 - El escáner **no reconoce las colecciones de McDonald's**. TCGdex tiene sus datos pero ninguna
   imagen de carta, y sin imagen de referencia no hay con qué comparar. Se coleccionan igual, a
   mano.
+- **Del japonés está lo que se puede reconocer, no todo lo que existe.** De los 184 sets que
+  TCGdex publica en japonés, 46 no tienen ninguna carta dentro y otros 72 vienen sin imágenes:
+  toda la serie Mega, los sets antiguos, y los japoneses de Black Bolt y White Flare. Sin imagen
+  no hay huella visual, así que esos sets no entran en el catálogo. Si TCGdex las publica algún
+  día llegarán solas, porque el catálogo se actualiza por su cuenta.
 - El escáner **no distingue una holográfica de su versión normal**. Ninguna fuente publica una
   imagen por variante, así que propone la más probable de las que la carta admite y tú la
   corriges con un clic antes de confirmar el lote. Lo mismo con la 1ª edición, que nunca se
@@ -64,6 +70,19 @@ que colarte una carta equivocada en la colección.
 El reconocimiento compara lo que ve con una huella visual de cada carta que viaja en el
 catálogo. Si el escáner dice **«sin datos de reconocimiento»**, es que el catálogo instalado es
 anterior a esta función: sincronízalo.
+
+### Di en qué idioma escaneas
+
+Arriba del panel del móvil hay una fila `AUTO · ES · EN · JA`. No es cosmética: el
+reconocimiento **no puede deducir el idioma mirando**, porque la misma carta en español, inglés
+o japonés da un parecido casi idéntico — sólo cambian unas líneas de texto pequeño. Así que se
+lo tienes que decir tú, y cambia con cada caja que abres.
+
+Con las impresiones japonesas en el catálogo eso pasó a decidir algo más gordo que una etiqueta.
+La japonesa no es la misma carta con otro texto: es otra carta, de otro set, con otro número y
+otro precio. Si declaras japonés, el escáner propone la impresión japonesa y deja la occidental
+como alternativa; si no declaras nada, propone la que más se parezca, que en un empate visual
+puede ser cualquiera de las dos.
 
 ### Escanear con el móvil
 
@@ -176,6 +195,7 @@ metida en la colección cuesta encontrarla y arreglarla.
 ### Comprobaciones
 
 ```bash
+npm run catalog:check # el catálogo generado, contra lo que exige el importador
 npm run typecheck     # main + preload + renderer
 npm run build:win     # instalador NSIS en release/<versión>
 ```

@@ -5,6 +5,7 @@ import { BatchList } from '../components/scan/BatchList'
 import { CameraPane } from '../components/scan/CameraPane'
 import { PhonePanel } from '../components/scan/PhonePanel'
 import { PhoneReview } from '../components/scan/PhoneReview'
+import { ScanLang } from '../components/scan/ScanLang'
 import {
   call,
   keys,
@@ -226,6 +227,14 @@ export function ScannerView({
             </span>
           </button>
         ) : null}
+
+        {/* Va antes que todo lo demás porque condiciona lo que el escáner
+            propone: sin declararlo, una carta japonesa entra como occidental. */}
+        <ScanLang
+          value={settings.data?.scanLang ?? null}
+          onChange={(next) => void patchSettings({ scanLang: next })}
+          strings={strings}
+        />
 
         <PhonePanel strings={strings} />
 

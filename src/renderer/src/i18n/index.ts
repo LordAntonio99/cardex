@@ -104,6 +104,7 @@ const es = {
   scanAutoOn: 'Se dispara solo cuando la carta se queda quieta',
   scanAutoOff: 'Pulsa «Capturar» para cada carta',
   scanLangLabel: 'IDIOMA DE MIS CARTAS',
+  scanLangAuto: 'AUTO',
 
   // Escanear con el móvil
   phoneEyebrow: 'ESCANEAR CON EL MÓVIL',
@@ -363,6 +364,7 @@ const en: typeof es = {
   scanAutoOn: 'Fires on its own once the card holds still',
   scanAutoOff: 'Press "Capture" for each card',
   scanLangLabel: 'LANGUAGE OF MY CARDS',
+  scanLangAuto: 'AUTO',
 
   phoneEyebrow: 'SCAN WITH YOUR PHONE',
   phoneIntro: 'Use the phone camera instead of the webcam. A page opens on the phone, nothing to install, and the cards land in this same batch.',
