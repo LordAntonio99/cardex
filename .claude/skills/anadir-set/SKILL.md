@@ -27,6 +27,11 @@ De dónde sale cada cosa:
 > sólo añade), pero **una instalación nueva se quedará sólo con el set nuevo**. Se regeneran
 > **siempre todos los sets publicados a la vez, de los dos juegos**: una ejecución con `--sets`
 > y sin `--riftbound` borra Riftbound del manifiesto, y al revés.
+>
+> **Salvo con `--keep`**, que conserva en el índice lo que ya estaba en `--out` y no se ha
+> regenerado, comprobando que cada fichero sigue ahí y que su `sha256` cuadra. Es lo que hace
+> práctico añadir un set cuando ya hay setenta: con `--keep` son minutos, sin él son horas. Si
+> algo no cuadra, se planta y lo dice.
 
 ---
 

@@ -100,6 +100,29 @@ entero en cada ejecución: dos generadores publicarían dos índices donde el ot
 existe. `scripts/build-catalog.mjs` orquesta y escribe, y `scripts/riftbound.mjs` es el origen
 de Riftbound.
 
+### Añadir sets sin regenerarlo todo: `--keep`
+
+Con setenta sets y sus vectores, regenerarlo todo para añadir uno son horas de descargas. Con
+`--keep`, los sets que ya estaban en `--out` y no se han vuelto a generar **siguen en el
+índice**:
+
+```bash
+npm run catalog:build -- --riftbound ogn,sfd,unl,ven --recognition --keep \
+  --out ../cardex-catalog/catalog
+```
+
+La garantía que daba regenerarlo todo —que no desaparezca un set del índice sin que nadie se
+entere— se mantiene por otra vía: en lugar de rehacer el fichero, se **comprueba** que sigue en
+disco y que su `sha256` es el que declaraba el manifiesto. Si falta o no cuadra, el generador
+**se planta** en vez de publicar un índice que apunta a un fichero que ya no es el que dice ser.
+
+Los vectores se conservan también para un set que sí se ha regenerado, si esa ejecución no
+llevaba `--recognition`: cambian a otro ritmo que los precios, y las cartas que ya no existan se
+filtran al cargarlos.
+
+Sin `--keep`, la regla de siempre: **se regeneran todos los sets publicados a la vez, de los dos
+juegos**.
+
 Opciones: `--langs es,en` (el primero aporta la ficha completa; sólo afecta a Pokémon),
 `--limit N`, `--out dir`, `--concurrency N`.
 
