@@ -27,6 +27,7 @@
     "catalog:sample": "node scripts/build-catalog.mjs --sets sv03 --limit 30",
     "catalog:recognition": "node scripts/build-catalog.mjs --recognition",
     "recog:eval": "node scripts/recog-eval.mjs",
+    "catalog:check": "node scripts/validate-catalog.mjs",
     "catalog:serve": "node scripts/serve-catalog.mjs"
   },
   "dependencies": {
