@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "catalogVersion": "2026.09.13",
-  "generatedAt": "2026-09-13T17:07:04.079Z",
+  "generatedAt": "2026-09-13T21:10:00.613Z",
   "sets": [
     {
       "id": "base1",
@@ -402,25 +402,25 @@
     {
       "id": "rb-ogn",
       "file": "sets/rb-ogn.json",
-      "sha256": "ecbd71c9e4768c8c6bb66a4a6893baceaefe44c7abae6ef30d8e756771c88bbd",
+      "sha256": "5ec578c5416af1f368e6d49e72ba9b0b7a93aeb3730aa164618f855a1538a8a0",
       "cardCount": 352
     },
     {
       "id": "rb-sfd",
       "file": "sets/rb-sfd.json",
-      "sha256": "e2080ed7ecd060a8c936b72ee2f8d5156b918394f187ea3868f88698b3bf2498",
+      "sha256": "fc9b0d4d81a667573793f62809d9e56d8ace07d6e2c284124e24772b76797dcb",
       "cardCount": 288
     },
     {
       "id": "rb-unl",
       "file": "sets/rb-unl.json",
-      "sha256": "7583de3826b74442010a41c908590f1f4a7ccdfa95adc5e77fef62ed337cf916",
+      "sha256": "1c2545c3742e29e22414bda9ff80db4e11f4d736e04f661da2f957ab8a84afae",
       "cardCount": 288
     },
     {
       "id": "rb-ven",
       "file": "sets/rb-ven.json",
-      "sha256": "ecd39db3f2a870079071d9b57085b001005fd4ac890dce549f48916a6ed7e5d0",
+      "sha256": "82af943c5371bbb2ce164d24ed84d5bac3301ec6c92df338030afb9959b5520e",
       "cardCount": 237
     }
   ],
