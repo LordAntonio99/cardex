@@ -1,0 +1,82 @@
+[
+  {
+    "id": "sv08-booster-pikachu",
+    "name": "Surging Sparks Booster Pack (Pikachu)",
+    "names": {
+      "es": "Sobre Chispas Fulgurantes (Pikachu)",
+      "en": "Surging Sparks Booster Pack (Pikachu)"
+    },
+    "kind": "booster",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/8/8b/SV8_Booster_Pikachu.png/300px-SV8_Booster_Pikachu.png"
+  },
+  {
+    "id": "sv08-booster-latias",
+    "name": "Surging Sparks Booster Pack (Latias)",
+    "names": {
+      "es": "Sobre Chispas Fulgurantes (Latias)",
+      "en": "Surging Sparks Booster Pack (Latias)"
+    },
+    "kind": "booster",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/0/08/SV8_Booster_Latias.png/300px-SV8_Booster_Latias.png"
+  },
+  {
+    "id": "sv08-booster-archaludon",
+    "name": "Surging Sparks Booster Pack (Archaludon)",
+    "names": {
+      "es": "Sobre Chispas Fulgurantes (Archaludon)",
+      "en": "Surging Sparks Booster Pack (Archaludon)"
+    },
+    "kind": "booster",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/4/4b/SV8_Booster_Archaludon.png/300px-SV8_Booster_Archaludon.png"
+  },
+  {
+    "id": "sv08-booster-exeggutor",
+    "name": "Surging Sparks Booster Pack (Alolan Exeggutor)",
+    "names": {
+      "es": "Sobre Chispas Fulgurantes (Exeggutor de Alola)",
+      "en": "Surging Sparks Booster Pack (Alolan Exeggutor)"
+    },
+    "kind": "booster",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/9/96/SV8_Booster_Alolan_Exeggutor.png/300px-SV8_Booster_Alolan_Exeggutor.png"
+  },
+  {
+    "id": "sv08-etb",
+    "name": "Surging Sparks Elite Trainer Box",
+    "names": {
+      "es": "Caja de Entrenador Élite Chispas Fulgurantes",
+      "en": "Surging Sparks Elite Trainer Box"
+    },
+    "kind": "etb",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/5/59/SV8_Elite_Trainer_Box.jpg/440px-SV8_Elite_Trainer_Box.jpg"
+  },
+  {
+    "id": "sv08-bundle",
+    "name": "Surging Sparks Booster Bundle",
+    "names": {
+      "es": "Pack de Sobres Chispas Fulgurantes",
+      "en": "Surging Sparks Booster Bundle"
+    },
+    "kind": "bundle",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/7/7c/SV8_Booster_Bundle_1.jpg/440px-SV8_Booster_Bundle_1.jpg"
+  },
+  {
+    "id": "sv08-build-battle",
+    "name": "Surging Sparks Build & Battle Box",
+    "names": {
+      "es": "Caja Construye y Combate Chispas Fulgurantes",
+      "en": "Surging Sparks Build & Battle Box"
+    },
+    "kind": "collection",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/6/6d/SV8_Build_Battle_Box.jpg/440px-SV8_Build_Battle_Box.jpg"
+  },
+  {
+    "id": "sv08-display",
+    "name": "Surging Sparks Booster Display (36)",
+    "names": {
+      "es": "Caja de 36 Sobres Chispas Fulgurantes",
+      "en": "Surging Sparks Booster Display (36)"
+    },
+    "kind": "bundle",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/4/4e/SV8_Booster_Display_Box.png/300px-SV8_Booster_Display_Box.png"
+  }
+]

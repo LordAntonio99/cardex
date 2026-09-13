@@ -1,0 +1,62 @@
+[
+  {
+    "id": "sv08.5-etb",
+    "name": "Prismatic Evolutions Elite Trainer Box",
+    "names": {
+      "es": "Caja de Entrenador Élite Evoluciones Prismáticas",
+      "en": "Prismatic Evolutions Elite Trainer Box"
+    },
+    "kind": "etb",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/c/ca/SV8.5_Elite_Trainer_Box.jpg/300px-SV8.5_Elite_Trainer_Box.jpg"
+  },
+  {
+    "id": "sv08.5-bundle",
+    "name": "Prismatic Evolutions Booster Bundle",
+    "names": {
+      "es": "Pack de Sobres Evoluciones Prismáticas",
+      "en": "Prismatic Evolutions Booster Bundle"
+    },
+    "kind": "bundle",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/d/de/SV8.5_Booster_Bundle.png/300px-SV8.5_Booster_Bundle.png"
+  },
+  {
+    "id": "sv08.5-binder",
+    "name": "Prismatic Evolutions Binder Collection",
+    "names": {
+      "es": "Colección con Archivador Evoluciones Prismáticas",
+      "en": "Prismatic Evolutions Binder Collection"
+    },
+    "kind": "collection",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/b/b0/SV8.5_Binder_Collection.jpg/440px-SV8.5_Binder_Collection.jpg"
+  },
+  {
+    "id": "sv08.5-super-premium",
+    "name": "Prismatic Evolutions Super-Premium Collection",
+    "names": {
+      "es": "Colección Súper Premium Evoluciones Prismáticas",
+      "en": "Prismatic Evolutions Super-Premium Collection"
+    },
+    "kind": "collection",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/f/fe/SV8.5_Super-Premium_Collection.jpg/440px-SV8.5_Super-Premium_Collection.jpg"
+  },
+  {
+    "id": "sv08.5-surprise-box",
+    "name": "Prismatic Evolutions Surprise Box",
+    "names": {
+      "es": "Caja Sorpresa Evoluciones Prismáticas",
+      "en": "Prismatic Evolutions Surprise Box"
+    },
+    "kind": "collection",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/6/62/SV8.5_Surprise_Box.jpg/440px-SV8.5_Surprise_Box.jpg"
+  },
+  {
+    "id": "sv08.5-poster",
+    "name": "Prismatic Evolutions Poster Collection",
+    "names": {
+      "es": "Colección con Póster Evoluciones Prismáticas",
+      "en": "Prismatic Evolutions Poster Collection"
+    },
+    "kind": "collection",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/9/9b/SV8.5_Poster_Collection.jpg/440px-SV8.5_Poster_Collection.jpg"
+  }
+]

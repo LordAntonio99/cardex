@@ -1,0 +1,92 @@
+[
+  {
+    "id": "me01-booster-venusaur",
+    "name": "Mega Evolution Booster Pack (Mega Venusaur)",
+    "names": {
+      "es": "Sobre Megaevolución (Mega Venusaur)",
+      "en": "Mega Evolution Booster Pack (Mega Venusaur)"
+    },
+    "kind": "booster",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/f/fd/ME1_Booster_Mega_Venusaur.png/300px-ME1_Booster_Mega_Venusaur.png"
+  },
+  {
+    "id": "me01-booster-gardevoir",
+    "name": "Mega Evolution Booster Pack (Mega Gardevoir)",
+    "names": {
+      "es": "Sobre Megaevolución (Mega Gardevoir)",
+      "en": "Mega Evolution Booster Pack (Mega Gardevoir)"
+    },
+    "kind": "booster",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/c/c4/ME1_Booster_Mega_Gardevoir.png/300px-ME1_Booster_Mega_Gardevoir.png"
+  },
+  {
+    "id": "me01-booster-lucario",
+    "name": "Mega Evolution Booster Pack (Mega Lucario)",
+    "names": {
+      "es": "Sobre Megaevolución (Mega Lucario)",
+      "en": "Mega Evolution Booster Pack (Mega Lucario)"
+    },
+    "kind": "booster",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/1/12/ME1_Booster_Mega_Lucario.png/300px-ME1_Booster_Mega_Lucario.png"
+  },
+  {
+    "id": "me01-booster-kangaskhan",
+    "name": "Mega Evolution Booster Pack (Mega Kangaskhan)",
+    "names": {
+      "es": "Sobre Megaevolución (Mega Kangaskhan)",
+      "en": "Mega Evolution Booster Pack (Mega Kangaskhan)"
+    },
+    "kind": "booster",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/b/b6/ME1_Booster_Mega_Kangaskhan.png/300px-ME1_Booster_Mega_Kangaskhan.png"
+  },
+  {
+    "id": "me01-etb-gardevoir",
+    "name": "Mega Evolution Elite Trainer Box (Mega Gardevoir)",
+    "names": {
+      "es": "Caja de Entrenador Élite Megaevolución (Mega Gardevoir)",
+      "en": "Mega Evolution Elite Trainer Box (Mega Gardevoir)"
+    },
+    "kind": "etb",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/c/c0/ME1_ETB_Mega_Gardevoir_box_art.png/300px-ME1_ETB_Mega_Gardevoir_box_art.png"
+  },
+  {
+    "id": "me01-etb-lucario",
+    "name": "Mega Evolution Elite Trainer Box (Mega Lucario)",
+    "names": {
+      "es": "Caja de Entrenador Élite Megaevolución (Mega Lucario)",
+      "en": "Mega Evolution Elite Trainer Box (Mega Lucario)"
+    },
+    "kind": "etb",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/6/6f/ME1_ETB_Mega_Lucario_box_art.png/300px-ME1_ETB_Mega_Lucario_box_art.png"
+  },
+  {
+    "id": "me01-bundle",
+    "name": "Mega Evolution Booster Bundle",
+    "names": {
+      "es": "Pack de Sobres Megaevolución",
+      "en": "Mega Evolution Booster Bundle"
+    },
+    "kind": "bundle",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/4/4c/ME1_Booster_Bundle.png/300px-ME1_Booster_Bundle.png"
+  },
+  {
+    "id": "me01-build-battle",
+    "name": "Mega Evolution Build & Battle Box",
+    "names": {
+      "es": "Caja Construye y Combate Megaevolución",
+      "en": "Mega Evolution Build & Battle Box"
+    },
+    "kind": "collection",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/b/bb/ME1_Build_Battle_Box.png/300px-ME1_Build_Battle_Box.png"
+  },
+  {
+    "id": "me01-display",
+    "name": "Mega Evolution Booster Display (36)",
+    "names": {
+      "es": "Caja de 36 Sobres Megaevolución",
+      "en": "Mega Evolution Booster Display (36)"
+    },
+    "kind": "bundle",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/e/e7/ME1_Booster_Display_Box.png/300px-ME1_Booster_Display_Box.png"
+  }
+]
