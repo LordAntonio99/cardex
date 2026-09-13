@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { TICK_HZ, WEBCAM, WORK_H, WORK_W } from '@shared/scan-tuning'
 import type { ScanEngineStatus, ScanStatus } from '@shared/types'
 import { Button, Eyebrow, GridTexture } from '../ds'
 import type { Strings } from '../../i18n'
@@ -15,27 +16,11 @@ import type { Strings } from '../../i18n'
 
 type CamState = 'off' | 'starting' | 'live' | 'denied'
 
-/** Lado del lienzo de trabajo. Con esto sobra para medir movimiento. */
-const WORK_W = 96
-const WORK_H = 132
-
-/** Veces por segundo que se mira el fotograma. */
-const TICK_HZ = 8
-
-/**
- * Umbrales del disparo automático, en niveles de gris medios (0-255).
- *
- * `PRESENCE_ON` es cuánto tiene que cambiar el marco respecto al fondo vacío
- * para creer que hay algo; `MOTION_STILL`, cuánto puede cambiar entre
- * fotogramas para considerarlo quieto. Son generosos a propósito: equivocarse
- * disparando de más sólo cuesta 100 ms de reconocimiento, y el resultado malo
- * se descarta solo.
+/*
+ * Los umbrales viven en `@shared/scan-tuning`, junto a los del móvil, porque
+ * son dos disparadores con el mismo esqueleto y números distintos y conviene
+ * verlos juntos. Los de aquí asumen cámara quieta sobre la mesa.
  */
-const PRESENCE_ON = 14
-const PRESENCE_OFF = 7
-const MOTION_STILL = 3.2
-const STILL_TICKS = 4
-const CLEAR_TICKS = 6
 
 export interface CameraHandle {
   busy: boolean
@@ -264,9 +249,9 @@ export function CameraPane({
       // Desarmado tras un disparo: se espera a que el marco vuelva a estar
       // vacío. Así una carta que se queda en la mesa no se escanea en bucle.
       if (!armedRef.current) {
-        if (presence < PRESENCE_OFF) {
+        if (presence < WEBCAM.presenceOff) {
           clearRef.current += 1
-          if (clearRef.current >= CLEAR_TICKS) {
+          if (clearRef.current >= WEBCAM.clearTicks) {
             armedRef.current = true
             clearRef.current = 0
             // El fondo se reaprende: la luz de la habitación cambia.
@@ -279,22 +264,22 @@ export function CameraPane({
         return
       }
 
-      if (presence < PRESENCE_ON) {
+      if (presence < WEBCAM.presenceOn) {
         stillRef.current = 0
         setHint('idle')
         return
       }
 
-      if (motion > MOTION_STILL) {
+      if (motion > WEBCAM.motionStill) {
         stillRef.current = 0
         setHint('hold')
         return
       }
 
       stillRef.current += 1
-      setHint(stillRef.current >= STILL_TICKS ? 'ready' : 'hold')
+      setHint(stillRef.current >= WEBCAM.stillTicks ? 'ready' : 'hold')
 
-      if (stillRef.current >= STILL_TICKS && autoRef.current && !busyRef.current) {
+      if (stillRef.current >= WEBCAM.stillTicks && autoRef.current && !busyRef.current) {
         armedRef.current = false
         stillRef.current = 0
         fire()

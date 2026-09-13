@@ -11,6 +11,7 @@ import type {
   GameId,
   PortfolioSnapshot,
   PortfolioStats,
+  PhoneSession,
   ScanEngineStatus,
   SetProgress,
   UpdateStatus
@@ -46,6 +47,7 @@ export const keys = {
   sets: ['sets'] as const,
   collection: ['collection'] as const,
   scanEngine: ['scan', 'engine'] as const,
+  phone: ['phone'] as const,
   update: ['update'] as const
 }
 
@@ -70,6 +72,15 @@ export const useFilterOptions = (): UseQueryResult<FilterOptions> =>
  */
 export const useScanEngine = (): UseQueryResult<ScanEngineStatus> =>
   useQuery({ queryKey: keys.scanEngine, queryFn: () => call('scan:engineStatus', undefined) })
+
+/**
+ * Estado del servidor del móvil.
+ *
+ * Igual que el motor: se pide al montar porque los eventos anteriores se
+ * pierden, y a partir de ahí lo refresca `phone:session`.
+ */
+export const usePhoneSession = (): UseQueryResult<PhoneSession> =>
+  useQuery({ queryKey: keys.phone, queryFn: () => call('phone:status', undefined) })
 
 export const useCardPage = (query: CardQuery, enabled = true): UseQueryResult<CardPage> =>
   useQuery({

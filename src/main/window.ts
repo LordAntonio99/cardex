@@ -90,11 +90,15 @@ export function createWindow(): BrowserWindow {
     return { action: 'deny' }
   })
 
-  // La cámara del escáner. Todo lo demás se deniega.
+  // La cámara del escáner y el botón de copiar del panel de ayuda del móvil.
+  // Todo lo demás se deniega.
+  const ALLOWED = ['media', 'clipboard-sanitized-write']
   win.webContents.session.setPermissionRequestHandler((_wc, permission, callback) => {
-    callback(permission === 'media')
+    callback(ALLOWED.includes(permission))
   })
-  win.webContents.session.setPermissionCheckHandler((_wc, permission) => permission === 'media')
+  win.webContents.session.setPermissionCheckHandler((_wc, permission) =>
+    ALLOWED.includes(permission)
+  )
 
   const persist = (): void => {
     if (win.isDestroyed()) return

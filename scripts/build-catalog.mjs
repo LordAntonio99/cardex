@@ -78,7 +78,7 @@ function parseArgs(argv) {
 
 const cache = new Map()
 
-async function get(url, tries = 3) {
+async function get(url, tries = 5) {
   if (cache.has(url)) return cache.get(url)
   for (let attempt = 1; attempt <= tries; attempt++) {
     try {
@@ -101,7 +101,12 @@ async function get(url, tries = 3) {
         return null
       }
       // La API de TCGdex devuelve 503 cuando va cargada; se espera y se repite.
-      await new Promise((r) => setTimeout(r, 400 * attempt))
+      // El retroceso se dobla en vez de crecer a pasos: en una generación de
+      // casi doscientos sets las sobrecargas vienen a rachas, y tres intentos
+      // separados por medio segundo se agotaban dentro de la misma racha. Una
+      // carta que agota los intentos no falla ruidosamente: entra sin su nombre
+      // traducido, y el catálogo sale peor que el que ya estaba publicado.
+      await new Promise((r) => setTimeout(r, 400 * 2 ** (attempt - 1)))
     }
   }
   return null
@@ -180,6 +185,17 @@ function printingLabel(v) {
  * La 1ª edición manda sobre todo lo demás: es lo que separa un Charizard de
  * 590 € de uno de 3.500 €.
  */
+/**
+ * El sello, en la forma que usa el resto del código.
+ *
+ * TCGdex traduce este campo, y en los sets occidentales daba igual porque la
+ * forma estructural se toma siempre del inglés. En un set japonés no hay inglés
+ * del que tomarla, y el japonés escribe «1st edition» con espacio donde el
+ * inglés pone «1st-edition»: sin normalizar, una 1ª edición japonesa entraría
+ * en la colección como normal, que es la distinción que más mueve el precio.
+ */
+const canonicalStamp = (s) => String(s).toLowerCase().trim().replace(/\s+/g, '-')
+
 function coarseVariant(v) {
   if ((v.stamp ?? []).includes('1st-edition')) return 'first_ed'
   if (v.type === 'holo') return 'holo'
@@ -261,6 +277,12 @@ async function buildSet(setId, langs, limit, concurrency) {
   const names = {}
   for (const [lang, h] of Object.entries(heads)) if (h?.name) names[lang] = h.name
 
+  // Los idiomas en los que este set existe de verdad. La cabecera ya lo dice, y
+  // sin esto se pide cada carta en todos los idiomas aunque dos de ellos hayan
+  // venido vacíos: con los sets japoneses dentro son decenas de miles de
+  // peticiones perdidas contra una API pública y gratuita.
+  const present = langs.filter((l) => (heads[l]?.cards ?? []).length > 0)
+
   let briefs = head.cards ?? []
   if (limit > 0) briefs = briefs.slice(0, limit)
 
@@ -275,7 +297,7 @@ async function buildSet(setId, langs, limit, concurrency) {
     const cardNames = {}
     const availableLangs = []
     let english = null
-    for (const lang of langs) {
+    for (const lang of present) {
       const localized = lang === source ? full : await get(`${API}/${lang}/cards/${brief.id}`)
       if (lang === 'en') english = localized
       if (localized?.name) {
@@ -297,7 +319,8 @@ async function buildSet(setId, langs, limit, concurrency) {
       (english?.variants_detailed ?? []).filter((v) => v.variantId).map((v) => [v.variantId, v])
     )
     const printings = (full.variants_detailed ?? []).map((v, i) => {
-      const shape = canonical.get(v.variantId) ?? v
+      const raw = canonical.get(v.variantId) ?? v
+      const shape = { ...raw, stamp: (raw.stamp ?? []).map(canonicalStamp) }
       return {
         id: v.variantId ?? `${full.id}-p${i}`,
         kind: shape.type ?? 'normal',
@@ -309,6 +332,14 @@ async function buildSet(setId, langs, limit, concurrency) {
         prices: printingPrices(v)
       }
     })
+
+    // TCGdex devuelve a veces la misma impresión dos veces —pasa en la mitad de
+    // las cartas de los sets `e` japoneses— y son copias exactas, no
+    // impresiones distintas que compartan identificador. Se queda la primera:
+    // dejarlas pasar revienta la importación con un UNIQUE de `card_printings`,
+    // y eso tira el set entero, no sólo la carta.
+    const vistas = new Set()
+    const unicas = printings.filter((p) => (vistas.has(p.id) ? false : vistas.add(p.id)))
 
     process.stdout.write('.')
     return {
@@ -330,7 +361,7 @@ async function buildSet(setId, langs, limit, concurrency) {
       imagePath: imagePath(full.image),
       variants: variantList(full.variants),
       langs: availableLangs,
-      printings
+      printings: unicas
     }
   })
 
@@ -437,43 +468,55 @@ vez, de los dos juegos, o una instalación nueva se quedará sólo con los de la
    * Es común a los dos juegos a propósito: el manifiesto se reescribe entero en
    * cada ejecución, así que partir esto en dos generadores publicaría índices
    * donde el otro juego no existe.
+   *
+   * `requestedId` es lo que se pidió por línea de órdenes, y sólo se usa para
+   * poder decirlo en los avisos.
    */
-  const emit = async (built) => {
-    const setId = built.set.id
+  const emit = async (built, requestedId) => {
+    // Manda el identificador que declara la ficha, no el que se pidió. El
+    // listado japonés de TCGdex ofrece 'SM10' y 'SM1+', pero sus fichas dicen
+    // 'sm10' y 'sm1': el fichero se llamaba de una forma y se declaraba de otra,
+    // y el importador —con razón— rechazaba el set entero. Además dos entradas
+    // del listado pueden resolver al mismo set, así que se descarta la repetida.
+    const canonId = built.set.id
+    if (byId.has(canonId)) {
+      console.log(`    (${requestedId} es el mismo set que ${canonId}, ya generado)`)
+      return
+    }
 
     // Superposición de sobres hecha a mano. En Pokémon es la única forma de
     // tener arte de sobres —ninguna API lo publica—; en Riftbound el generador
     // ya los saca de los productos sellados de TCGplayer, pero lo que haya aquí
     // sigue mandando y sobrevive a la regeneración.
-    const overlay = path.join(packsDir, `${setId}.json`)
+    const overlay = path.join(packsDir, `${canonId}.json`)
     if (existsSync(overlay)) {
       try {
         const packs = JSON.parse(await readFile(overlay, 'utf8'))
         if (Array.isArray(packs)) built.packs = packs
-        console.log(`    + ${packs.length} sobre(s) de ${args.packs}/${setId}.json`)
+        console.log(`    + ${packs.length} sobre(s) de ${args.packs}/${canonId}.json`)
       } catch (e) {
-        console.warn(`    ! ${args.packs}/${setId}.json ilegible: ${e.message}`)
+        console.warn(`    ! ${args.packs}/${canonId}.json ilegible: ${e.message}`)
       }
     }
 
     // Sin saltos de línea al final y con claves estables: así el sha256 sólo
     // cambia cuando cambia el contenido de verdad.
     const body = JSON.stringify(built)
-    const file = `sets/${setId}.json`
+    const file = `sets/${canonId}.json`
     await writeFile(path.join(outDir, file), body, 'utf8')
 
     entries.push({
-      id: setId,
+      id: canonId,
       file,
       sha256: createHash('sha256').update(body, 'utf8').digest('hex'),
       cardCount: built.cards.length
     })
-    byId.set(setId, { cards: built.cards, game: built.set.game ?? 'pokemon' })
+    byId.set(canonId, { cards: built.cards, game: built.set.game ?? 'pokemon' })
   }
 
   for (const setId of setIds) {
     const built = await buildSet(setId, args.langs, args.limit, args.concurrency)
-    if (built) await emit(built)
+    if (built) await emit(built, setId)
   }
 
   // ── Riftbound ─────────────────────────────────────────────────────────────
@@ -488,7 +531,7 @@ vez, de los dos juegos, o una instalación nueva se quedará sólo con los de la
     )
     for (const code of args.riftbound) {
       const built = await riftbound.buildSet(code, { limit: args.limit, fx })
-      if (built) await emit(built)
+      if (built) await emit(built, code)
     }
   }
 

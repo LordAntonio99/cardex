@@ -5,6 +5,7 @@ import { scheduleBackgroundSync } from './catalog/sync'
 import { initDatabases, shutdownDatabases } from './db'
 import { registerIpc } from './ipc'
 import { registerCatalogWatch, stop as stopRecognizer } from './recognition/service'
+import { stop as stopPhone } from './phone/server'
 import { buildMenu } from './menu'
 import { log } from './log'
 import { initUpdater } from './updater'
@@ -83,6 +84,9 @@ if (!app.requestSingleInstanceLock()) {
     // Primero el proceso auxiliar: dejarlo huérfano mantendría vivo un proceso
     // con el modelo cargado después de cerrar la ventana.
     stopRecognizer()
+    // Y el puerto del móvil, que si no se queda escuchando sin nadie al otro
+    // lado hasta que el sistema operativo lo recoja.
+    stopPhone()
     shutdownDatabases()
   })
 

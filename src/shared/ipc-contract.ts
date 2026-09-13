@@ -18,6 +18,7 @@ import type {
   FilterOptions,
   GameId,
   Movement,
+  PhoneSession,
   PortfolioSnapshot,
   PortfolioStats,
   PricePoint,
@@ -133,6 +134,29 @@ export interface IpcRequests {
   /** Suelta el motor y su memoria al salir de la vista. */
   'scan:release': { req: void; res: void }
 
+  // El móvil como cámara ──────────────────────────────────────────────────────
+  /** Estado del servidor del móvil ahora mismo. */
+  'phone:status': { req: void; res: PhoneSession }
+  /**
+   * Levanta el servidor.
+   *
+   * Es la llamada que hace aparecer el diálogo del Firewall de Windows, así que
+   * NUNCA se hace sola al montar una vista: siempre detrás de un botón, y
+   * después de avisar de lo que va a pasar. Un diálogo esperado se acepta; uno
+   * por sorpresa se cancela, y cancelarlo crea una regla de bloqueo que ya no
+   * vuelve a preguntar.
+   */
+  'phone:start': { req: void; res: PhoneSession }
+  'phone:stop': { req: void; res: void }
+  /**
+   * Cambia la dirección que se codifica en el QR.
+   *
+   * No reinicia nada: el servidor escucha en 0.0.0.0 y esto sólo decide qué IP
+   * se le enseña al móvil. Así probar otra es instantáneo y no invalida la
+   * excepción de certificado que el móvil ya haya aceptado.
+   */
+  'phone:useAddress': { req: { address: string }; res: PhoneSession }
+
   // Imágenes ──────────────────────────────────────────────────────────────────
   /**
    * Resuelve la URL local de una imagen, descargándola a la caché si hace
@@ -198,6 +222,10 @@ export const IPC_CHANNELS = [
   'scan:engineStatus',
   'scan:warmup',
   'scan:release',
+  'phone:status',
+  'phone:start',
+  'phone:stop',
+  'phone:useAddress',
   'images:resolve',
   'update:status',
   'update:check',
@@ -222,6 +250,17 @@ export interface IpcEvents {
   'nav:go': { view: string }
   /** El motor de reconocimiento ha cambiado de estado. */
   'scan:engine': ScanEngineStatus
+  /** Estado de la sesión del móvil: conexión, contador de capturas, error. */
+  'phone:session': PhoneSession
+  /**
+   * Una captura del móvil, ya reconocida.
+   *
+   * Trae el mismo `ScanResult` que devolvería `scan:identify`, porque acaba en
+   * el mismo lote. Se escucha en `App`, no en la vista del escáner: el lote
+   * sobrevive al cambio de pantalla y lo que llegue mientras el usuario mira la
+   * colección tiene que entrar igual.
+   */
+  'phone:scan': { result: ScanResult; source: 'live' | 'photo' }
 }
 
 export type IpcEventName = keyof IpcEvents
@@ -232,5 +271,7 @@ export const IPC_EVENTS = [
   'update:changed',
   'db:changed',
   'nav:go',
-  'scan:engine'
+  'scan:engine',
+  'phone:session',
+  'phone:scan'
 ] as const satisfies readonly IpcEventName[]

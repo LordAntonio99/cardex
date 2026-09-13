@@ -1,0 +1,674 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <title>Cardex</title>
+    <style>
+      /*
+        Sin tipografías ni imágenes externas: la CSP de esta página es
+        `default-src 'none'` y lo que no esté aquí dentro no carga. Tampoco se
+        parece del todo a la aplicación de escritorio, y es a propósito: esto se
+        mira a un palmo, con una mano, y a veces con la otra sujetando una carta.
+      */
+      *, *::before, *::after { box-sizing: border-box; }
+      :root {
+        --bg: #0d0e10;
+        --panel: #16171a;
+        --rule: #2a2c31;
+        --ink: #edeef0;
+        --soft: #a2a5ad;
+        --faint: #6d7079;
+        --ac: #9771e2;
+        --ok: #34c07a;
+        --warn: #e0a33d;
+        --code: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+      }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        display: flex;
+        flex-direction: column;
+        padding: env(safe-area-inset-top) env(safe-area-inset-right)
+                 env(safe-area-inset-bottom) env(safe-area-inset-left);
+        overscroll-behavior: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      .code { font-family: var(--code); font-size: 10px; letter-spacing: .16em; text-transform: uppercase; }
+
+      header {
+        display: flex; align-items: center; gap: 10px;
+        padding: 12px 16px; border-bottom: 1px solid var(--rule);
+      }
+      header .dot { width: 7px; height: 7px; background: var(--faint); flex: none; }
+      header .dot.on { background: var(--ok); }
+      header .name { font-weight: 600; letter-spacing: .02em; }
+      header .batch { margin-left: auto; color: var(--soft); }
+      header .batch b { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+      main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+      #stage {
+        position: relative; flex: 1; min-height: 0;
+        background: #000; overflow: hidden;
+      }
+      #video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      #guide {
+        position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+        aspect-ratio: 63 / 88;
+        border: 2px solid rgba(151, 113, 226, .8);
+        background: rgba(138, 92, 223, .06);
+        transition: border-color .15s, background .15s;
+        pointer-events: none;
+      }
+      #guide.ready { border-color: var(--ok); background: rgba(52, 192, 122, .12); }
+      #flash {
+        position: absolute; inset: 0; background: #fff; opacity: 0;
+        pointer-events: none; transition: opacity .12s;
+      }
+      #flash.on { opacity: .55; transition: none; }
+      /* Sin esto, si el disparo automático no salta te quedas sin salida. */
+      #fire {
+        position: absolute; left: 50%; bottom: 74px; transform: translateX(-50%);
+        width: 68px; height: 68px; border-radius: 50%; cursor: pointer; padding: 0;
+        background: rgba(255, 255, 255, .92); border: 4px solid rgba(13, 14, 16, .55);
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, .5);
+      }
+      #fire:active { background: var(--ac); }
+      #fire:disabled { opacity: .4; }
+      #say {
+        position: absolute; left: 12px; right: 12px; bottom: 12px;
+        padding: 10px 14px; text-align: center;
+        background: rgba(13, 14, 16, .88); border: 1px solid var(--rule);
+        color: var(--soft);
+      }
+      #say.ok { color: var(--ok); border-color: rgba(52, 192, 122, .5); }
+      #say.bad { color: var(--warn); border-color: rgba(224, 163, 61, .5); }
+      #say:empty { display: none; }
+      #debug {
+        position: absolute; left: 12px; top: 12px; padding: 6px 9px;
+        background: rgba(13, 14, 16, .88); border: 1px solid var(--rule);
+        color: var(--soft); white-space: pre; line-height: 1.6;
+      }
+
+      #photo {
+        flex: 1; min-height: 0; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 18px; padding: 28px 22px;
+      }
+      #photoHelp { margin: 0; color: var(--soft); text-align: center; max-width: 34ch; }
+      #photoSay { margin: 0; min-height: 1.4em; text-align: center; }
+      #photoSay.ok { color: var(--ok); }
+      #photoSay.bad { color: var(--warn); }
+      #shot {
+        width: 100%; max-width: 320px; padding: 20px; font: inherit; font-weight: 600;
+        color: #120e1c; background: var(--ac); border: 0; cursor: pointer;
+      }
+      #shot:disabled { opacity: .5; }
+      .link {
+        background: none; border: 0; color: var(--soft); font: inherit;
+        text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: 6px;
+      }
+
+      footer {
+        border-top: 1px solid var(--rule); padding: 10px 16px 14px;
+        display: flex; flex-direction: column; gap: 10px;
+      }
+      .modes { display: flex; border: 1px solid var(--rule); }
+      .modes button {
+        flex: 1; padding: 11px 8px; font: inherit; cursor: pointer;
+        background: transparent; color: var(--soft); border: 0;
+      }
+      .modes button[aria-pressed="true"] { background: var(--panel); color: var(--ink); font-weight: 600; }
+      .modes button:disabled { opacity: .35; cursor: default; }
+      .note { color: var(--faint); text-align: center; }
+
+      #over {
+        position: fixed; inset: 0; z-index: 10; display: none;
+        flex-direction: column; align-items: center; justify-content: center;
+        gap: 14px; padding: 32px; text-align: center; background: var(--bg);
+      }
+      #over.on { display: flex; }
+      #over h2 { margin: 0; font-size: 19px; }
+      #over p { margin: 0; color: var(--soft); max-width: 32ch; }
+
+      .hidden { display: none !important; }
+      input[type="file"] { display: none; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <span class="dot" id="dot"></span>
+      <span class="name">Cardex</span>
+      <span class="batch code"><span id="batchLabel"></span> <b id="batch">0</b></span>
+    </header>
+
+    <main>
+      <section id="stage" class="hidden">
+        <video id="video" playsinline muted autoplay></video>
+        <div id="guide"></div>
+        <div id="flash"></div>
+        <div id="debug" class="code hidden"></div>
+        <button id="fire" type="button"></button>
+        <div id="say"></div>
+      </section>
+
+      <section id="photo" class="hidden">
+        <p id="photoHelp"></p>
+        <button id="shot"></button>
+        <button class="link" id="gallery"></button>
+        <p id="photoSay"></p>
+      </section>
+    </main>
+
+    <footer>
+      <div class="modes">
+        <button id="mLive" aria-pressed="false"></button>
+        <button id="mPhoto" aria-pressed="false"></button>
+      </div>
+      <span class="note code" id="note"></span>
+    </footer>
+
+    <div id="over">
+      <h2 id="overTitle"></h2>
+      <p id="overBody"></p>
+      <button class="link" id="overAction"></button>
+    </div>
+
+    <input type="file" id="fileOne" accept="image/*" capture="environment" />
+    <input type="file" id="fileMany" accept="image/*" multiple />
+
+    <script nonce="__NONCE__">
+      'use strict'
+      var CFG = __CARDEX_CONFIG__
+
+      var TEXT = {
+        es: {
+          batchLabel: 'ESCANEADAS',
+          modeLive: 'Cámara en vivo',
+          modePhoto: 'Foto a foto',
+          start: 'Toca para encender la cámara',
+          photoHelp: 'Pulsa y haz la foto de la carta. Se envía sola y aparece en el ordenador.',
+          shot: 'Hacer foto de una carta',
+          gallery: 'Subir fotos que ya tengo',
+          noteLive: 'CENTRA LA CARTA EN EL MARCO · SIN FUNDA · LUZ LATERAL',
+          notePhoto: 'FONDO LISO · SIN FUNDA · QUE LA CARTA LLENE LA FOTO',
+          hold: 'Quieta…',
+          closer: 'Acerca la carta al marco',
+          moveOn: 'Guardada. Cambia de carta',
+          no_card: 'No veo ninguna carta',
+          blurry: 'Salió movida: sujétala quieta',
+          glare: 'Demasiado brillo: inclina la carta',
+          unknown: 'No la reconozco. ¿Está en el catálogo?',
+          tooFast: 'Voy un paso por detrás, espera un segundo',
+          netError: 'No he podido enviarla. ¿Sigue el ordenador encendido?',
+          uploading: 'Enviando…',
+          camDenied: 'No tengo acceso a la cámara. Puedes seguir con «Foto a foto».',
+          camNeedsHttps: 'Este navegador no da acceso a la cámara aquí. Usa «Foto a foto».',
+          deadTitle: 'Sesión terminada',
+          deadBody: 'El ordenador ha cerrado el escáner del móvil. Vuelve a escanear el QR desde Cardex para seguir.',
+          retry: 'Reintentar'
+        },
+        en: {
+          batchLabel: 'SCANNED',
+          modeLive: 'Live camera',
+          modePhoto: 'Photo by photo',
+          start: 'Tap to turn the camera on',
+          photoHelp: 'Tap and photograph the card. It is sent on its own and shows up on the computer.',
+          shot: 'Photograph a card',
+          gallery: 'Upload photos I already have',
+          noteLive: 'CENTRE THE CARD IN THE FRAME · NO SLEEVE · SIDE LIGHTING',
+          notePhoto: 'PLAIN BACKGROUND · NO SLEEVE · LET THE CARD FILL THE PHOTO',
+          hold: 'Hold still…',
+          closer: 'Move the card closer to the frame',
+          moveOn: 'Saved. Next card',
+          no_card: 'I cannot see a card',
+          blurry: 'It came out blurry: hold it still',
+          glare: 'Too much glare: tilt the card',
+          unknown: 'I do not recognise it. Is it in the catalogue?',
+          tooFast: 'I am a step behind, give me a second',
+          netError: 'Could not send it. Is the computer still on?',
+          uploading: 'Sending…',
+          camDenied: 'No camera access. You can still use "Photo by photo".',
+          camNeedsHttps: 'This browser will not give camera access here. Use "Photo by photo".',
+          deadTitle: 'Session over',
+          deadBody: 'The computer closed the phone scanner. Scan the QR from Cardex again to carry on.',
+          retry: 'Retry'
+        }
+      }
+      var T = TEXT[CFG.lang] || TEXT.es
+
+      var $ = function (id) { return document.getElementById(id) }
+      var video = $('video'), guide = $('guide'), stage = $('stage')
+      var say = $('say'), dbg = $('debug'), photoSay = $('photoSay')
+      var busy = false, dead = false, mode = null, camera = 'off', fails = 0
+
+      $('batchLabel').textContent = T.batchLabel
+      $('mLive').textContent = T.modeLive
+      $('mPhoto').textContent = T.modePhoto
+      $('photoHelp').textContent = T.photoHelp
+      $('shot').textContent = T.shot
+      $('gallery').textContent = T.gallery
+      $('overTitle').textContent = T.deadTitle
+      $('overBody').textContent = T.deadBody
+      $('overAction').textContent = T.retry
+      $('overAction').addEventListener('click', function () { location.reload() })
+      guide.style.width = (CFG.guideWidth * 100) + '%'
+
+      function tell(text, tone) {
+        say.textContent = text || ''
+        say.className = tone || ''
+        photoSay.textContent = text || ''
+        photoSay.className = tone || ''
+      }
+
+      function endSession() {
+        if (dead) return
+        dead = true
+        stopCamera()
+        $('over').classList.add('on')
+      }
+
+      /*
+        ¿Se puede usar la cámara en vivo?
+
+        No basta con mirar el protocolo. Safari, con un certificado que el
+        usuario ha aceptado a mano, deja navegar pero puede no exponer
+        `mediaDevices`. Así que se pregunta por el objeto, no por la teoría, y si
+        no está, el modo vivo ni siquiera se ofrece.
+      */
+      var CAN_LIVE = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)
+
+      // ── Subida ───────────────────────────────────────────────────────────────
+
+      async function upload(blob, source) {
+        if (busy || dead) return
+        busy = true
+        tell(T.uploading)
+        try {
+          var res = await fetch('/capture?source=' + source, {
+            method: 'POST',
+            headers: { 'X-Cardex-Token': CFG.token, 'Content-Type': 'image/jpeg' },
+            body: blob
+          })
+          if (res.status === 401 || res.status === 410) { endSession(); return }
+          if (res.status === 429) { tell(T.tooFast, 'bad'); return }
+          if (!res.ok) { tell(T.netError, 'bad'); return }
+          var ack = await res.json()
+          $('batch').textContent = String(ack.accepted)
+          if (ack.status === 'match' || ack.status === 'confirm') {
+            tell(ack.name ? ack.name + ' · ' + ack.numberLabel : T.moveOn, 'ok')
+          } else {
+            tell(T[ack.status] || T.unknown, 'bad')
+          }
+        } catch (e) {
+          tell(T.netError, 'bad')
+        } finally {
+          busy = false
+        }
+      }
+
+      /** Reduce al lado largo pactado y devuelve el JPEG. */
+      function toJpeg(source, w, h) {
+        var scale = Math.min(1, CFG.maxEdge / Math.max(w, h))
+        var canvas = document.createElement('canvas')
+        canvas.width = Math.round(w * scale)
+        canvas.height = Math.round(h * scale)
+        canvas.getContext('2d').drawImage(source, 0, 0, canvas.width, canvas.height)
+        return new Promise(function (resolve) {
+          canvas.toBlob(function (b) { resolve(b) }, 'image/jpeg', CFG.quality)
+        })
+      }
+
+      /*
+        Modo foto.
+
+        La cámara nativa da doce megapíxeles con autofoco de verdad y HDR, que es
+        bastante más de lo que sale de `getUserMedia`. Aquí se reduce a lo que el
+        reconocedor puede aprovechar antes de mandarla: cuatro megas por carta
+        convierten el Wi-Fi en el cuello de botella, y el reconocedor rectifica a
+        600x825 de todas formas.
+      */
+      async function fromFile(file) {
+        var url = URL.createObjectURL(file)
+        try {
+          var img = await new Promise(function (resolve, reject) {
+            var i = new Image()
+            i.onload = function () { resolve(i) }
+            i.onerror = reject
+            i.src = url
+          })
+          var blob = await toJpeg(img, img.naturalWidth, img.naturalHeight)
+          if (blob) await upload(blob, 'photo')
+        } catch (e) {
+          tell(T.netError, 'bad')
+        } finally {
+          URL.revokeObjectURL(url)
+        }
+      }
+
+      $('shot').addEventListener('click', function () { $('fileOne').click() })
+      $('gallery').addEventListener('click', function () { $('fileMany').click() })
+
+      $('fileOne').addEventListener('change', async function (e) {
+        var file = e.target.files && e.target.files[0]
+        e.target.value = ''
+        if (file) await fromFile(file)
+      })
+
+      $('fileMany').addEventListener('change', async function (e) {
+        var files = Array.prototype.slice.call(e.target.files || [])
+        e.target.value = ''
+        // De una en una y esperando: subirlas a la vez sólo conseguiría que el
+        // servidor devolviera 429 a la mitad.
+        for (var i = 0; i < files.length; i += 1) {
+          $('shot').disabled = true
+          await fromFile(files[i])
+        }
+        $('shot').disabled = false
+      })
+
+      // ── Modo vivo ────────────────────────────────────────────────────────────
+
+      var stream = null
+      var work = document.createElement('canvas')
+      work.width = CFG.workW
+      work.height = CFG.workH
+      var wctx = work.getContext('2d', { willReadFrequently: true })
+      var previous = null, still = 0, moved = 0, armed = true, pending = 0, lastTick = 0
+      var loopHandle = 0, loopKind = ''
+      // Los últimos valores de movimiento. El menor de todos es el «suelo»: lo
+      // más quieto que ha sabido estar esta mano hace un momento.
+      var recientes = []
+
+      function stopCamera() {
+        if (stream) stream.getTracks().forEach(function (t) { t.stop() })
+        stream = null
+        video.srcObject = null
+        previous = null
+        camera = 'off'
+        if (loopHandle) {
+          if (loopKind === 'v' && video.cancelVideoFrameCallback) video.cancelVideoFrameCallback(loopHandle)
+          else cancelAnimationFrame(loopHandle)
+          loopHandle = 0
+        }
+      }
+
+      async function startCamera() {
+        if (!CAN_LIVE || dead || camera === 'starting') return
+        camera = 'starting'
+        render()
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { ideal: 'environment' },
+              width: { ideal: 1920 },
+              height: { ideal: 1080 }
+            },
+            audio: false
+          })
+          video.srcObject = stream
+          await video.play()
+          camera = 'live'
+          armed = true; still = 0; moved = 0; pending = 0; previous = null; recientes = []
+          try {
+            // Enfoque continuo donde exista. En iOS no existe y no pasa nada.
+            var track = stream.getVideoTracks()[0]
+            if (track && track.applyConstraints) {
+              await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] })
+            }
+          } catch (e) { /* lo decide el navegador, y su decisión vale */ }
+          void keepAwake()
+          startLoop()
+        } catch (e) {
+          camera = 'denied'
+        }
+        render()
+      }
+
+      function schedule(fn) {
+        // `requestVideoFrameCallback` llega con el fotograma ya decodificado y
+        // no se dispara con el vídeo parado, que es justo lo que interesa.
+        // Safari lo tiene desde la 15.4; antes de eso, el reloj de pintado.
+        if (video.requestVideoFrameCallback) {
+          loopKind = 'v'
+          loopHandle = video.requestVideoFrameCallback(fn)
+        } else {
+          loopKind = 'r'
+          loopHandle = requestAnimationFrame(fn)
+        }
+      }
+
+      function startLoop() {
+        var step = function () {
+          if (camera !== 'live') return
+          var now = performance.now()
+          if (now - lastTick >= 1000 / CFG.tickHz) { lastTick = now; measure(now) }
+          schedule(step)
+        }
+        schedule(step)
+      }
+
+      /** El rectángulo de la guía, en píxeles del vídeo. */
+      function guideInVideo() {
+        if (!video.videoWidth) return null
+        var bw = stage.clientWidth, bh = stage.clientHeight
+        // `object-fit: cover`: el vídeo se agranda hasta tapar la caja y se
+        // recorta lo que sobra, así que la escala es el máximo de las dos.
+        var scale = Math.max(bw / video.videoWidth, bh / video.videoHeight)
+        var gw = bw * CFG.guideWidth
+        var gh = (gw * 88) / 63
+        var w = gw / scale, h = gh / scale
+        return { x: (video.videoWidth - w) / 2, y: (video.videoHeight - h) / 2, w: w, h: h }
+      }
+
+      async function fire() {
+        if (!video.videoWidth) return
+        var blob = await toJpeg(video, video.videoWidth, video.videoHeight)
+        if (!blob) return
+        $('flash').classList.add('on')
+        setTimeout(function () { $('flash').classList.remove('on') }, 140)
+        await upload(blob, 'live')
+      }
+
+      function ready(on) { guide.classList.toggle('ready', !!on) }
+
+      /*
+        El bucle de vigilancia, con el móvil en la mano.
+
+        La webcam de escritorio mide «presencia» contra un fondo vacío que
+        aprende al empezar, y se rearma esperando a que el marco vuelva a
+        quedarse vacío. Las dos cosas asumen que la cámara no se mueve: en la
+        mano, el fondo aprendido caduca al primer temblor y el marco no vuelve a
+        estar vacío nunca.
+
+        Así que aquí la presencia se sustituye por TEXTURA —el gradiente medio,
+        que sube cuando entra algo impreso y no necesita ninguna referencia— y el
+        rearme es por MOVIMIENTO: hay carta nueva cuando el usuario mueve el
+        móvil, no cuando el marco se vacía.
+      */
+      function measure(now) {
+        var g = guideInVideo()
+        if (!g) return
+        var W = CFG.workW, H = CFG.workH
+        wctx.drawImage(video, g.x, g.y, g.w, g.h, 0, 0, W, H)
+        var data = wctx.getImageData(0, 0, W, H).data
+
+        var gray = new Float32Array(W * H)
+        for (var i = 0; i < gray.length; i += 1) {
+          var o = i * 4
+          gray[i] = 0.299 * data[o] + 0.587 * data[o + 1] + 0.114 * data[o + 2]
+        }
+
+        var dsum = 0
+        for (var y = 0; y < H - 1; y += 1) {
+          for (var x = 0; x < W - 1; x += 1) {
+            var p = y * W + x
+            dsum += Math.abs(gray[p + 1] - gray[p]) + Math.abs(gray[p + W] - gray[p])
+          }
+        }
+        var detail = dsum / ((W - 1) * (H - 1))
+
+        var prev = previous
+        previous = gray
+        var motion = 999
+        if (prev) {
+          var msum = 0
+          for (var k = 0; k < gray.length; k += 1) msum += Math.abs(gray[k] - prev[k])
+          motion = msum / gray.length
+        }
+
+        // El suelo se aprende sobre una ventana corta. El 999 del primer
+        // fotograma no cuenta: no es movimiento, es que aún no había anterior.
+        if (prev) {
+          recientes.push(motion)
+          if (recientes.length > CFG.floorWindow) recientes.shift()
+        }
+        var suelo = recientes.length ? Math.min.apply(null, recientes) : motion
+        // Quieta es «cerca de su propio suelo», no «por debajo de un número
+        // que decidí yo sin haber sujetado nunca el móvil». En la mano el
+        // suelo ronda 5-8; en un soporte, menos de 1. El techo evita que un
+        // suelo altísimo acabe dando por buena una foto movida.
+        var limite = Math.min(suelo + CFG.motionSlack, CFG.motionCeiling)
+        var quieta = motion <= limite
+
+        if (CFG.debug) {
+          dbg.textContent =
+            'detail ' + detail.toFixed(1) + '\nmotion ' + motion.toFixed(1) +
+            '\nsuelo  ' + suelo.toFixed(1) + '\nlimite ' + limite.toFixed(1) +
+            '\nstill  ' + still + '\n' + (armed ? 'ARMADO' : 'esperando')
+        }
+
+        if (!CFG.auto || busy) { still = 0; pending = 0; return }
+
+        if (!armed) {
+          // Rearmar también contra el suelo: «se ha movido de verdad».
+          if (motion > suelo * 2.5 + 4) {
+            moved += 1
+            if (moved >= CFG.rearmTicks) { armed = true; moved = 0; ready(false); tell('') }
+          } else {
+            moved = 0
+          }
+          return
+        }
+
+        if (detail < CFG.detailMin) { still = 0; pending = 0; ready(false); tell(T.closer); return }
+        if (!quieta) { still = 0; pending = 0; ready(false); tell(T.hold); return }
+
+        still += 1
+        if (still < CFG.stillTicks) { tell(T.hold); return }
+        ready(true)
+
+        // Quieta, pero no se dispara todavía: el autofoco tarda un instante en
+        // converger y un fotograma capturado antes vuelve `blurry`. Se espera,
+        // se reconfirma la quietud en el tick siguiente, y entonces sí.
+        if (!pending) { pending = now + CFG.focusDelayMs; return }
+        if (now < pending) return
+        pending = 0
+        still = 0
+        armed = false
+        moved = 0
+        void fire()
+      }
+
+      // ── Pantalla encendida ───────────────────────────────────────────────────
+
+      var wake = null
+      async function keepAwake() {
+        try {
+          if (navigator.wakeLock && !wake) wake = await navigator.wakeLock.request('screen')
+        } catch (e) { /* con la batería baja se deniega, y es razonable */ }
+      }
+
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) {
+          // Soltar la cámara al pasar a segundo plano no es cortesía: iOS la
+          // cierra igual, y mantenerla sólo calienta el móvil.
+          stopCamera()
+          if (wake) { try { wake.release() } catch (e) {} wake = null }
+          render()
+        } else if (mode === 'live' && !dead) {
+          void startCamera()
+        }
+      })
+
+      // ── Latido ───────────────────────────────────────────────────────────────
+      /*
+        Le dice al ordenador que el móvil sigue ahí —de eso viven el indicador de
+        conectado y el diagnóstico de firewall— y de paso trae el tamaño del lote
+        sin necesidad de ningún canal en sentido contrario.
+      */
+      async function ping() {
+        if (dead) return
+        try {
+          var res = await fetch('/ping', {
+            method: 'POST',
+            headers: { 'X-Cardex-Token': CFG.token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode: mode })
+          })
+          if (res.status === 401 || res.status === 410) { endSession(); return }
+          if (!res.ok) throw new Error('ping')
+          var s = await res.json()
+          fails = 0
+          if (!busy) $('batch').textContent = String(s.accepted)
+          $('dot').classList.add('on')
+        } catch (e) {
+          // Una caída suelta es el Wi-Fi. Varias seguidas son el ordenador, que
+          // ha cerrado el escáner o se ha ido a dormir.
+          fails += 1
+          $('dot').classList.remove('on')
+          if (fails >= 4) endSession()
+        }
+      }
+
+      // ── Modos ────────────────────────────────────────────────────────────────
+
+      function render() {
+        var live = mode === 'live'
+        stage.classList.toggle('hidden', !live)
+        $('photo').classList.toggle('hidden', live)
+        $('mLive').setAttribute('aria-pressed', String(live))
+        $('mPhoto').setAttribute('aria-pressed', String(!live))
+        $('mLive').disabled = !CAN_LIVE
+        $('note').textContent = live ? T.noteLive : T.notePhoto
+        dbg.classList.toggle('hidden', !CFG.debug || !live)
+        $('fire').classList.toggle('hidden', !live || camera !== 'live')
+        if (live && camera === 'off') tell(T.start)
+        if (live && camera === 'denied') tell(T.camDenied, 'bad')
+      }
+
+      function setMode(next, remember) {
+        if (next === 'live' && !CAN_LIVE) next = 'photo'
+        mode = next
+        if (remember) { try { localStorage.setItem('cardex.mode', next) } catch (e) {} }
+        tell('')
+        if (next === 'live') { void startCamera() } else { stopCamera() }
+        render()
+      }
+
+      $('fire').addEventListener('click', function (e) {
+        e.stopPropagation()
+        if (camera === 'live' && !busy) void fire()
+      })
+
+      $('mLive').addEventListener('click', function () { setMode('live', true) })
+      $('mPhoto').addEventListener('click', function () { setMode('photo', true) })
+      // En iOS la cámara sólo arranca dentro de un gesto del usuario, así que
+      // tocar la imagen vuelve a intentarlo en vez de dejar un panel muerto.
+      stage.addEventListener('click', function () {
+        if (mode === 'live' && camera !== 'live') void startCamera()
+      })
+
+      var saved = null
+      try { saved = localStorage.getItem('cardex.mode') } catch (e) {}
+      setMode(saved === 'photo' || !CAN_LIVE ? 'photo' : 'live', false)
+      if (!CAN_LIVE) tell(T.camNeedsHttps, 'bad')
+      void ping()
+      setInterval(ping, CFG.pingMs)
+    </script>
+  </body>
+</html>

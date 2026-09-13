@@ -6,7 +6,8 @@ League of Legends). Base de datos local, sin cuenta y sin servidor: todo vive en
 - **Colección** — lo que tienes, con su valor y su variación.
 - **Explorador** — el catálogo entero; las que te faltan salen en gris.
 - **Sets y sobres** — progreso por set y los sobres en los que puede salir cada carta.
-- **Escáner** — reconoce tus cartas con la webcam y las mete en el inventario.
+- **Escáner** — reconoce tus cartas con la webcam, o con la cámara del móvil, y las mete en
+  el inventario.
 - **Mercado** — valor de la colección, histórico y las que más se mueven.
 
 El selector de la cabecera (`TODOS · POKÉMON · RIFTBOUND`) manda sobre las cinco pantallas a la
@@ -18,12 +19,14 @@ vez y se recuerda entre arranques. Sólo aparece si el catálogo instalado trae 
 [Releases](https://github.com/LordAntonio99/cardex/releases).
 
 La novedad de la 0.2.0 fue que **el escáner reconoce cartas de verdad**, en tu equipo y sin
-conexión. Lo que viene después, todavía sin publicar, es **Riftbound**: cuatro sets (Origins,
-Spiritforged, Unleashed y Vendetta) con el mismo trato que las de Pokémon.
+conexión. Lo que viene después, todavía sin publicar en Releases, son tres cosas: **escanear
+con la cámara del móvil**, el **catálogo japonés** y **Riftbound**, con Origins, Spiritforged,
+Unleashed y Vendetta tratadas igual que las de Pokémon.
 
-Al abrirla por primera vez se descarga el catálogo publicado, con sus imágenes, sus sobres, sus
-precios y las huellas visuales que usa el escáner. Mientras llega verás una pantalla con el
-progreso. Tu colección arranca vacía.
+Al abrirla por primera vez se descarga el catálogo publicado: 70 sets y 10.137 cartas —4.072 de
+ellas japonesas y 1.165 de Riftbound— con sus imágenes, sus sobres, sus precios y las huellas
+visuales que usa el escáner. Mientras llega verás una pantalla con el progreso. Tu colección
+arranca vacía.
 
 > El catálogo con Riftbound usa el **formato v2**. Una instalación 0.2.0 no lo entiende y lo
 > dirá («actualiza la aplicación») en vez de importarlo a medias; su colección y su catálogo
@@ -34,6 +37,11 @@ Lo que **todavía no** hace:
 - El escáner **no reconoce las colecciones de McDonald's**. TCGdex tiene sus datos pero ninguna
   imagen de carta, y sin imagen de referencia no hay con qué comparar. Se coleccionan igual, a
   mano.
+- **Del japonés está lo que se puede reconocer, no todo lo que existe.** De los 184 sets que
+  TCGdex publica en japonés, 46 no tienen ninguna carta dentro y otros 72 vienen sin imágenes:
+  toda la serie Mega, los sets antiguos, y los japoneses de Black Bolt y White Flare. Sin imagen
+  no hay huella visual, así que esos sets no entran en el catálogo. Si TCGdex las publica algún
+  día llegarán solas, porque el catálogo se actualiza por su cuenta.
 - El escáner **no distingue una holográfica de su versión normal**. Ninguna fuente publica una
   imagen por variante, así que propone la más probable de las que la carta admite y tú la
   corriges con un clic antes de confirmar el lote. Lo mismo con la 1ª edición, que nunca se
@@ -88,6 +96,58 @@ El reconocimiento compara lo que ve con una huella visual de cada carta que viaj
 catálogo. Si el escáner dice **«sin datos de reconocimiento»**, es que el catálogo instalado es
 anterior a esta función: sincronízalo.
 
+### Di en qué idioma escaneas
+
+Arriba del panel del móvil hay una fila `AUTO · ES · EN · JA`. No es cosmética: el
+reconocimiento **no puede deducir el idioma mirando**, porque la misma carta en español, inglés
+o japonés da un parecido casi idéntico — sólo cambian unas líneas de texto pequeño. Así que se
+lo tienes que decir tú, y cambia con cada caja que abres.
+
+Con las impresiones japonesas en el catálogo eso pasó a decidir algo más gordo que una etiqueta.
+La japonesa no es la misma carta con otro texto: es otra carta, de otro set, con otro número y
+otro precio. Si declaras japonés, el escáner propone la impresión japonesa y deja la occidental
+como alternativa; si no declaras nada, propone la que más se parezca, que en un empate visual
+puede ser cualquiera de las dos.
+
+### Escanear con el móvil
+
+La cámara de un móvil es mucho mejor que una webcam corriente, y eso se nota en cuántas cartas
+se reconocen a la primera. En el escáner, **«Usar el móvil»** levanta un servidor en tu propio
+ordenador y enseña un código QR: lo escaneas con la cámara del móvil, se abre una página y ya
+estás capturando. No hay que instalar nada, y las fotos no salen de tu red: el reconocimiento
+sigue ocurriendo en el ordenador.
+
+El móvil sólo aporta la imagen. El lote se revisa y se confirma en el ordenador, igual que
+siempre, y las cartas van apareciendo ahí según las capturas.
+
+Hay dos formas de capturar, y se eligen en el propio móvil:
+
+- **Cámara en vivo** — pones la carta, se dispara sola y pasas a la siguiente. Es lo cómodo para
+  un sobre entero.
+- **Foto a foto** — abre la cámara del móvil y disparas tú. Son más toques, pero la foto sale
+  con toda la resolución y el autofoco de verdad, así que reconoce mejor. También puedes
+  fotografiar un montón de cartas con la app de cámara y subirlas luego todas de golpe.
+
+La página elige el modo vivo cuando el navegador se lo permite y cae al modo foto cuando no.
+En iPhone puede no haber modo vivo: Safari es estricto con la cámara en un sitio cuyo
+certificado no reconoce, y el modo foto funciona igual de bien.
+
+Dos cosas que te va a preguntar el sistema la primera vez:
+
+- **Windows**, si Cardex puede aceptar conexiones de tu red. Marca **Redes privadas** y acepta.
+  Si lo cancelas, Windows crea una regla de bloqueo y ya no vuelve a preguntar; el panel del
+  escáner trae el comando para arreglarlo.
+- **El móvil**, que la conexión no es de fiar. Es normal y no hay forma de evitarlo: la cámara
+  del navegador exige HTTPS, ninguna autoridad firma certificados para una dirección de red
+  local, y el que usa Cardex se lo genera él. Continúa y concede la cámara.
+
+Si el móvil no carga la página, casi siempre es una de cuatro: el firewall, la red marcada como
+«Pública», el móvil en datos móviles en vez del Wi-Fi, o el router con aislamiento de clientes.
+El panel de ayuda del escáner las repasa todas.
+
+Quien vea el código QR puede mandar cartas a tu lote mientras esté encendido, así que no lo
+enseñes en una pantalla compartida. El enlace muere al apagar el servidor o al cerrar Cardex.
+
 ## Desarrollo
 
 ```bash
@@ -98,7 +158,11 @@ npm run dev
 Atajos: `Ctrl+1` a `Ctrl+5` cambian de vista.
 
 El catálogo se descarga solo al arrancar, así que en desarrollo ya tienes cartas con las que
-trabajar. Para meter algunas en tu colección: Escáner → «Simular detección» → «Confirmar lote».
+trabajar. Para meter algunas en tu colección basta con escanearlas y confirmar el lote.
+
+Para afinar el disparo automático del móvil sin poder abrir la consola en él, añade `?debug=1`
+al final de la dirección del QR: la página pinta textura y movimiento en pantalla, que son los
+dos números de los que salen los umbrales de `src/shared/scan-tuning.ts`.
 
 ### Probar un catálogo antes de publicarlo
 
@@ -156,6 +220,7 @@ metida en la colección cuesta encontrarla y arreglarla.
 ### Comprobaciones
 
 ```bash
+npm run catalog:check # el catálogo generado, contra lo que exige el importador
 npm run typecheck     # main + preload + renderer
 npm run build:win     # instalador NSIS en release/<versión>
 ```
