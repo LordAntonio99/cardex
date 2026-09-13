@@ -200,23 +200,33 @@ function sendReferences(target: UtilityProcess): void {
 
   const emit = (): void => {
     if (bySet.length === 0) return
-    const vectors = new Float32Array(bySet.length * EMBED_DIMS)
-    const entries = bySet.map((row, i) => {
-      if (row.embedding.byteLength === bytes) {
-        vectors.set(
-          new Float32Array(row.embedding.buffer.slice(row.embedding.byteOffset, row.embedding.byteOffset + bytes)),
-          i * EMBED_DIMS
-        )
-      }
+    const setId = bySet[0]!.set_id
+    // Un vector con un tamaño que no cuadra se descarta entero. Rellenarlo de
+    // ceros lo dejaría en el índice ocupando el sitio de una carta que ya nunca
+    // podría reconocerse, y sin que nadie se entere.
+    const usable = bySet.filter((row) => row.embedding.byteLength === bytes)
+    if (usable.length !== bySet.length) {
+      log.warn(`${setId}: ${bySet.length - usable.length} vector(es) con tamaño incorrecto, descartados`)
+    }
+    bySet = []
+    if (usable.length === 0) return
+
+    const vectors = new Float32Array(usable.length * EMBED_DIMS)
+    const entries = usable.map((row, i) => {
+      vectors.set(
+        new Float32Array(
+          row.embedding.buffer.slice(row.embedding.byteOffset, row.embedding.byteOffset + bytes)
+        ),
+        i * EMBED_DIMS
+      )
       return { cardId: row.card_id, lang: row.lang as CardLang }
     })
     target.postMessage({
       type: 'refs:chunk',
-      setId: bySet[0]!.set_id,
+      setId,
       entries,
       vectors: vectors.buffer as ArrayBuffer
     } satisfies ToRecognizer)
-    bySet = []
   }
 
   for (const row of rows) {
@@ -233,10 +243,22 @@ function sendReferences(target: UtilityProcess): void {
 export function start(): Promise<void> {
   if (child && !refsDirty) return Promise.resolve()
   if (starting) return starting
-  if (status.state === 'error') return Promise.reject(new Error(status.message ?? 'Motor no disponible'))
+
+  // La ventana de caídas ha pasado: se olvida el historial y se vuelve a
+  // intentar. El tope existe para no entrar en un bucle de reinicios, no para
+  // dejar el escáner inservible hasta que se cierre la aplicación.
+  const now = Date.now()
+  crashes = crashes.filter((t) => now - t < CRASH_WINDOW_MS)
+  if (status.state === 'error' && crashes.length >= MAX_CRASHES) {
+    return Promise.reject(new Error(status.message ?? 'Motor no disponible'))
+  }
 
   if (child && refsDirty) {
-    sendReferences(child)
+    try {
+      sendReferences(child)
+    } catch (e) {
+      return Promise.reject(e instanceof Error ? e : new Error(String(e)))
+    }
     return Promise.resolve()
   }
 

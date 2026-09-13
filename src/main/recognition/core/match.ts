@@ -11,6 +11,9 @@
  */
 
 import { EMBED_DIMS } from '../format'
+import type { Embedder } from './embed'
+import { rotate180, type Rgba } from './image'
+import { THRESHOLDS } from './thresholds'
 
 export interface RefIndexEntry {
   cardId: string
@@ -74,4 +77,50 @@ export function similarityBetween(index: RefIndex, rowA: number, rowB: number): 
     sum += index.vectors[offsetA + i]! * index.vectors[offsetB + i]!
   }
   return sum
+}
+
+export interface MatchResult {
+  hits: Hit[]
+  /** La carta estaba boca abajo: la miniatura debe salir girada. */
+  flipped: boolean
+  /** Distancia de la mejor a la primera carta DISTINTA. La señal fuerte. */
+  margin: number
+  /** Las dos mejores comparten ilustración: hay que mirar lo impreso. */
+  ambiguous: boolean
+}
+
+/**
+ * Empareja una carta rectificada contra el catálogo.
+ *
+ * Vive aquí y no en el proceso reconocedor porque el evaluador de umbrales
+ * tiene que tomar EXACTAMENTE las mismas decisiones. Cuando esta lógica estaba
+ * duplicada, añadir la comprobación de orientación al escáner dejó al evaluador
+ * midiendo otra cosa, y una calibración que no mide lo que hace el producto no
+ * sirve para nada.
+ *
+ * Se prueban las dos orientaciones: al pasar una pila es fácil que una carta
+ * caiga boca abajo, y el cuadrilátero sale igual de válido.
+ */
+export async function matchCard(
+  index: RefIndex,
+  embedder: Embedder,
+  card: Rgba
+): Promise<MatchResult> {
+  const upright = search(index, await embedder.embed(card), THRESHOLDS.topK)
+  const upsideDown = search(index, await embedder.embed(rotate180(card)), THRESHOLDS.topK)
+
+  const flipped = (upsideDown[0]?.score ?? -1) > (upright[0]?.score ?? -1)
+  const hits = flipped ? upsideDown : upright
+
+  const best = hits[0]
+  const second = hits[1]
+  return {
+    hits,
+    flipped,
+    margin: best && second ? best.score - second.score : 1,
+    // Si las dos mejores referencias se parecen tanto entre sí como la captura
+    // a ellas, el problema no es la foto: son dos cartas con la misma
+    // ilustración.
+    ambiguous: Boolean(best && second) && similarityBetween(index, best!.row, second!.row) > THRESHOLDS.sameArtCosine
+  }
 }

@@ -29,9 +29,9 @@ import {
   emptyIndex,
   findCardQuad,
   loadCv,
+  matchCard,
   measureQuality,
-  search,
-  similarityBetween,
+  rotate180,
   toWebpDataUrl,
   warpCard,
   type Embedder,
@@ -116,26 +116,21 @@ async function identify(jpeg: Buffer): Promise<RawResult> {
     return empty('unknown', { sharpness: quality.sharpness, glare: quality.glare })
   }
 
-  const vector = await embedder.embed(card)
-  const hits = search(index, vector, THRESHOLDS.topK)
-  const thumbnail = await toWebpDataUrl(card, 300)
+  const match = await matchCard(index, embedder, card)
+  // La miniatura sale en la orientación que ha ganado: es la que el usuario
+  // reconoce, aunque haya puesto la carta del revés.
+  const thumbnail = await toWebpDataUrl(match.flipped ? rotate180(card) : card, 300)
 
-  const best = hits[0]
+  const best = match.hits[0]
   if (!best || best.score < THRESHOLDS.minCosine) {
     return empty('unknown', { thumbnail, sharpness: quality.sharpness, glare: quality.glare })
   }
 
-  const second = hits[1]
-  const margin = second ? best.score - second.score : 1
-  // Si las dos mejores referencias se parecen tanto entre sí como la captura a
-  // ellas, el problema no es la foto: son dos cartas con la misma ilustración.
-  const ambiguous = Boolean(second) && similarityBetween(index, best.row, second!.row) > THRESHOLDS.sameArtCosine
-
   return {
     outcome: 'candidates',
-    candidates: hits.map((h) => ({ cardId: h.cardId, lang: h.lang as CardLang, score: h.score })),
-    margin,
-    ambiguous,
+    candidates: match.hits.map((h) => ({ cardId: h.cardId, lang: h.lang as CardLang, score: h.score })),
+    margin: match.margin,
+    ambiguous: match.ambiguous,
     thumbnail,
     sharpness: quality.sharpness,
     glare: quality.glare,

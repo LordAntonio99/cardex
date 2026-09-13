@@ -131,10 +131,11 @@ async function main() {
           ? 'glare'
           : null
 
-    const vector = await embedder.embed(card)
-    const hits = P.search(index, vector, 5)
-    const best = hits[0]
-    const second = hits[1]
+    // La MISMA función que usa el escáner, no una copia: las dos orientaciones,
+    // el margen y la detección de ilustración compartida salen de ahí. Una
+    // calibración que no mida exactamente lo que hace el producto no sirve.
+    const match = await P.matchCard(index, embedder, card)
+    const best = match.hits[0]
 
     rows.push({
       file,
@@ -144,8 +145,10 @@ async function main() {
       top1: best?.cardId ?? '',
       lang: best?.lang ?? '',
       cos: best?.score ?? 0,
-      margin: best && second ? best.score - second.score : 1,
-      inTop3: hits.slice(0, 3).some((h) => h.cardId === label.card),
+      margin: match.margin,
+      flipped: match.flipped,
+      ambiguous: match.ambiguous,
+      inTop3: match.hits.slice(0, 3).some((h) => h.cardId === label.card),
       sharpness: quality.sharpness,
       glare: quality.glare,
       ms: Date.now() - started
@@ -170,7 +173,8 @@ async function main() {
       fmt(r.cos, 8),
       fmt(r.margin),
       String(Math.round(r.sharpness)).padStart(7),
-      `${(r.glare * 100).toFixed(1)}%`.padStart(6)
+      `${(r.glare * 100).toFixed(1)}%`.padStart(6),
+      `${r.flipped ? ' boca-abajo' : ''}${r.ambiguous ? ' misma-ilustración' : ''}`
     )
   }
 
@@ -205,7 +209,7 @@ async function main() {
 
   // ── Qué harían los umbrales actuales ──────────────────────────────────────
   const T = P.THRESHOLDS
-  const auto = (r) => r.cos >= T.autoCosine && r.margin >= T.autoMargin
+  const auto = (r) => r.cos >= T.autoCosine && r.margin >= T.autoMargin && !r.ambiguous
   const autoRight = right.filter(auto).length
   const autoWrong = wrong.filter(auto).length
   console.log(`\numbrales actuales  coseno ≥ ${T.autoCosine}  margen ≥ ${T.autoMargin}`)

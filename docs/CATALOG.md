@@ -72,15 +72,35 @@ Opciones: `--langs es,en` (el primero aporta la ficha completa), `--limit N`, `-
 
 ### Publicarlo
 
+El catálogo se genera **directamente dentro de un worktree** de la rama `catalog`:
+
 ```bash
-npm run catalog:build -- --series sv
-git checkout catalog
-git add catalog
-git commit -m "catálogo: serie Escarlata y Púrpura"
-git push origin catalog
+# Una sola vez por equipo
+git worktree add ../cardex-catalog catalog
+
+# Cada publicación, desde la raíz del proyecto
+git -C ../cardex-catalog pull --ff-only
+npm run catalog:build -- --out ../cardex-catalog/catalog --series sv
+git -C ../cardex-catalog add catalog
+git -C ../cardex-catalog commit -m "Catálogo: serie Escarlata y Púrpura"
+git -C ../cardex-catalog push origin catalog
 ```
 
-La próxima vez que alguien abra Cardex, se lo baja.
+> **No hagas `git checkout catalog` con el catálogo recién generado en el directorio.**
+> `/catalog/` está ignorado en `main`, y git considera prescindibles los ficheros ignorados:
+> el checkout los sobrescribe **sin avisar** con lo que ya estaba publicado, y te quedas sin
+> la generación entera. El worktree además deja el repositorio principal donde está.
+
+`npm run` se ejecuta desde la raíz del proyecto aunque lo lances desde otro directorio, así que
+`--out` y `--packs` son relativos a la raíz, no a donde estés.
+
+**El manifiesto se reescribe entero** con los sets de esa ejecución. Generar sólo el set nuevo
+publica un índice donde los demás no existen: quien ya los tenga los conserva, pero una
+instalación nueva se quedaría sólo con ese. Regenera siempre todos los sets publicados.
+
+La próxima vez que alguien abra Cardex, se lo baja. El procedimiento completo, con las
+llamadas de API para elegir el set y buscar el arte de los sobres, está en la skill
+[`anadir-set`](../.claude/skills/anadir-set/SKILL.md).
 
 ### Probarlo antes de publicar
 

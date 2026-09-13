@@ -28,8 +28,26 @@ export {
   type SidecarEntry
 } from './format'
 export { CARD_W, CARD_H, findCardQuad, frameQuad, orderCorners, warpCard, type Quad, type Point } from './core/geometry'
-export { configureSharp, decodeToRgba, downscaleRgba, resizeRgba, toWebpDataUrl, type Rgba } from './core/image'
+export {
+  configureSharp,
+  decodeToRgba,
+  downscaleRgba,
+  resizeRgba,
+  rotate180,
+  toWebpDataUrl,
+  type Rgba
+} from './core/image'
 export { loadCv } from './core/cv'
 export { measureQuality, type Quality } from './core/quality'
-export { dot, emptyIndex, search, similarityBetween, type Hit, type RefIndex, type RefIndexEntry } from './core/match'
+export {
+  dot,
+  emptyIndex,
+  matchCard,
+  search,
+  similarityBetween,
+  type Hit,
+  type MatchResult,
+  type RefIndex,
+  type RefIndexEntry
+} from './core/match'
 export { THRESHOLDS } from './core/thresholds'

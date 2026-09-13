@@ -78,3 +78,27 @@ export async function toWebpDataUrl(img: Rgba, width: number, quality = 72): Pro
     .toBuffer()
   return `data:image/webp;base64,${buf.toString('base64')}`
 }
+
+/**
+ * Gira el mapa de bits media vuelta.
+ *
+ * Al pasar una pila de cartas es fácil que alguna caiga boca abajo. El
+ * cuadrilátero sale igual de válido —una carta del revés sigue siendo un
+ * rectángulo con las proporciones correctas—, pero su huella no se parece a
+ * nada del catálogo. Probar las dos orientaciones cuesta una inferencia más y
+ * ahorra un «no la reconozco» que despista.
+ */
+export function rotate180(img: Rgba): Rgba {
+  const { data, width, height } = img
+  const out = new Uint8Array(data.length)
+  const pixels = width * height
+  for (let i = 0; i < pixels; i += 1) {
+    const from = i * 4
+    const to = (pixels - 1 - i) * 4
+    out[to] = data[from]!
+    out[to + 1] = data[from + 1]!
+    out[to + 2] = data[from + 2]!
+    out[to + 3] = data[from + 3]!
+  }
+  return { data: out, width, height }
+}
