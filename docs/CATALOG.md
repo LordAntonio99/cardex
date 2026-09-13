@@ -295,7 +295,11 @@ Detalles que importan:
   migración. Sólo se guardan las que la carta trae de verdad; un cero es un valor legítimo.
 - **`category`** es `Pokemon | Trainer | Energy` en Pokémon y
   `Unit | Spell | Legend | Battlefield | Gear | Rune` en Riftbound. El visor la usa para elegir
-  el reverso: en Riftbound no todas las cartas comparten el mismo.
+  el reverso, porque en Riftbound hay tres: azul el mazo principal, negro las leyendas y los
+  campos de batalla, y blanco las runas. De momento **sólo se ha encontrado publicado el azul**,
+  y se usa para todas: 209 de las 1.165 enseñan así un reverso que no es el suyo, que es el
+  precio que se decidió pagar por no dejar el hueco. En cuanto aparezcan las otras dos, basta
+  añadirlas por categoría en `CARD_BACKS` (`CardViewer.tsx`).
 - **`rarity` va en el idioma principal** (español por defecto). El clasificador de rareza de la
   interfaz entiende tanto `Rara Doble` como `Double Rare`, así que el efecto holográfico
   funciona igual. Ojo: los datos de TCGdex en español están incompletos y algunas rarezas

@@ -27,27 +27,29 @@ import { useStore } from '../../state/store'
  * de sobres: una URL https que se descarga una vez a la caché local de cada
  * usuario, en vez de republicar material ajeno en el repositorio.
  *
- * En Pokémon hay uno solo y vale para todo; se referencia desde Bulbagarden
- * Archives. En Riftbound hay TRES, según a qué mazo pertenece la carta: azul el
- * mazo principal, negro las leyendas y los campos de batalla, y blanco las
- * runas.
+ * El mapa es por categoría porque en Riftbound hay TRES reversos: azul el mazo
+ * principal —unidades, hechizos y equipo—, negro las leyendas y los campos de
+ * batalla, y blanco las runas. De los tres sólo se ha encontrado publicado el
+ * azul, en el artículo de Riftbound de la Wikipedia en inglés (obra de Riot
+ * Games, alojada allí con su justificación de uso legítimo).
  *
- * De los tres **sólo se ha encontrado publicado el azul**, en el artículo de
- * Riftbound de la Wikipedia en inglés (obra de Riot Games, alojada allí con su
- * justificación de uso legítimo). Las otras dos categorías se quedan con el
- * hueco que el visor ya dibuja: enseñar un reverso que no es el suyo sería
- * peor que no enseñar ninguno.
+ * **Decisión del proyecto: el azul se usa para todas.** Es lo que se pidió
+ * expresamente. Tiene un coste que conviene no olvidar: 209 de las 1.165 cartas
+ * enseñan un reverso que no es el suyo. La alternativa era el hueco, y se
+ * prefirió la uniformidad.
+ *
+ * En cuanto aparezcan las otras dos imágenes, esto se cierra bien añadiendo sus
+ * entradas por categoría —`Legend`, `Battlefield` y `Rune`—, que mandan sobre
+ * el `default`.
  */
+const RIFTBOUND_BACK = 'https://upload.wikimedia.org/wikipedia/en/0/0a/Riftbound_blue_card_back.png'
+
 const CARD_BACKS: Record<GameId, Record<string, string> & { default?: string }> = {
   pokemon: {
     default: 'https://archives.bulbagarden.net/media/upload/thumb/1/17/Cardback.jpg/600px-Cardback.jpg'
   },
   riftbound: {
-    // Mazo principal: unidades, hechizos y equipo.
-    Unit: 'https://upload.wikimedia.org/wikipedia/en/0/0a/Riftbound_blue_card_back.png',
-    Spell: 'https://upload.wikimedia.org/wikipedia/en/0/0a/Riftbound_blue_card_back.png',
-    Gear: 'https://upload.wikimedia.org/wikipedia/en/0/0a/Riftbound_blue_card_back.png'
-    // Legend y Battlefield (negro) y Rune (blanco) siguen sin imagen.
+    default: RIFTBOUND_BACK
   }
 }
 
