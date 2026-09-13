@@ -1,25 +1,37 @@
 {
   "schemaVersion": 1,
   "catalogVersion": "2026.09.13",
-  "generatedAt": "2026-09-13T10:27:20.389Z",
+  "generatedAt": "2026-09-13T10:58:54.570Z",
   "sets": [
     {
       "id": "base1",
       "file": "sets/base1.json",
-      "sha256": "311c333ec00fd06cd80e3e3384463970562b326adc6286b10e1a750b80436051",
+      "sha256": "31e2ca3a54e7cd585d0e574a553976d535253babad0824814bbbe0471fe92ad2",
       "cardCount": 102
     },
     {
       "id": "me05",
       "file": "sets/me05.json",
-      "sha256": "4779d139db34e3e0447f83791437fa63d1ef1cc020709ab7b733053e70bc1868",
+      "sha256": "e37c47674be884694427f1284e9e2fafb60fdbbdf21f23d744e40c282d0647a6",
       "cardCount": 120
     },
     {
       "id": "sv09",
       "file": "sets/sv09.json",
-      "sha256": "ecfe23b9590b24d92349e5e5cead4d4a8cd6650a432720266a5b64279e55cd0f",
+      "sha256": "868e334ef23686c7600eade7a4c9230f6dd33185d6094adeca83f4758f58d459",
       "cardCount": 190
+    },
+    {
+      "id": "sv10.5b",
+      "file": "sets/sv10.5b.json",
+      "sha256": "fb9b581e99593fda851b5a9990d4c9fe1d1b5ec2b36524370e939846845911c3",
+      "cardCount": 172
+    },
+    {
+      "id": "sv10.5w",
+      "file": "sets/sv10.5w.json",
+      "sha256": "cb94b8d760d7b5a0fb951462e446a9790a8b978d41935b5ee940c6846a379073",
+      "cardCount": 173
     }
   ],
   "recognition": [
@@ -49,6 +61,24 @@
       "dims": 384,
       "dtype": "f32",
       "count": 380
+    },
+    {
+      "id": "sv10.5b",
+      "file": "recog/sv10.5b.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "b4f8a0163db8853e121e23524c56ade85b0ded752aa0a55d08cf047413651d5a",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 344
+    },
+    {
+      "id": "sv10.5w",
+      "file": "recog/sv10.5w.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "494d6b6b095310a3eebca962f7e61ca1ae44c17926b2430435a77057a16410f6",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 346
     }
   ]
 }
