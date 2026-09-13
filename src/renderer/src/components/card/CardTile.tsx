@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useState } from 'react'
 import type { CardLang, CardListItem, UiLang } from '@shared/types'
 import { imageLang, useCardImage } from '../../lib/api'
 import { deltaColor, money, pct } from '../../lib/format'
@@ -27,11 +27,45 @@ interface Props {
   onOpenDetail: (cardId: string) => void
 }
 
+/**
+ * La cifra que se enseña sobre la ilustración.
+ *
+ * En Pokémon es el PV, que es lo que identifica a ojo una carta en la rejilla.
+ * En Riftbound no hay PV: lo que se imprime es el coste de energía y el poderío,
+ * así que se enseñan esos dos con los mismos símbolos que la carta. Un cero es
+ * un valor real —hay unidades con 0 de poderío—, de ahí las comprobaciones
+ * contra `undefined` y no contra un valor falsy.
+ */
+function statLine(card: CardListItem): string | null {
+  if (card.hp) return `HP ${card.hp}`
+  const stats = card.stats
+  if (!stats) return null
+  const parts: string[] = []
+  if (stats['energy'] !== undefined) parts.push(`◈ ${stats['energy']}`)
+  if (stats['might'] !== undefined) parts.push(`⚔ ${stats['might']}`)
+  if (!parts.length && stats['power'] !== undefined) parts.push(`✦ ${stats['power']}`)
+  return parts.length ? parts.join('  ') : null
+}
+
 function CardTileImpl({ card, lang, cardLang, strings, onOpenDetail }: Props): React.JSX.Element {
   const tone = RARITY_TONE[rarityTier(card.rarity)]
   const owned = card.ownedQty > 0
   // En la rejilla basta la calidad baja: 31 KB frente a 126 KB por carta.
-  const image = useCardImage(card.imagePath, imageLang(card.langs, cardLang), 'low')
+  const image = useCardImage(card.imagePath, imageLang(card.langs, cardLang), 'low', card.game)
+
+  /**
+   * Si la carta es apaisada.
+   *
+   * Los campos de batalla de Riftbound se imprimen en horizontal, y el hueco de
+   * la rejilla es vertical. Con `cover` se vería un recorte central del que no
+   * se reconoce la carta, así que esas van con `contain`.
+   *
+   * Se mide en el `onLoad` en lugar de leerlo del catálogo porque la imagen ya
+   * lo sabe: no hace falta un campo más que mantener, ni que el generador
+   * acierte, ni que el renderer conozca qué categorías de qué juego son
+   * apaisadas.
+   */
+  const [wide, setWide] = useState(false)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 11, opacity: owned ? 1 : 0.4 }}>
@@ -60,7 +94,13 @@ function CardTileImpl({ card, lang, cardLang, strings, onOpenDetail }: Props): R
             src={image.data}
             alt={card.name}
             loading="lazy"
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            onLoad={(e) => setWide(e.currentTarget.naturalWidth > e.currentTarget.naturalHeight)}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: wide ? 'contain' : 'cover',
+              display: 'block'
+            }}
           />
         ) : (
           <>
@@ -116,12 +156,17 @@ function CardTileImpl({ card, lang, cardLang, strings, onOpenDetail }: Props): R
                 >
                   {card.name}
                 </span>
-                {card.hp ? (
+                {statLine(card) ? (
                   <span
                     className="font-code"
-                    style={{ fontSize: 9.5, color: 'rgba(255,255,255,.72)', lineHeight: 1 }}
+                    style={{
+                      fontSize: 9.5,
+                      color: 'rgba(255,255,255,.72)',
+                      lineHeight: 1,
+                      whiteSpace: 'nowrap'
+                    }}
                   >
-                    HP {card.hp}
+                    {statLine(card)}
                   </span>
                 ) : null}
               </div>

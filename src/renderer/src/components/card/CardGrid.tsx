@@ -36,6 +36,7 @@ interface Props {
 
 export function CardGrid({ scope, scrollRef, lang, strings, onEmpty }: Props): React.JSX.Element {
   const filters = useStore((s) => s.filters)
+  const game = useStore((s) => s.settings.game)
   const select = useStore((s) => s.select)
 
   const containerRef = useRef<HTMLDivElement>(null)
@@ -80,6 +81,10 @@ export function CardGrid({ scope, scrollRef, lang, strings, onEmpty }: Props): R
   const offset = Math.max(0, Math.floor(firstVisible / PAGE) * PAGE)
   const query: CardQuery = {
     scope,
+    // El juego no es un filtro de la barra lateral: es el ámbito que elige la
+    // cabecera, y vive en los ajustes. Entra en la consulta para que TanStack
+    // Query lo tenga en la clave y vuelva a pedir la página al cambiarlo.
+    game,
     search: filters.search,
     setId: filters.setId,
     lang: filters.lang,

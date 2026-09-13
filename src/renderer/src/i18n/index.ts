@@ -20,6 +20,11 @@ const es = {
   navScan: 'Escáner',
   navMarket: 'Mercado',
 
+  // Selector de juego. Sólo aparece cuando el catálogo trae más de uno.
+  gameAll: 'TODOS',
+  gamePokemon: 'POKÉMON',
+  gameRiftbound: 'RIFTBOUND',
+
   // Barra lateral
   search: 'BUSCAR',
   searchPlaceholder: 'Charizard, 004/102…',
@@ -155,6 +160,9 @@ const es = {
   stCardsNote: 'copias totales en inventario',
   history: 'Valor de la colección',
   range90: 'ÚLTIMOS 90 DÍAS',
+  // El histórico se anota una vez al día con el total de la cartera, así que
+  // no se puede partir por juego hacia atrás. Se dice en vez de disimularlo.
+  historyAllGames: 'TODOS LOS JUEGOS',
   topUp: 'MÁS SUBEN (7 DÍAS)',
   topDown: 'MÁS BAJAN (7 DÍAS)',
   source: 'FUENTE DEL PRECIO',
@@ -171,6 +179,11 @@ const es = {
   cardBack: 'Reverso',
   close: 'CERRAR',
   marketPrice: 'PRECIO DE MERCADO',
+  // De dónde sale el precio. Con dos juegos ya no es lo mismo: Pokémon cotiza
+  // en Cardmarket, en euros, y Riftbound en TCGplayer, en dólares convertidos
+  // al cambio del BCE del día en que se generó el catálogo.
+  priceFromCardmarket: 'PRECIO · CARDMARKET',
+  priceFromTcgplayer: 'PRECIO · TCGPLAYER (USD→€)',
   priceHistory: 'HISTÓRICO DE PRECIO',
   inventory: 'INVENTARIO',
   foundIn: 'PUEDE SALIR EN',
@@ -182,6 +195,11 @@ const es = {
   fNumK: 'NÚMERO',
   fTypeK: 'TIPO',
   fLangK: 'IDIOMA',
+  // Cifras impresas de Riftbound, donde Pokémon imprime el PV.
+  fStatsK: 'CIFRAS',
+  statEnergy: 'energía',
+  statMight: 'poderío',
+  statPower: 'poder',
   noCopies: 'No tienes ninguna copia',
   noMovements: 'Sin movimientos registrados',
 
@@ -244,6 +262,10 @@ const en: typeof es = {
   navSets: 'Sets & packs',
   navScan: 'Scanner',
   navMarket: 'Market',
+
+  gameAll: 'ALL',
+  gamePokemon: 'POKÉMON',
+  gameRiftbound: 'RIFTBOUND',
 
   search: 'SEARCH',
   searchPlaceholder: 'Charizard, 004/102…',
@@ -374,6 +396,7 @@ const en: typeof es = {
   stCardsNote: 'total copies in inventory',
   history: 'Collection value',
   range90: 'LAST 90 DAYS',
+  historyAllGames: 'ALL GAMES',
   topUp: 'TOP RISERS (7 DAYS)',
   topDown: 'TOP FALLERS (7 DAYS)',
   source: 'PRICE SOURCE',
@@ -389,6 +412,8 @@ const en: typeof es = {
   cardBack: 'Card back',
   close: 'CLOSE',
   marketPrice: 'MARKET PRICE',
+  priceFromCardmarket: 'PRICE · CARDMARKET',
+  priceFromTcgplayer: 'PRICE · TCGPLAYER (USD→€)',
   priceHistory: 'PRICE HISTORY',
   inventory: 'INVENTORY',
   foundIn: 'CAN COME FROM',
@@ -400,6 +425,10 @@ const en: typeof es = {
   fNumK: 'NUMBER',
   fTypeK: 'TYPE',
   fLangK: 'LANGUAGE',
+  fStatsK: 'STATS',
+  statEnergy: 'energy',
+  statMight: 'might',
+  statPower: 'power',
   noCopies: 'You do not own a copy',
   noMovements: 'No movements recorded',
 

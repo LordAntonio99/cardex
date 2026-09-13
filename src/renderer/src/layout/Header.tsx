@@ -1,5 +1,5 @@
-import { VIEWS, type UiLang, type ViewId } from '@shared/types'
-import { call, useCollectionStats, useUpdateStatus } from '../lib/api'
+import { VIEWS, type GameId, type UiLang, type ViewId } from '@shared/types'
+import { call, useCollectionStats, useFilterOptions, useUpdateStatus } from '../lib/api'
 import { money } from '../lib/format'
 import type { Strings } from '../i18n'
 import { useStore } from '../state/store'
@@ -27,6 +27,71 @@ const NAV_LABEL: Record<ViewId, keyof Strings> = {
   sets: 'navSets',
   scan: 'navScan',
   market: 'navMarket'
+}
+
+const GAME_LABEL: Record<GameId, keyof Strings> = {
+  pokemon: 'gamePokemon',
+  riftbound: 'gameRiftbound'
+}
+
+/**
+ * Selector de juego.
+ *
+ * Manda sobre las cinco vistas y se guarda en los ajustes, así que sigue puesto
+ * al volver a abrir. Vive junto a la marca porque no es un filtro más: es el
+ * ámbito de todo lo que se ve debajo.
+ *
+ * **No aparece cuando el catálogo instalado tiene un solo juego.** Un control
+ * de un único valor no decide nada y sólo ocupa cabecera; en cuanto se
+ * sincroniza un catálogo con dos, aparece.
+ */
+function GameSwitch({ strings }: { strings: Strings }): React.JSX.Element | null {
+  const settings = useStore((s) => s.settings)
+  const setSettings = useStore((s) => s.setSettings)
+  const setFilters = useStore((s) => s.setFilters)
+  const options = useFilterOptions()
+
+  const games = (options.data?.games ?? []).filter((g) => g.count > 0)
+  if (games.length < 2) return null
+
+  const choose = async (next: GameId | 'all'): Promise<void> => {
+    if (next === settings.game) return
+    // El set y la rareza se sueltan a la vez que el juego: los sets son de un
+    // juego y las rarezas ni siquiera se llaman igual ('Rara Doble' frente a
+    // 'Epic'). Dejarlos puestos daría una rejilla vacía sin explicación.
+    setFilters({ setId: 'all', rarity: 'all' })
+    setSettings(await call('settings:patch', { game: next }))
+  }
+
+  const choices: (GameId | 'all')[] = ['all', ...games.map((g) => g.value)]
+
+  return (
+    <div style={{ display: 'flex', border: '1px solid var(--rule)', flex: '0 0 auto' }}>
+      {choices.map((code) => {
+        const active = settings.game === code
+        return (
+          <button
+            key={code}
+            type="button"
+            onClick={() => void choose(code)}
+            className="font-code no-drag"
+            style={{
+              background: active ? 'var(--ac)' : 'transparent',
+              color: active ? 'var(--on-brand)' : 'var(--soft)',
+              border: 0,
+              padding: '7px 11px',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <span style={{ fontSize: 9.5, letterSpacing: '.14em', fontWeight: 600 }}>
+              {code === 'all' ? strings.gameAll : strings[GAME_LABEL[code]]}
+            </span>
+          </button>
+        )
+      })}
+    </div>
+  )
 }
 
 export function Header({ strings, lang }: { strings: Strings; lang: UiLang }): React.JSX.Element {
@@ -105,6 +170,8 @@ export function Header({ strings, lang }: { strings: Strings; lang: UiLang }): R
             </span>
           </div>
         </div>
+
+        <GameSwitch strings={strings} />
 
         {/* Navegación 01-05 */}
         <nav style={{ display: 'flex', alignSelf: 'stretch', flex: '0 0 auto' }}>

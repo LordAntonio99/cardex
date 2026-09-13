@@ -19,6 +19,7 @@ export function MarketView({ strings, lang }: { strings: Strings; lang: UiLang }
   const movers = useTopMovers(5)
   const select = useStore((s) => s.select)
   const setView = useStore((s) => s.setView)
+  const game = useStore((s) => s.settings.game)
 
   const s = stats.data
   const series = history.data ?? []
@@ -114,7 +115,12 @@ export function MarketView({ strings, lang }: { strings: Strings; lang: UiLang }
               {strings.history}
             </span>
             <span className="font-code text-faint" style={{ fontSize: 9.5, letterSpacing: '.14em' }}>
-              {strings.range90}
+              {/* La curva es la de la cartera ENTERA, también cuando arriba hay
+                  un juego seleccionado: el histórico se anota una vez al día
+                  con el total, y partirlo por juego a posteriori es imposible
+                  sin reescribir un pasado que no se puede reconstruir. Se dice
+                  en vez de dar a entender que la curva es la del juego. */}
+              {game === 'all' ? strings.range90 : `${strings.range90} · ${strings.historyAllGames}`}
             </span>
           </div>
           <div style={{ border: '1px solid var(--rule)', background: 'var(--card)', padding: '18px 18px 10px' }}>
@@ -198,7 +204,7 @@ export function MarketView({ strings, lang }: { strings: Strings; lang: UiLang }
           {strings.source}
         </span>
         <span className="font-code text-soft" style={{ fontSize: 9.5, letterSpacing: '.06em' }}>
-          Cardmarket · TCGdex
+          Cardmarket · TCGdex · TCGplayer · Riot Games
         </span>
       </div>
     </main>

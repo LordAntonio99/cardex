@@ -1,11 +1,14 @@
-import type {
-  CardListItem,
-  CardPage,
-  CardQuery,
-  FilterOptions,
-  Movement,
-  PokemonType,
-  PricePoint
+import {
+  GAMES,
+  isGameId,
+  type CardListItem,
+  type CardPage,
+  type CardQuery,
+  type CardTypeKey,
+  type FilterOptions,
+  type GameId,
+  type Movement,
+  type PricePoint
 } from '@shared/types'
 import { getDb } from '../db'
 import { getSettings } from '../settings'
@@ -13,6 +16,7 @@ import { getSettings } from '../settings'
 /** Fila cruda tal y como sale del SELECT de la rejilla. */
 interface CardRow {
   card_id: string
+  game: string
   name: string
   local_id: string
   set_id: string
@@ -20,13 +24,16 @@ interface CardRow {
   set_name: string
   total_official: number
   rarity: string | null
+  category: string | null
   types: string
   hp: number | null
+  stats: string | null
   image_path: string | null
   variant_mask: number
   langs: string | null
   owned_qty: number | null
   price_cents: number | null
+  price_source: number | null
   delta7: number | null
 }
 
@@ -45,18 +52,33 @@ function numberLabel(localId: string, totalOfficial: number): string {
     : `${localId}/${totalOfficial}`
 }
 
-function parseTypes(json: string): PokemonType[] {
+function parseTypes(json: string): CardTypeKey[] {
   try {
     const v: unknown = JSON.parse(json)
-    return Array.isArray(v) ? (v as PokemonType[]) : []
+    return Array.isArray(v) ? (v as CardTypeKey[]) : []
   } catch {
     return []
+  }
+}
+
+/** Las cifras impresas que no son el PV. Nulo cuando la carta no tiene ninguna. */
+function parseStats(json: string | null): Record<string, number> | null {
+  if (!json) return null
+  try {
+    const v: unknown = JSON.parse(json)
+    if (typeof v !== 'object' || v === null || Array.isArray(v)) return null
+    const out: Record<string, number> = {}
+    for (const [k, n] of Object.entries(v)) if (typeof n === 'number') out[k] = n
+    return Object.keys(out).length ? out : null
+  } catch {
+    return null
   }
 }
 
 function toItem(r: CardRow): CardListItem {
   return {
     cardId: r.card_id,
+    game: isGameId(r.game) ? r.game : 'pokemon',
     name: r.name,
     localId: r.local_id,
     numberLabel: numberLabel(r.local_id, r.total_official),
@@ -64,13 +86,16 @@ function toItem(r: CardRow): CardListItem {
     setCode: r.set_code,
     setName: r.set_name,
     rarity: r.rarity,
+    category: r.category,
     types: parseTypes(r.types),
     hp: r.hp,
+    stats: parseStats(r.stats),
     imagePath: r.image_path,
     variantMask: r.variant_mask,
     langs: (r.langs ?? 'en').split(',').filter(Boolean) as CardListItem['langs'],
     ownedQty: r.owned_qty ?? 0,
     priceCents: r.price_cents,
+    priceSource: r.price_source === null ? null : r.price_source === 1 ? 'tcgplayer' : 'cardmarket',
     delta7: r.delta7
   }
 }
@@ -82,12 +107,16 @@ function toItem(r: CardRow): CardListItem {
  * `owned_price` vale lo que valen las impresiones que el usuario tiene de
  *               verdad. Importa: un Charizard del Set Base holo unlimited anda
  *               por 590 € y el mismo shadowless de 1ª edición pasa de 3.500.
- * `catalog`     el precio de referencia de la carta (su impresión corriente),
- *               para las que no se tienen.
+ * El precio de referencia de la carta —el de su impresión corriente, para las
+ * que no se tienen— llega por `cat.card_default_price`, que además resuelve de
+ * qué fuente sale: Cardmarket cuando la hay y TCGplayer cuando no, que es el
+ * caso de Riftbound.
  *
  * La variación a siete días sale de comparar la tendencia con la media de la
- * semana, ambas de Cardmarket y ya en el catálogo. Así hay variación desde el
- * primer día, sin esperar a acumular histórico local.
+ * semana, ambas ya en el catálogo. Así hay variación desde el primer día, sin
+ * esperar a acumular histórico local. Las fuentes que no publican media semanal
+ * dejan `avg7_cents` a nulo y la carta sale sin variación, que es más honesto
+ * que inventarla.
  */
 const WITH_BLOCK = `
   WITH owned AS (
@@ -102,18 +131,12 @@ const WITH_BLOCK = `
     JOIN collection_items ci ON ci.card_key_id = ck.id AND ci.qty > 0
     JOIN cat.card_variant_price v ON v.card_id = ck.card_id AND v.variant = ck.variant
     GROUP BY ck.card_id
-  ),
-  catalog AS (
-    SELECT p.card_id AS card_id, pr.trend_cents AS trend_cents, pr.avg7_cents AS avg7_cents
-    FROM cat.card_printings p
-    JOIN cat.printing_prices pr
-      ON pr.card_id = p.card_id AND pr.printing_id = p.printing_id AND pr.source = 0
-    WHERE p.is_default = 1
   )
 `
 
 const SELECT_COLS = `
   c.id            AS card_id,
+  s.game          AS game,
   COALESCE(cn.name, c.name) AS name,
   c.local_id      AS local_id,
   c.set_id        AS set_id,
@@ -121,13 +144,16 @@ const SELECT_COLS = `
   COALESCE(sn.name, s.name) AS set_name,
   s.total_official AS total_official,
   c.rarity        AS rarity,
+  c.category      AS category,
   c.types         AS types,
   c.hp            AS hp,
+  c.stats         AS stats,
   c.image_path    AS image_path,
   c.variant_mask  AS variant_mask,
   (SELECT GROUP_CONCAT(cl.lang) FROM cat.card_langs cl WHERE cl.card_id = c.id) AS langs,
   owned.qty       AS owned_qty,
   COALESCE(owned_price.trend_cents, catalog.trend_cents) AS price_cents,
+  catalog.source  AS price_source,
   CASE
     WHEN catalog.avg7_cents IS NULL OR catalog.avg7_cents = 0 THEN NULL
     ELSE ROUND((catalog.trend_cents - catalog.avg7_cents) * 100.0 / catalog.avg7_cents, 1)
@@ -141,11 +167,12 @@ const FROM_BLOCK = `
   LEFT JOIN cat.set_names  sn ON sn.set_id  = s.id AND sn.lang = @uiLang
   LEFT JOIN owned       ON owned.card_id       = c.id
   LEFT JOIN owned_price ON owned_price.card_id = c.id
-  LEFT JOIN catalog     ON catalog.card_id     = c.id
+  LEFT JOIN cat.card_default_price catalog ON catalog.card_id = c.id
 `
 
 interface Params {
   uiLang: string
+  game?: string
   search?: string
   setId?: string
   lang?: string
@@ -167,6 +194,13 @@ function buildFilters(q: CardQuery): { sql: string; params: Params } {
     where.push('COALESCE(owned.qty, 0) > 0')
   }
 
+  // El juego se filtra por el set, que es donde vive: una carta es del juego de
+  // su set y no hay caso intermedio.
+  if (q.game !== 'all') {
+    where.push('s.game = @game')
+    params.game = q.game
+  }
+
   const search = q.search.trim()
   if (search) {
     // El buscador combina dos cosas a propósito: quien colecciona teclea
@@ -176,9 +210,14 @@ function buildFilters(q: CardQuery): { sql: string; params: Params } {
       c.local_id = @search
       OR c.local_id LIKE @searchPrefix
       OR c.id IN (
-        SELECT src.card_id FROM cat.cards_fts f
-        JOIN cat.card_search_src src ON src.rowid_ = f.rowid
-        WHERE cat.cards_fts MATCH @ftsQuery
+        -- El operando izquierdo de MATCH tiene que ser el nombre DESNUDO de la
+        -- tabla FTS5. Ni cualificado con el esquema ('cat.cards_fts MATCH') ni
+        -- por un alias ('f MATCH'): las dos formas fallan con «no such column»
+        -- y tumban la consulta entera en cuanto hay algo escrito en el
+        -- buscador. Por eso el MATCH va aislado en su propia subconsulta, donde
+        -- la tabla no necesita ni prefijo ni alias.
+        SELECT src.card_id FROM cat.card_search_src src
+        WHERE src.rowid_ IN (SELECT rowid FROM cat.cards_fts WHERE cards_fts MATCH @ftsQuery)
       )
     )`)
     Object.assign(params, {
@@ -251,7 +290,14 @@ export function page(q: CardQuery): CardPage {
       .get(params) ?? { n: 0 }
   ).n
 
-  const scopeWhere = q.scope === 'collection' ? 'WHERE COALESCE(owned.qty, 0) > 0' : ''
+  // El total del ámbito («N de M cartas») respeta el juego activo pero no los
+  // filtros: con Riftbound seleccionado, M es el catálogo de Riftbound, no el
+  // de los dos juegos juntos.
+  const scopeConds = [
+    ...(q.scope === 'collection' ? ['COALESCE(owned.qty, 0) > 0'] : []),
+    ...(q.game !== 'all' ? ['s.game = @game'] : [])
+  ]
+  const scopeWhere = scopeConds.length ? `WHERE ${scopeConds.join(' AND ')}` : ''
   const scopeTotal = (
     db
       .prepare<Params, { n: number }>(
@@ -273,45 +319,95 @@ export function byId(cardId: string): CardListItem | null {
   return row ? toItem(row) : null
 }
 
-/** Alimenta la barra lateral con lo que realmente hay en el catálogo. */
+/**
+ * Alimenta la barra lateral con lo que realmente hay en el catálogo.
+ *
+ * Todo va acotado al juego activo salvo el recuento por juego, que es el
+ * control con el que se cambia de juego y por tanto tiene que contarlos todos.
+ * Ofrecer sets o rarezas del otro juego dejaría la rejilla vacía sin que se
+ * entienda por qué.
+ *
+ * El juego se lee de los ajustes, igual que el idioma de la interfaz: son
+ * estado del proceso main, no argumentos de la consulta.
+ */
 export function filterOptions(): FilterOptions {
   const db = getDb()
-  const uiLang = getSettings().uiLang
+  const { uiLang, game } = getSettings()
+  // El mismo predicado en todas las consultas de aquí abajo, escrito de forma
+  // que el parámetro se enlaza siempre: así no hay una variante del SQL que
+  // reciba un valor que no usa. Con cinco o diez sets, el coste es ninguno.
+  const scope = " AND (@game = 'all' OR s.game = @game)"
+  const params = { uiLang, game }
+
+  // En el orden en que se declaran los juegos, no por número de cartas: es un
+  // selector fijo de la cabecera, y que los botones cambien de sitio al
+  // publicarse un set nuevo rompería la memoria muscular de quien lo usa a
+  // diario.
+  const games = db
+    .prepare<[], { value: GameId; count: number }>(
+      `SELECT s.game AS value, COUNT(c.id) AS count
+       FROM cat.sets s
+       LEFT JOIN cat.cards c ON c.set_id = s.id
+       GROUP BY s.game`
+    )
+    .all()
+    .sort((a, b) => GAMES.indexOf(a.value) - GAMES.indexOf(b.value))
 
   const sets = db
-    .prepare<{ uiLang: string }, { id: string; name: string; code: string | null; count: number }>(
+    .prepare<
+      typeof params,
+      { id: string; game: GameId; name: string; code: string | null; count: number }
+    >(
       `SELECT s.id AS id,
+              s.game AS game,
               COALESCE(sn.name, s.name) AS name,
               s.code AS code,
               COUNT(c.id) AS count
        FROM cat.sets s
        LEFT JOIN cat.set_names sn ON sn.set_id = s.id AND sn.lang = @uiLang
        LEFT JOIN cat.cards c ON c.set_id = s.id
+       WHERE 1 = 1${scope}
        GROUP BY s.id
        ORDER BY s.sort_key DESC, s.id`
     )
-    .all({ uiLang })
+    .all(params)
 
   const rarities = db
-    .prepare<[], { value: string; count: number }>(
-      `SELECT rarity AS value, COUNT(*) AS count
-       FROM cat.cards WHERE rarity IS NOT NULL AND rarity <> ''
-       GROUP BY rarity ORDER BY count DESC`
+    .prepare<typeof params, { value: string; count: number }>(
+      `SELECT c.rarity AS value, COUNT(*) AS count
+       FROM cat.cards c
+       JOIN cat.sets s ON s.id = c.set_id
+       WHERE c.rarity IS NOT NULL AND c.rarity <> ''${scope}
+       GROUP BY c.rarity ORDER BY count DESC`
     )
-    .all()
+    .all(params)
 
   const langs = db
-    .prepare<[], { value: 'es' | 'en' | 'ja'; count: number }>(
-      `SELECT lang AS value, COUNT(*) AS count
-       FROM cat.card_langs GROUP BY lang ORDER BY count DESC`
+    .prepare<typeof params, { value: 'es' | 'en' | 'ja'; count: number }>(
+      `SELECT cl.lang AS value, COUNT(*) AS count
+       FROM cat.card_langs cl
+       JOIN cat.cards c ON c.id = cl.card_id
+       JOIN cat.sets s ON s.id = c.set_id
+       WHERE 1 = 1${scope}
+       GROUP BY cl.lang ORDER BY count DESC`
     )
-    .all()
+    .all(params)
 
+  // El máximo sale de la vista y no de `printing_prices` en crudo porque es la
+  // que decide qué fuente cotiza cada carta. Contra la tabla se colaría el
+  // precio de una fuente que la interfaz no llega a enseñar nunca.
   const maxRow = db
-    .prepare<[], { m: number | null }>('SELECT MAX(trend_cents) AS m FROM cat.printing_prices WHERE source = 0')
-    .get()
+    .prepare<typeof params, { m: number | null }>(
+      `SELECT MAX(v.trend_cents) AS m
+       FROM cat.card_default_price v
+       JOIN cat.cards c ON c.id = v.card_id
+       JOIN cat.sets s ON s.id = c.set_id
+       WHERE 1 = 1${scope}`
+    )
+    .get(params)
 
   return {
+    games,
     sets,
     rarities,
     langs,

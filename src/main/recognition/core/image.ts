@@ -88,6 +88,38 @@ export async function toWebpDataUrl(img: Rgba, width: number, quality = 72): Pro
  * nada del catálogo. Probar las dos orientaciones cuesta una inferencia más y
  * ahorra un «no la reconozco» que despista.
  */
+/**
+ * Gira el mapa de bits un cuarto de vuelta en el sentido de las agujas.
+ *
+ * Lo necesitan las cartas APAISADAS —los campos de batalla de Riftbound—, y no
+ * el escáner sino el generador del catálogo. El motivo está en `orderCorners`:
+ * ese código normaliza cualquier cuadrilátero a vertical, así que una carta
+ * apaisada sobre la mesa llega a la huella girada 90°, en un sentido o en el
+ * otro según por dónde se haya dejado. La imagen de referencia, en cambio, sale
+ * apaisada de origen, y las dos no se parecerían en nada.
+ *
+ * Se arregla publicando la referencia ya girada a vertical. Con una basta:
+ * `matchCard` prueba la captura y su giro de 180°, y esas dos pruebas cubren
+ * los dos sentidos posibles.
+ */
+export function rotate90(img: Rgba): Rgba {
+  const { data, width, height } = img
+  const out = new Uint8Array(data.length)
+  // Al girar, los lados se intercambian.
+  const outWidth = height
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const from = (y * width + x) * 4
+      const to = (x * outWidth + (height - 1 - y)) * 4
+      out[to] = data[from]!
+      out[to + 1] = data[from + 1]!
+      out[to + 2] = data[from + 2]!
+      out[to + 3] = data[from + 3]!
+    }
+  }
+  return { data: out, width: outWidth, height: width }
+}
+
 export function rotate180(img: Rgba): Rgba {
   const { data, width, height } = img
   const out = new Uint8Array(data.length)

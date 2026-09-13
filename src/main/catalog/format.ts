@@ -1,4 +1,4 @@
-import type { CatalogManifest, CatalogManifestRecognition, CatalogManifestSet } from '@shared/types'
+import { isGameId, type CatalogManifest, type CatalogManifestRecognition, type CatalogManifestSet, type GameId } from '@shared/types'
 
 /**
  * Formato del catálogo publicado en GitHub.
@@ -33,12 +33,25 @@ export interface CatalogPrinting {
     avg7Cents?: number | null
     avg30Cents?: number | null
     updatedAt?: string | null
+    /**
+     * Rastro de la conversión de moneda, cuando la ha habido.
+     *
+     * Riftbound sólo tiene precios en dólares, y el generador los pasa a euros
+     * con el tipo del BCE del día. `currency` dice ya EUR; estos tres campos
+     * dicen de dónde salía y con qué cambio, para que la cifra se pueda
+     * auditar. No se importan: son para quien lea el catálogo publicado.
+     */
+    sourceCurrency?: string
+    fxRate?: number
+    fxOn?: string
   }[]
 }
 
 export interface CatalogSetFile {
   set: {
     id: string
+    /** 'pokemon' | 'riftbound'. Ausente en catálogos v1: son todos de Pokémon. */
+    game?: string
     seriesId: string
     seriesName: string
     region?: string
@@ -61,6 +74,8 @@ export interface CatalogSetFile {
     category?: string | null
     types?: string[]
     hp?: number | null
+    /** Cifras impresas que no son el PV: energía, poderío y poder en Riftbound. */
+    stats?: Record<string, number>
     illustrator?: string | null
     imagePath?: string | null
     variants?: string[]
@@ -157,7 +172,32 @@ function assertSafePath(file: string): void {
   }
 }
 
-export const SUPPORTED_SCHEMA = 1
+/**
+ * Formato del catálogo que esta versión entiende.
+ *
+ *   v1  sólo Pokémon
+ *   v2  el set declara a qué juego pertenece, y de ahí salen su origen de
+ *       imágenes y su fuente de precios
+ *
+ * Sube a 2 con Riftbound y no se queda en 1 con un campo opcional a propósito:
+ * una instalación anterior que no conociera `game` importaría los sets de
+ * Riftbound como si fueran de Pokémon —imágenes rotas contra TCGdex, precios
+ * sin fuente, cartas coladas en la rejilla—. Prefiere decir «actualiza la
+ * aplicación» y no tocar nada.
+ */
+export const SUPPORTED_SCHEMA = 2
+
+/**
+ * Juego de un set del catálogo.
+ *
+ * Un valor desconocido cae a Pokémon en vez de rechazar el set: el catálogo
+ * llega de la red y se trata como dato, y un juego que esta versión no conoce
+ * no es motivo para perder el set entero. Con `SUPPORTED_SCHEMA` haciendo de
+ * puerta, el caso sólo puede darse si alguien publica mal.
+ */
+export function parseGame(value: unknown): GameId {
+  return isGameId(value) ? value : 'pokemon'
+}
 
 export function parseSetFile(raw: unknown, expectedId: string): CatalogSetFile {
   if (!isObj(raw)) throw new Error('El fichero de set no es un objeto')

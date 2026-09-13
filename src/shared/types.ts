@@ -11,6 +11,23 @@
 
 // ── Enumerados ────────────────────────────────────────────────────────────────
 
+/**
+ * Juego al que pertenece un set.
+ *
+ * Atraviesa el catálogo entero: de él dependen de dónde salen las imágenes, qué
+ * fuente cotiza la carta y qué reverso tiene. Vive en `sets`, no en `cards`: un
+ * set es de un juego y ya está.
+ *
+ * Los identificadores de Riftbound van con prefijo (`rb-ogn`, `rb-ogn-056-298`)
+ * porque `card_keys.card_id` de la colección no tiene clave foránea al catálogo:
+ * sin prefijo, un choque futuro de identificadores entre dos juegos apuntaría la
+ * colección de alguien a otra carta sin dar ningún error.
+ */
+export type GameId = 'pokemon' | 'riftbound'
+export const GAMES: readonly GameId[] = ['pokemon', 'riftbound']
+
+export const isGameId = (v: unknown): v is GameId => (GAMES as readonly unknown[]).includes(v)
+
 /** Idioma de la carta física. */
 export type CardLang = 'es' | 'en' | 'ja'
 export const CARD_LANGS: readonly CardLang[] = ['es', 'en', 'ja']
@@ -60,10 +77,28 @@ export type PokemonType =
   | 'Colorless'
   | 'Fairy'
 
+/**
+ * Dominios de Riftbound, en la clave canónica en inglés de la galería de Riot.
+ *
+ * `Colorless` lo comparten los dos juegos y significa lo mismo en ambos: sin
+ * color. No hace falta desambiguarlo.
+ */
+export type RiftboundDomain = 'Fury' | 'Calm' | 'Mind' | 'Body' | 'Chaos' | 'Order' | 'Colorless'
+
+/**
+ * La clave con la que se colorea una carta, venga del juego que venga.
+ *
+ * Va SIEMPRE en inglés canónico porque es el índice de la tabla `oklch` del
+ * renderer: si se colara 'Planta' o 'Calma', el degradado se iría al color por
+ * defecto sin avisar de nada.
+ */
+export type CardTypeKey = PokemonType | RiftboundDomain
+
 // ── Catálogo ──────────────────────────────────────────────────────────────────
 
 export interface CardSet {
   id: string
+  game: GameId
   seriesId: string
   /** 'intl' | 'jp' */
   region: string
@@ -91,11 +126,24 @@ export interface Card {
   numberSuffix: string
   name: string
   rarity: string | null
+  /** Pokemon | Trainer | Energy · Unit | Spell | Legend | Battlefield | Gear | Rune */
   category: string | null
-  types: PokemonType[]
+  types: CardTypeKey[]
   hp: number | null
+  /**
+   * Cifras impresas que no son el PV.
+   *
+   * En Riftbound son `energy`, `might` y `power`; en Pokémon es nulo, porque su
+   * única cifra es `hp`. Va como mapa y no como columnas para que el tercer
+   * juego no obligue a otra migración.
+   */
+  stats: Record<string, number> | null
   illustrator: string | null
-  /** Ruta base de TCGdex, sin idioma ni calidad: 'sv/sv03/125'. */
+  /**
+   * Ruta de la imagen, sin idioma ni calidad. La compone la aplicación en
+   * tiempo de render, y cómo se compone depende del juego del set:
+   * 'sv/sv03/125' en TCGdex, el identificador del recurso en Riftbound.
+   */
   imagePath: string | null
   variantMask: number
 }
@@ -193,6 +241,8 @@ export interface PortfolioSnapshot {
 /** Una carta lista para pintar en la rejilla: catálogo + tenencia + precio. */
 export interface CardListItem {
   cardId: string
+  /** De qué juego es. Decide de dónde sale la imagen y qué reverso tiene. */
+  game: GameId
   name: string
   localId: string
   /** '004/102', ya compuesto. */
@@ -201,8 +251,10 @@ export interface CardListItem {
   setCode: string | null
   setName: string
   rarity: string | null
-  types: PokemonType[]
+  category: string | null
+  types: CardTypeKey[]
   hp: number | null
+  stats: Record<string, number> | null
   imagePath: string | null
   variantMask: number
   /**
@@ -216,6 +268,15 @@ export interface CardListItem {
   ownedQty: number
   /** Precio de mercado actual, en céntimos. null si no se conoce. */
   priceCents: number | null
+  /**
+   * Quién cotiza ese precio.
+   *
+   * Con dos juegos deja de ser una obviedad: Pokémon sale de Cardmarket, en
+   * euros y del mercado europeo, y Riftbound de TCGplayer, en dólares y
+   * convertido. La ficha lo dice para que nadie compare una cifra con la de
+   * Cardmarket y piense que la aplicación se equivoca.
+   */
+  priceSource: PriceSource | null
   /** Variación a 7 días en porcentaje. null si no hay histórico. */
   delta7: number | null
 }
@@ -241,6 +302,8 @@ export interface PortfolioStats {
 export interface CardQuery {
   /** 'collection' filtra a lo que posees; 'explorer' recorre el catálogo entero. */
   scope: 'collection' | 'explorer'
+  /** Juego activo. 'all' mezcla los dos, que es como arranca. */
+  game: GameId | 'all'
   search: string
   setId: string | 'all'
   lang: CardLang | 'all'
@@ -262,9 +325,17 @@ export interface CardPage {
   scopeTotal: number
 }
 
-/** Opciones que alimentan la barra lateral, calculadas desde el catálogo real. */
+/**
+ * Opciones que alimentan la barra lateral, calculadas desde el catálogo real.
+ *
+ * Todo salvo `games` llega ya acotado al juego activo: filtrar por un set del
+ * otro juego dejaría la rejilla vacía sin que se entienda por qué. `games`, en
+ * cambio, cuenta siempre el catálogo entero, porque es el control con el que se
+ * cambia de juego.
+ */
 export interface FilterOptions {
-  sets: { id: string; name: string; code: string | null; count: number }[]
+  games: { value: GameId; count: number }[]
+  sets: { id: string; game: GameId; name: string; code: string | null; count: number }[]
   rarities: { value: string; count: number }[]
   langs: { value: CardLang; count: number }[]
   maxCents: number
@@ -285,6 +356,7 @@ export type ScanStatus = 'match' | 'confirm' | 'unknown' | 'no_card' | 'blurry' 
 /** Una carta candidata, con lo justo para pintarla en el selector. */
 export interface ScanCandidate {
   cardId: string
+  game: GameId
   name: string
   numberLabel: string
   setId: string
@@ -314,6 +386,8 @@ export interface ScanEvidence {
 export interface ScanDetection {
   id: string
   cardId: string
+  /** El escáner no pregunta de qué juego es la carta: lo deduce del catálogo. */
+  game: GameId
   name: string
   numberLabel: string
   lang: CardLang
@@ -428,6 +502,14 @@ export interface CatalogStatus {
 
 export interface AppSettings {
   uiLang: UiLang
+  /**
+   * Juego activo, el que gobierna las cinco vistas.
+   *
+   * Vive en los ajustes y no en los filtros de la rejilla porque manda también
+   * sobre Sets, Escáner y Mercado, que no tienen barra lateral, y porque se
+   * espera que siga puesto al volver a abrir.
+   */
+  game: GameId | 'all'
   theme: ThemeSource
   effect3d: Effect3d
   /** Descargar imágenes de carta bajo demanda. Apagado = sólo texto. */
@@ -451,6 +533,7 @@ export interface AppSettings {
 
 export const DEFAULT_SETTINGS: AppSettings = {
   uiLang: 'es',
+  game: 'all',
   theme: 'system',
   effect3d: 'prism',
   downloadImages: true,

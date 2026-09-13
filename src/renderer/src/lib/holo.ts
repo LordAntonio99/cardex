@@ -1,4 +1,4 @@
-import type { Effect3d, PokemonType } from '@shared/types'
+import type { CardTypeKey, Effect3d } from '@shared/types'
 
 /**
  * Constantes del efecto holográfico, portadas del diseño.
@@ -100,24 +100,42 @@ export function rarityTier(rarity: string | null): RarityTier {
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
 
-  if (/ilustracion|illustration|hyper|hiper|rainbow|arcoiris|gold|oro|inmersiva|immersive/.test(r)) {
+  // Riftbound: showcase es su rareza de vitrina y epic la de arriba del sobre.
+  if (
+    /ilustracion|illustration|hyper|hiper|rainbow|arcoiris|gold|oro|inmersiva|immersive|showcase/.test(
+      r
+    )
+  ) {
     return 'special'
   }
-  if (/ultra|doble|double|secret|secreta|shiny|brillante|ace spec|radiant|prisma/.test(r)) {
+  if (/ultra|doble|double|secret|secreta|shiny|brillante|ace spec|radiant|prisma|epic/.test(r)) {
     return 'ultra'
   }
   if (/holo|\bex\b|\bgx\b|\bv\b|vmax|vstar|estrella/.test(r)) return 'holo'
+  // 'uncommon' NO entra aquí: contiene 'common' y no 'rare', así que cae sola
+  // al nivel común, que es donde va.
   if (/rara|rare/.test(r)) return 'rare'
   return 'common'
 }
 
-// ── Tipos de Pokémon ─────────────────────────────────────────────────────────
+// ── Tipos y dominios ─────────────────────────────────────────────────────────
 
 /**
  * Par de colores por tipo, en oklch como el diseño. El primero es la luz de la
  * ilustración y el segundo el cuerpo del marco.
+ *
+ * La tabla mezcla los once tipos de Pokémon y los siete dominios de Riftbound
+ * porque la clave es única: no hay ningún nombre que signifique cosas distintas
+ * en los dos juegos, y `Colorless`, que sí comparten, significa lo mismo en
+ * ambos. Los tonos de Riftbound salen de los que publica la propia galería de
+ * Riot para cada dominio.
+ *
+ * La clave llega del catálogo SIEMPRE en inglés canónico. Si se colara un valor
+ * traducido, la carta se iría al color por defecto sin dar ningún error: por eso
+ * el generador los toma de la versión inglesa en los dos juegos.
  */
-export const TYPE_COLORS: Record<PokemonType, [string, string]> = {
+export const TYPE_COLORS: Record<CardTypeKey, [string, string]> = {
+  // Pokémon
   Fire: ['oklch(.64 .17 42)', 'oklch(.32 .12 34)'],
   Water: ['oklch(.63 .13 235)', 'oklch(.3 .09 240)'],
   Grass: ['oklch(.64 .14 148)', 'oklch(.3 .09 152)'],
@@ -127,24 +145,34 @@ export const TYPE_COLORS: Record<PokemonType, [string, string]> = {
   Darkness: ['oklch(.46 .05 282)', 'oklch(.2 .03 282)'],
   Metal: ['oklch(.66 .02 240)', 'oklch(.33 .02 240)'],
   Dragon: ['oklch(.61 .12 72)', 'oklch(.28 .08 72)'],
-  Colorless: ['oklch(.71 .02 92)', 'oklch(.36 .02 92)'],
-  Fairy: ['oklch(.71 .12 350)', 'oklch(.36 .08 350)']
+  Fairy: ['oklch(.71 .12 350)', 'oklch(.36 .08 350)'],
+
+  // Riftbound
+  Fury: ['oklch(.62 .17 25)', 'oklch(.3 .11 22)'],
+  Calm: ['oklch(.66 .14 140)', 'oklch(.31 .09 142)'],
+  Mind: ['oklch(.66 .12 232)', 'oklch(.31 .08 236)'],
+  Body: ['oklch(.68 .12 62)', 'oklch(.32 .08 58)'],
+  Chaos: ['oklch(.6 .16 305)', 'oklch(.29 .11 305)'],
+  Order: ['oklch(.78 .13 88)', 'oklch(.36 .09 86)'],
+
+  // De los dos
+  Colorless: ['oklch(.71 .02 92)', 'oklch(.36 .02 92)']
 }
 
 const FALLBACK: [string, string] = TYPE_COLORS.Colorless
 
-export function typeColors(types: PokemonType[]): [string, string] {
+export function typeColors(types: CardTypeKey[]): [string, string] {
   return (types[0] && TYPE_COLORS[types[0]]) || FALLBACK
 }
 
 /** Degradado de la ventana de ilustración cuando no hay imagen descargada. */
-export function artGradient(types: PokemonType[]): string {
+export function artGradient(types: CardTypeKey[]): string {
   const [c1, c2] = typeColors(types)
   return `radial-gradient(115% 85% at 28% 18%, ${c1}, ${c2} 62%, #0c0d0f)`
 }
 
 /** Degradado del marco de la carta. */
-export function frameGradient(types: PokemonType[]): string {
+export function frameGradient(types: CardTypeKey[]): string {
   const [, c2] = typeColors(types)
   return `linear-gradient(160deg, ${c2}, #121316 78%)`
 }

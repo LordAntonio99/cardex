@@ -6,6 +6,7 @@ import { broadcast, mainBus } from '../events'
 import { log } from '../log'
 import {
   SUPPORTED_SCHEMA,
+  parseGame,
   parseManifest,
   parseSetFile,
   splitNumber,
@@ -197,16 +198,17 @@ function importSet(file: CatalogSetFile, sourceFile: string, hash: string): numb
 
     db.prepare(
       `INSERT INTO cat.sets
-         (id, series_id, region, code, name, released_on, total_official, total_all,
+         (id, game, series_id, region, code, name, released_on, total_official, total_all,
           logo_path, symbol_path, sort_key)
-       VALUES (@id, @seriesId, @region, @code, @name, @releasedOn, @totalOfficial, @totalAll,
+       VALUES (@id, @game, @seriesId, @region, @code, @name, @releasedOn, @totalOfficial, @totalAll,
                @logoPath, @symbolPath, @sortKey)
        ON CONFLICT(id) DO UPDATE SET
-         series_id = @seriesId, region = @region, code = @code, name = @name,
+         game = @game, series_id = @seriesId, region = @region, code = @code, name = @name,
          released_on = @releasedOn, total_official = @totalOfficial, total_all = @totalAll,
          logo_path = @logoPath, symbol_path = @symbolPath, sort_key = @sortKey`
     ).run({
       id: s.id,
+      game: parseGame(s.game),
       seriesId: s.seriesId,
       region: s.region ?? 'intl',
       code: s.code ?? null,
@@ -259,9 +261,9 @@ function importSet(file: CatalogSetFile, sourceFile: string, hash: string): numb
     const insCard = db.prepare(
       `INSERT INTO cat.cards
          (id, set_id, local_id, number_sort, number_suffix, name, rarity, category,
-          types, hp, illustrator, image_path, variant_mask)
+          types, hp, stats, illustrator, image_path, variant_mask)
        VALUES (@id, @setId, @localId, @numberSort, @numberSuffix, @name, @rarity, @category,
-               @types, @hp, @illustrator, @imagePath, @variantMask)`
+               @types, @hp, @stats, @illustrator, @imagePath, @variantMask)`
     )
     const insCardName = db.prepare(
       'INSERT INTO cat.card_names (card_id, lang, name) VALUES (@cardId, @lang, @name)'
@@ -303,6 +305,9 @@ function importSet(file: CatalogSetFile, sourceFile: string, hash: string): numb
         category: c.category ?? null,
         types: JSON.stringify(c.types ?? []),
         hp: c.hp ?? null,
+        // Nulo y no '{}' cuando no hay ninguna: así la interfaz distingue «esta
+        // carta no imprime cifras» de «tiene cifras y todas valen cero».
+        stats: c.stats && Object.keys(c.stats).length ? JSON.stringify(c.stats) : null,
         illustrator: c.illustrator ?? null,
         imagePath: c.imagePath ?? null,
         variantMask: variantMask(c.variants)

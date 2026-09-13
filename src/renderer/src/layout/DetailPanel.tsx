@@ -1,11 +1,28 @@
+import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import type { CardLang, UiLang } from '@shared/types'
+import type { CardLang, CardListItem, UiLang } from '@shared/types'
 import { Eyebrow, Tag } from '../components/ds'
 import { call, imageLang, keys, useCard, useCardImage } from '../lib/api'
 import { deltaColor, money, monthYear, pct, polygonArea, polyline } from '../lib/format'
 import { artGradient, frameGradient } from '../lib/holo'
 import type { Strings } from '../i18n'
 import { useStore } from '../state/store'
+
+/**
+ * Las cifras impresas de una carta de Riftbound, en una línea.
+ *
+ * Un cero es un valor real —hay unidades con 0 de poderío—, así que se comprueba
+ * contra `undefined`. Sin ninguna cifra se cae al tipo de carta, que es lo que
+ * distingue a un campo de batalla de una runa.
+ */
+function statsLine(c: CardListItem, strings: Strings): string {
+  const s = c.stats
+  const parts: string[] = []
+  if (s?.['energy'] !== undefined) parts.push(`${s['energy']} ${strings.statEnergy}`)
+  if (s?.['might'] !== undefined) parts.push(`${s['might']} ${strings.statMight}`)
+  if (s?.['power'] !== undefined) parts.push(`${s['power']} ${strings.statPower}`)
+  return parts.join(' · ') || c.category || '—'
+}
 
 /**
  * Ficha de carta, en un panel lateral fijo como en el diseño.
@@ -28,7 +45,17 @@ export function DetailPanel({
 
   const cardLang: CardLang = filters.lang === 'all' ? (lang === 'en' ? 'en' : 'es') : filters.lang
   const shownLang = imageLang(card.data?.langs ?? [], cardLang)
-  const image = useCardImage(card.data?.imagePath ?? null, shownLang, 'high')
+  const image = useCardImage(
+    card.data?.imagePath ?? null,
+    shownLang,
+    'high',
+    card.data?.game ?? 'pokemon'
+  )
+  const [wide, setWide] = useState(false)
+
+  // Al cambiar de carta se vuelve a vertical: si la nueva no llega a cargar
+  // imagen, se quedaría con la orientación de la anterior.
+  useEffect(() => setWide(false), [cardId])
 
   const copies = useQuery({
     queryKey: keys.cardCopies(cardId ?? ''),
@@ -137,7 +164,16 @@ export function DetailPanel({
             <img
               src={image.data}
               alt={c.name}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              // Las cartas apaisadas —los campos de batalla de Riftbound— no
+              // caben recortadas en un hueco vertical: se vería un trozo del
+              // centro del que no se reconoce la carta.
+              onLoad={(e) => setWide(e.currentTarget.naturalWidth > e.currentTarget.naturalHeight)}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: wide ? 'contain' : 'cover',
+                display: 'block'
+              }}
             />
           ) : (
             <div style={{ position: 'absolute', inset: 0, background: artGradient(c.types) }} />
@@ -172,7 +208,15 @@ export function DetailPanel({
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 5, paddingTop: 4 }}>
             <span className="font-code text-faint" style={{ fontSize: 9, letterSpacing: '.18em' }}>
-              {strings.marketPrice}
+              {/* Con dos juegos, de dónde sale el precio deja de ser una
+                  obviedad: Pokémon cotiza en Cardmarket y Riftbound en
+                  TCGplayer, convertido a euros. Decirlo evita que alguien
+                  compare con Cardmarket y crea que la cifra está mal. */}
+              {c.priceSource === 'tcgplayer'
+                ? strings.priceFromTcgplayer
+                : c.priceSource === 'cardmarket'
+                  ? strings.priceFromCardmarket
+                  : strings.marketPrice}
             </span>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
               <span
@@ -206,7 +250,14 @@ export function DetailPanel({
           { k: strings.fSetK, v: c.setName },
           { k: strings.fNumK, v: c.numberLabel },
           { k: strings.fTypeK, v: c.types.join(', ') || '—' },
-          { k: strings.fLangK, v: shownLang.toUpperCase() }
+          // La cuarta casilla dice lo que aporta algo en cada juego. En Pokémon
+          // es el idioma, que cambia de carta a carta y de precio a precio; en
+          // Riftbound siempre es inglés —ya está en la etiqueta de arriba— y lo
+          // que se busca ahí son las cifras impresas. Se mantienen cuatro
+          // casillas para que la rejilla no quede coja.
+          c.game === 'riftbound'
+            ? { k: strings.fStatsK, v: statsLine(c, strings) }
+            : { k: strings.fLangK, v: shownLang.toUpperCase() }
         ].map((f) => (
           <div
             key={f.k}

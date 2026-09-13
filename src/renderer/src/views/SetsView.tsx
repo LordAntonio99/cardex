@@ -1,9 +1,15 @@
-import type { UiLang } from '@shared/types'
+import { Fragment } from 'react'
+import type { GameId, UiLang } from '@shared/types'
 import { Button, EmptyState, Eyebrow, ImageSlot } from '../components/ds'
 import { call, useAssetImage, useCatalogStatus, useSetProgress } from '../lib/api'
 import { money } from '../lib/format'
 import type { Strings } from '../i18n'
 import { useStore } from '../state/store'
+
+const GAME_LABEL: Record<GameId, keyof Strings> = {
+  pokemon: 'gamePokemon',
+  riftbound: 'gameRiftbound'
+}
 
 /**
  * Sets y sobres.
@@ -20,6 +26,8 @@ export function SetsView({ strings, lang }: { strings: Strings; lang: UiLang }):
 
   const syncing = catalog.data?.state === 'syncing' || catalog.data?.state === 'checking'
   const rows = sets.data ?? []
+  // Con un solo juego a la vista, poner su nombre de cabecera sobra.
+  const mixed = new Set(rows.map((r) => r.set.game)).size > 1
 
   const openSet = (setId: string): void => {
     setFilters({ setId, ownedOnly: false })
@@ -64,141 +72,157 @@ export function SetsView({ strings, lang }: { strings: Strings; lang: UiLang }):
         />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {rows.map((row) => (
-            <div
-              key={row.set.id}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '210px minmax(0, 1fr)',
-                gap: 26,
-                padding: '24px 26px',
-                borderBottom: '1px solid var(--rule)'
-              }}
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {rows.map((row, i) => (
+            <Fragment key={row.set.id}>
+              {/* Con los dos juegos a la vez, una cabecera cada vez que cambia.
+                  Las filas ya vienen agrupadas por juego del proceso main: aquí
+                  sólo hay que marcar dónde empieza cada grupo. */}
+              {row.set.game !== rows[i - 1]?.set.game && mixed ? (
                 <div
                   style={{
-                    background: 'var(--deep)',
-                    border: '1px solid var(--rule)',
-                    padding: 14,
-                    display: 'grid',
-                    placeItems: 'center'
+                    padding: '18px 26px 10px',
+                    borderBottom: '1px solid var(--rule)',
+                    background: 'var(--paper)'
                   }}
                 >
-                  <SetLogo
-                    logoPath={row.set.logoPath}
-                    name={row.set.name}
-                    lang={lang}
-                    placeholder={strings.logoPlaceholder}
-                  />
+                  <Eyebrow tone="brand">{strings[GAME_LABEL[row.set.game]]}</Eyebrow>
                 </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 9 }}>
-                    <span
-                      className="font-code"
-                      style={{ fontSize: 9.5, letterSpacing: '.16em', color: 'var(--ac)' }}
-                    >
-                      {row.set.code ?? row.set.id.toUpperCase()}
-                    </span>
-                    <span className="font-code text-faint" style={{ fontSize: 9.5 }}>
-                      {row.set.releasedOn?.slice(0, 4) ?? ''}
-                    </span>
-                  </div>
-                  <span
-                    className="font-brand text-ink"
-                    style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-.02em', lineHeight: 1.15 }}
-                  >
-                    {row.set.name}
-                  </span>
-                  <span className="font-code text-faint" style={{ fontSize: 9.5, letterSpacing: '.08em' }}>
-                    {row.set.seriesId.toUpperCase()}
-                  </span>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
-                    <span className="font-code text-soft" style={{ fontSize: 9.5, letterSpacing: '.14em' }}>
-                      {strings.completion}
-                    </span>
-                    <span className="font-code text-ink tabular" style={{ fontSize: 11, fontWeight: 700 }}>
-                      {row.pct.toFixed(1)}%
-                    </span>
-                  </div>
-                  <div style={{ height: 3, background: 'var(--rule)', position: 'relative' }}>
-                    <div
-                      style={{
-                        position: 'absolute',
-                        left: 0,
-                        top: 0,
-                        bottom: 0,
-                        width: `${Math.max(row.pct > 0 ? 1.5 : 0, row.pct)}%`,
-                        background: 'var(--ac)'
-                      }}
-                    />
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
-                    <span className="font-code text-faint tabular" style={{ fontSize: 9.5 }}>
-                      {row.ownedCards} / {row.set.totalOfficial}
-                    </span>
-                    <span className="font-code text-ink tabular" style={{ fontSize: 13, fontWeight: 700 }}>
-                      {money(row.valueCents, lang)}
-                    </span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => openSet(row.set.id)}
-                  className="font-code"
-                  style={{
-                    background: 'none',
-                    border: '1px solid var(--rule)',
-                    padding: '9px 12px',
-                    cursor: 'pointer',
-                    color: 'var(--ac)',
-                    textAlign: 'center'
-                  }}
-                >
-                  <span style={{ fontSize: 9.5, letterSpacing: '.14em', whiteSpace: 'nowrap' }}>
-                    {strings.seeCards}
-                  </span>
-                </button>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
-                <span className="font-code text-faint" style={{ fontSize: 9.5, letterSpacing: '.18em' }}>
-                  {strings.boostersIn}
-                </span>
-                {row.packs.length === 0 ? (
-                  <div style={{ display: 'flex', alignItems: 'center', minHeight: 180 }}>
-                    <span className="font-code text-faint" style={{ fontSize: 9.5, letterSpacing: '.06em' }}>
-                      {strings.noPacks}
-                    </span>
-                  </div>
-                ) : (
+              ) : null}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '210px minmax(0, 1fr)',
+                  gap: 26,
+                  padding: '24px 26px',
+                  borderBottom: '1px solid var(--rule)'
+                }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div
                     style={{
-                      flex: 1,
-                      display: 'flex',
-                      alignItems: 'stretch',
-                      gap: 18,
-                      flexWrap: 'wrap',
-                      minHeight: 210
+                      background: 'var(--deep)',
+                      border: '1px solid var(--rule)',
+                      padding: 14,
+                      display: 'grid',
+                      placeItems: 'center'
                     }}
                   >
-                    {row.packs.map((pack) => (
-                      <PackSlot
-                        key={pack.id}
-                        artworkPath={pack.artworkPath}
-                        name={pack.name}
-                        placeholder={strings.packPlaceholder}
-                      />
-                    ))}
+                    <SetLogo
+                      logoPath={row.set.logoPath}
+                      game={row.set.game}
+                      name={row.set.name}
+                      lang={lang}
+                      placeholder={strings.logoPlaceholder}
+                    />
                   </div>
-                )}
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 9 }}>
+                      <span
+                        className="font-code"
+                        style={{ fontSize: 9.5, letterSpacing: '.16em', color: 'var(--ac)' }}
+                      >
+                        {row.set.code ?? row.set.id.toUpperCase()}
+                      </span>
+                      <span className="font-code text-faint" style={{ fontSize: 9.5 }}>
+                        {row.set.releasedOn?.slice(0, 4) ?? ''}
+                      </span>
+                    </div>
+                    <span
+                      className="font-brand text-ink"
+                      style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-.02em', lineHeight: 1.15 }}
+                    >
+                      {row.set.name}
+                    </span>
+                    <span className="font-code text-faint" style={{ fontSize: 9.5, letterSpacing: '.08em' }}>
+                      {row.set.seriesId.toUpperCase()}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
+                      <span className="font-code text-soft" style={{ fontSize: 9.5, letterSpacing: '.14em' }}>
+                        {strings.completion}
+                      </span>
+                      <span className="font-code text-ink tabular" style={{ fontSize: 11, fontWeight: 700 }}>
+                        {row.pct.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div style={{ height: 3, background: 'var(--rule)', position: 'relative' }}>
+                      <div
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          top: 0,
+                          bottom: 0,
+                          width: `${Math.max(row.pct > 0 ? 1.5 : 0, row.pct)}%`,
+                          background: 'var(--ac)'
+                        }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
+                      <span className="font-code text-faint tabular" style={{ fontSize: 9.5 }}>
+                        {row.ownedCards} / {row.set.totalOfficial}
+                      </span>
+                      <span className="font-code text-ink tabular" style={{ fontSize: 13, fontWeight: 700 }}>
+                        {money(row.valueCents, lang)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => openSet(row.set.id)}
+                    className="font-code"
+                    style={{
+                      background: 'none',
+                      border: '1px solid var(--rule)',
+                      padding: '9px 12px',
+                      cursor: 'pointer',
+                      color: 'var(--ac)',
+                      textAlign: 'center'
+                    }}
+                  >
+                    <span style={{ fontSize: 9.5, letterSpacing: '.14em', whiteSpace: 'nowrap' }}>
+                      {strings.seeCards}
+                    </span>
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
+                  <span className="font-code text-faint" style={{ fontSize: 9.5, letterSpacing: '.18em' }}>
+                    {strings.boostersIn}
+                  </span>
+                  {row.packs.length === 0 ? (
+                    <div style={{ display: 'flex', alignItems: 'center', minHeight: 180 }}>
+                      <span className="font-code text-faint" style={{ fontSize: 9.5, letterSpacing: '.06em' }}>
+                        {strings.noPacks}
+                      </span>
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'stretch',
+                        gap: 18,
+                        flexWrap: 'wrap',
+                        minHeight: 210
+                      }}
+                    >
+                      {row.packs.map((pack) => (
+                        <PackSlot
+                          key={pack.id}
+                          artworkPath={pack.artworkPath}
+                          name={pack.name}
+                          placeholder={strings.packPlaceholder}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            </Fragment>
           ))}
         </div>
       )}
@@ -212,22 +236,28 @@ export function SetsView({ strings, lang }: { strings: Strings; lang: UiLang }):
  * Va en su propio componente porque necesita un hook y no se puede llamar a uno
  * dentro de un map: el orden cambiaría al variar la lista.
  *
- * El logo vive en TCGdex bajo "{idioma}/{ruta}.webp", sin segmento de calidad
- * (a diferencia de las cartas), y no está en todos los idiomas. El proceso main
- * cae al inglés si el pedido no lo tiene: el Set Base sólo existe en inglés.
+ * En Pokémon vive en TCGdex bajo "{idioma}/{ruta}.webp", sin segmento de
+ * calidad (a diferencia de las cartas), y no está en todos los idiomas: el
+ * proceso main cae al inglés si el pedido no lo tiene, porque el Set Base sólo
+ * existe en inglés.
+ *
+ * Riftbound no publica logos de set en su galería, así que ahí siempre sale el
+ * hueco con el nombre. Es el mismo respaldo que ya usaban los sobres sin arte.
  */
 function SetLogo({
   logoPath,
+  game,
   name,
   lang,
   placeholder
 }: {
   logoPath: string | null
+  game: GameId
   name: string
   lang: UiLang
   placeholder: string
 }): React.JSX.Element {
-  const logo = useAssetImage('setAsset', logoPath, { lang })
+  const logo = useAssetImage('setAsset', logoPath, { lang, game })
   return (
     <ImageSlot
       src={logo.data}

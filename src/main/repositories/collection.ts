@@ -1,5 +1,6 @@
 import type { CardListItem, PortfolioSnapshot, PortfolioStats } from '@shared/types'
 import { getDb } from '../db'
+import { getSettings } from '../settings'
 import { byId } from './cards'
 
 /**
@@ -11,9 +12,10 @@ import { byId } from './cards'
  */
 export function stats(): PortfolioStats {
   const db = getDb()
+  const game = getSettings().game
   const row = db
     .prepare<
-      [],
+      { game: string },
       {
         total_cents: number | null
         cost_cents: number | null
@@ -24,21 +26,32 @@ export function stats(): PortfolioStats {
       // El valor sale del precio de la IMPRESIÓN que se tiene, no de un precio
       // genérico por carta: en el Set Base la diferencia entre unlimited y
       // primera edición es de seis veces.
+      //
+      // El juego se resuelve cruzando hasta `cat.sets`. La colección no lo
+      // guarda a propósito: es dato de catálogo, y duplicarlo en la base del
+      // usuario sería una copia que se puede desincronizar.
       `SELECT
          COALESCE(SUM(ci.qty * COALESCE(v.trend_cents, 0)), 0) AS total_cents,
          COALESCE((
            SELECT SUM(m.qty_delta * COALESCE(m.unit_cents, 0) + m.fees_cents)
-           FROM movements m WHERE m.kind IN ('buy', 'trade_in')
+           FROM movements m
+           JOIN card_keys mk ON mk.id = m.card_key_id
+           LEFT JOIN cat.cards mc ON mc.id = mk.card_id
+           LEFT JOIN cat.sets ms ON ms.id = mc.set_id
+           WHERE m.kind IN ('buy', 'trade_in')
+             AND (@game = 'all' OR ms.game = @game)
          ), 0) AS cost_cents,
          COALESCE(SUM(ci.qty), 0) AS copies,
          COUNT(DISTINCT ck.card_id) AS distinct_cards
        FROM collection_items ci
        JOIN card_keys ck ON ck.id = ci.card_key_id
+       LEFT JOIN cat.cards c ON c.id = ck.card_id
+       LEFT JOIN cat.sets s ON s.id = c.set_id
        LEFT JOIN cat.card_variant_price v
          ON v.card_id = ck.card_id AND v.variant = ck.variant
-       WHERE ci.qty > 0`
+       WHERE ci.qty > 0 AND (@game = 'all' OR s.game = @game)`
     )
-    .get()
+    .get({ game })
 
   const totalCents = row?.total_cents ?? 0
   const costCents = row?.cost_cents ?? 0
@@ -52,7 +65,16 @@ export function stats(): PortfolioStats {
   }
 }
 
-/** Serie de valor de la colección para la gráfica de 90 días. */
+/**
+ * Serie de valor de la colección para la gráfica de 90 días.
+ *
+ * Es la ÚNICA cifra de Mercado que no se acota al juego activo, y no por
+ * descuido: `portfolio_snapshots` guarda una fila al día con el total de la
+ * cartera entera. Partirla por juego obligaría a cambiar el esquema de
+ * `collection.db` —la base irreemplazable— y a reescribir el histórico ya
+ * anotado, que no se puede reconstruir. La vista lo dice con todas las letras
+ * en vez de dar a entender que la curva es la del juego elegido.
+ */
 export function history(days: number): PortfolioSnapshot[] {
   const db = getDb()
   const since = Math.floor(Date.now() / 86400000) - days
@@ -91,22 +113,28 @@ export function history(days: number): PortfolioSnapshot[] {
 export function topMovers(limit: number): { gainers: CardListItem[]; losers: CardListItem[] } {
   const db = getDb()
   const rows = db
-    .prepare<{ limit: number }, { card_id: string; delta: number }>(
+    .prepare<{ game: string }, { card_id: string; delta: number }>(
       // La variación sale de comparar la tendencia con la media de siete días,
-      // ambas de Cardmarket y ya presentes en el catálogo. No hace falta
-      // esperar a acumular histórico local para que esto tenga algo que decir.
+      // ambas ya presentes en el catálogo. No hace falta esperar a acumular
+      // histórico local para que esto tenga algo que decir.
+      //
+      // Las fuentes que no publican media semanal —TCGplayer, que es la que
+      // cotiza Riftbound— dejan `avg7_cents` a nulo, así que esas cartas no
+      // entran en el ranking. Es lo correcto: no se puede ordenar por una
+      // variación que no se conoce.
       `SELECT ck.card_id AS card_id,
-              ROUND((pr.trend_cents - pr.avg7_cents) * 100.0 / pr.avg7_cents, 1) AS delta
+              ROUND((v.trend_cents - v.avg7_cents) * 100.0 / v.avg7_cents, 1) AS delta
        FROM card_keys ck
        JOIN collection_items ci ON ci.card_key_id = ck.id AND ci.qty > 0
-       JOIN cat.card_printings p ON p.card_id = ck.card_id AND p.is_default = 1
-       JOIN cat.printing_prices pr
-         ON pr.card_id = p.card_id AND pr.printing_id = p.printing_id AND pr.source = 0
-       WHERE pr.avg7_cents IS NOT NULL AND pr.avg7_cents > 0
+       JOIN cat.card_default_price v ON v.card_id = ck.card_id
+       JOIN cat.cards c ON c.id = ck.card_id
+       JOIN cat.sets s ON s.id = c.set_id
+       WHERE v.avg7_cents IS NOT NULL AND v.avg7_cents > 0
+         AND (@game = 'all' OR s.game = @game)
        GROUP BY ck.card_id
        ORDER BY delta DESC`
     )
-    .all({ limit })
+    .all({ game: getSettings().game })
 
   const hydrate = (ids: { card_id: string }[]): CardListItem[] =>
     ids.map((r) => byId(r.card_id)).filter((c): c is CardListItem => c !== null)

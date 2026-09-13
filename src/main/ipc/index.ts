@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, nativeTheme, shell } from 'electron'
 import type { IpcChannel, IpcReq, IpcRes } from '@shared/ipc-contract'
 import type { ThemeSource } from '@shared/types'
 import { dataDir, imagesDir } from '../db/connection'
+import { broadcast } from '../events'
 import { log } from '../log'
 import { getSettings, patchSettings } from '../settings'
 import { applyThemeToWindow } from '../window'
@@ -39,8 +40,16 @@ export function registerIpc(): void {
   // ── Ajustes ────────────────────────────────────────────────────────────────
   handle('settings:get', () => getSettings())
   handle('settings:patch', (patch) => {
+    const before = getSettings()
     const next = patchSettings(patch)
     if (patch.theme) nativeTheme.themeSource = patch.theme
+    // El juego activo no viaja en cada consulta: `sets:progress`,
+    // `catalog:filters` y las cifras de Mercado lo leen de los ajustes. Al
+    // cambiarlo hay que decirle al renderer que lo que tiene cacheado ya no
+    // vale, o se quedaría enseñando el juego anterior hasta cambiar de vista.
+    if (next.game !== before.game) {
+      broadcast('db:changed', { scopes: ['catalog', 'cards', 'sets', 'collection'] })
+    }
     return next
   })
 
@@ -115,8 +124,8 @@ export function registerIpc(): void {
   handle('scan:release', () => recognizer.stop())
 
   // ── Imágenes ───────────────────────────────────────────────────────────────
-  handle('images:resolve', ({ kind, path: assetPath, lang, quality }) =>
-    images.resolve(kind, assetPath, lang, quality)
+  handle('images:resolve', ({ kind, path: assetPath, lang, quality, game }) =>
+    images.resolve(kind, assetPath, lang, quality, game)
   )
 
   // ── Actualización ──────────────────────────────────────────────────────────

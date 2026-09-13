@@ -307,6 +307,23 @@
      invitación a que el giro se aplane sin avisar. */
 }
 
+/* Cartas apaisadas.
+ *
+ * Los campos de batalla de Riftbound se imprimen en horizontal: es la misma
+ * carta de 63 x 88 mm girada, así que lo único que cambia es por dónde se mide.
+ * El escenario se sigue gobernando desde el lado que NO depende de la anchura
+ * de la ventana —el alto—, igual que en vertical, y el redondeo intercambia sus
+ * dos ejes para que los 3 mm del troquel sigan siendo 3 mm.
+ *
+ * `is-wide` lo pone el visor a partir del tamaño real de la imagen cargada; no
+ * hay ningún campo del catálogo que diga esto. */
+.card-viewer-card.is-wide {
+  --corner-x: calc(100% * 3 / 88);
+  --corner-y: calc(100% * 3 / 63);
+  height: min(50vh, 616px);
+  aspect-ratio: 88 / 63;
+}
+
 .card-viewer-card.is-dragging {
   transition: none;
 }

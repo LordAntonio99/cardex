@@ -33,6 +33,7 @@ export {
   decodeToRgba,
   downscaleRgba,
   resizeRgba,
+  rotate90,
   rotate180,
   toWebpDataUrl,
   type Rgba

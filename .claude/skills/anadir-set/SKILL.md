@@ -1,6 +1,6 @@
 ---
 name: anadir-set
-description: Añadir o actualizar un set de cartas y el arte de sus sobres en el catálogo de Cardex, paso a paso y con las llamadas de API concretas - elegir el set en TCGdex, generar los ficheros, buscar el arte de los sobres en Bulbagarden Archives, probarlo en local y publicarlo en la rama catalog. Úsala siempre que se hable de añadir sets, sobres, packs, o de regenerar o publicar el catálogo.
+description: Añadir o actualizar un set de cartas y el arte de sus sobres en el catálogo de Cardex, paso a paso y con las llamadas de API concretas - elegir el set en TCGdex (Pokémon) o en la galería de Riot (Riftbound), generar los ficheros, buscar el arte de los sobres, probarlo en local y publicarlo en la rama catalog. Úsala siempre que se hable de añadir sets, sobres, packs, cartas de Pokémon o de Riftbound, o de regenerar o publicar el catálogo.
 ---
 
 # Añadir un set al catálogo
@@ -9,19 +9,24 @@ El catálogo se publica **aparte de la aplicación**, en la rama `catalog` de es
 repositorio, para poder añadir un set sin sacar versión. Aquí está el procedimiento; el
 **formato** de los ficheros está en [docs/CATALOG.md](../../../docs/CATALOG.md) y no se repite.
 
+**Hay dos juegos y no se añaden igual.** Todo lo que sigue es el procedimiento de **Pokémon**;
+Riftbound tiene su propia sección al final, mucho más corta porque casi todo es automático.
+
 De dónde sale cada cosa:
 
-| Dato | Fuente | Cómo |
+| Dato | Pokémon | Riftbound |
 |---|---|---|
-| Set, cartas, impresiones, precios, rutas de imagen | API de TCGdex | Automático: `npm run catalog:build` |
-| **Arte de los sobres** | Bulbagarden Archives, a mano | `catalog-packs/<setId>.json` |
-| Vectores del escáner | Se calculan en local | `--recognition` |
+| Set, cartas, impresiones, rutas de imagen | API de TCGdex | galería oficial de Riot |
+| Precios | Cardmarket, vía TCGdex | TCGplayer, vía TCGCSV, convertido a € (BCE) |
+| **Arte de los sobres** | Bulbagarden Archives, **a mano** | productos sellados de TCGplayer, automático |
+| Vectores del escáner | Se calculan en local (`--recognition`) | igual |
 
 > **La regla que se rompe primero.** `manifest.json` se **reescribe entero** en cada
 > generación, con los sets de *esa* ejecución y nada más. Generar sólo el set nuevo publica un
 > manifiesto donde los demás no existen: quien ya los tenga los conserva (la sincronización
 > sólo añade), pero **una instalación nueva se quedará sólo con el set nuevo**. Se regeneran
-> **siempre todos los sets publicados a la vez**.
+> **siempre todos los sets publicados a la vez, de los dos juegos**: una ejecución con `--sets`
+> y sin `--riftbound` borra Riftbound del manifiesto, y al revés.
 
 ---
 
@@ -77,10 +82,10 @@ curl -s https://raw.githubusercontent.com/LordAntonio99/cardex/catalog/catalog/m
                   '| vectores:', m.recognition?.length ?? 0)})"
 ```
 
-Y se genera esa lista **más** el set nuevo:
+Y se genera esa lista **más** el set nuevo, con los sets de Riftbound que ya hubiera:
 
 ```bash
-npm run catalog:build -- --sets base1,me05,me04
+npm run catalog:build -- --sets base1,me05,me04 --riftbound ogn,sfd,unl,ven
 ```
 
 Opciones (`--help` las lista todas): `--series me` para una serie entera, `--langs es,en`,
@@ -267,9 +272,63 @@ sincronizar catálogo, y el set aparece. No hay que sacar versión de la aplicac
 
 ---
 
+## Riftbound
+
+Casi todo es automático. La abreviatura impresa del set es su identificador: `ogn` (Origins),
+`sfd` (Spiritforged), `unl` (Unleashed), `ven` (Vendetta).
+
+**Qué sets hay ahora mismo**, con sus cartas numeradas:
+
+```bash
+node -e "
+const H='https://riftbound.leagueoflegends.com';
+(async () => {
+  const html = await (await fetch(H + '/en-us/card-gallery/')).text();
+  const id = /\"buildId\":\"([^\"]+)\"/.exec(html)[1];
+  const d = await (await fetch(H + '/_next/data/' + id + '/en-us/card-gallery.json')).json();
+  const g = d.pageProps.page.blades.find(b => b.type === 'riftboundCardGallery');
+  for (const s of g.sets.items) {
+    const n = g.cards.items.filter(c => c.set.value.id === s.id).length;
+    console.log(s.id.padEnd(5), String(s.collectorNumberMax).padStart(4), 'numeradas |',
+                String(n).padStart(4), 'en total |', s.name);
+  }
+})()"
+```
+
+Y se genera como cualquier otro, junto con todos los sets de Pokémon publicados:
+
+```bash
+npm run catalog:build -- --sets base1,me05,me04 --riftbound ogn,sfd,unl,ven
+```
+
+Los pasos 4 a 7 (vectores, prueba local, publicación, comprobación) son **exactamente los
+mismos**. El paso 3, el del arte de los sobres, **no hace falta**: el generador los saca de los
+productos sellados de TCGplayer con su imagen. Si algún día quieres cambiarlos, un
+`catalog-packs/rb-<set>.json` manda igual que en Pokémon.
+
+Lo que conviene saber antes de tocar nada:
+
+- **No hay API publicada.** La galería de Riot es una aplicación Next.js, y `scripts/riftbound.mjs`
+  saca su `buildId` de la página para pedirle el JSON de datos. Cuando Riot despliega, el
+  `buildId` cambia: por eso se lee en cada ejecución en vez de fijarlo. Si un día el generador
+  dice *«No se ha encontrado el buildId»*, es que han cambiado cómo sirven la página y hay que
+  revisar ese extractor.
+- **El precio es TCGplayer convertido a euros** con el tipo del BCE del día, porque Cardmarket
+  no abre su API. Queda anotado en cada precio (`sourceCurrency`, `fxRate`, `fxOn`) y la ficha
+  de carta lo dice. **Regenerar cambia el tipo de cambio**, así que el `sha256` de todos los
+  sets de Riftbound cambia aunque no se mueva ningún precio: es esperable.
+- **Sólo existe en inglés.** No busques la versión en español: la galería en `es-es` devuelve
+  exactamente lo mismo.
+- **No hay logos de set.** Riot no los publica; la vista de Sets dibuja el hueco con el nombre.
+- **Los tokens no tienen precio**: TCGplayer no los lista. Son nueve cartas en total y salen
+  con «—».
+
+---
+
 ## Trampas ya pisadas
 
-- **Generar sólo el set nuevo.** El manifiesto se reescribe entero. Regenera siempre todos.
+- **Generar sólo el set nuevo.** El manifiesto se reescribe entero. Regenera siempre todos,
+  **de los dos juegos**: `--sets` sin `--riftbound` borra Riftbound del índice.
 - **`git checkout catalog`** borra el catálogo generado. Worktree.
 - **Componer a mano la URL de la miniatura** de Bulbagarden. El directorio de hash no se
   adivina: copia `thumburl`.

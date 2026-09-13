@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useLayoutEffect, useRef } from 'react'
-import type { CardLang, CardListItem, UiLang } from '@shared/types'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import type { CardLang, CardListItem, GameId, UiLang } from '@shared/types'
 import { imageLang, useAssetImage, useCardImage } from '../../lib/api'
 import { deltaColor, money, pct } from '../../lib/format'
 import { artGradient, frameGradient } from '../../lib/holo'
@@ -21,12 +21,40 @@ import { useStore } from '../../state/store'
  */
 
 /**
- * Reverso estándar del JCC Pokémon. Es el mismo para todas las cartas y no lo
- * publica ninguna API de cartas, así que se referencia igual que el arte de
- * sobres: se descarga una vez a la caché local de cada usuario.
+ * El reverso de la carta.
+ *
+ * No lo publica ninguna API de cartas, así que se referencia igual que el arte
+ * de sobres: una URL https que se descarga una vez a la caché local de cada
+ * usuario, en vez de republicar material ajeno en el repositorio.
+ *
+ * En Pokémon hay uno solo y vale para todo; se referencia desde Bulbagarden
+ * Archives. En Riftbound hay TRES, según a qué mazo pertenece la carta: azul el
+ * mazo principal, negro las leyendas y los campos de batalla, y blanco las
+ * runas.
+ *
+ * De los tres **sólo se ha encontrado publicado el azul**, en el artículo de
+ * Riftbound de la Wikipedia en inglés (obra de Riot Games, alojada allí con su
+ * justificación de uso legítimo). Las otras dos categorías se quedan con el
+ * hueco que el visor ya dibuja: enseñar un reverso que no es el suyo sería
+ * peor que no enseñar ninguno.
  */
-const CARD_BACK =
-  'https://archives.bulbagarden.net/media/upload/thumb/1/17/Cardback.jpg/600px-Cardback.jpg'
+const CARD_BACKS: Record<GameId, Record<string, string> & { default?: string }> = {
+  pokemon: {
+    default: 'https://archives.bulbagarden.net/media/upload/thumb/1/17/Cardback.jpg/600px-Cardback.jpg'
+  },
+  riftbound: {
+    // Mazo principal: unidades, hechizos y equipo.
+    Unit: 'https://upload.wikimedia.org/wikipedia/en/0/0a/Riftbound_blue_card_back.png',
+    Spell: 'https://upload.wikimedia.org/wikipedia/en/0/0a/Riftbound_blue_card_back.png',
+    Gear: 'https://upload.wikimedia.org/wikipedia/en/0/0a/Riftbound_blue_card_back.png'
+    // Legend y Battlefield (negro) y Rune (blanco) siguen sin imagen.
+  }
+}
+
+function cardBack(game: GameId, category: string | null): string | null {
+  const backs = CARD_BACKS[game]
+  return (category ? backs[category] : null) ?? backs.default ?? null
+}
 
 /** Grados de giro por píxel arrastrado. */
 const DRAG_SENSITIVITY = 0.42
@@ -50,8 +78,18 @@ export function CardViewer({ card, lang, cardLang, strings }: Props): React.JSX.
   const frame = useRef(0)
 
   // Calidad alta: aquí la carta ocupa media pantalla.
-  const front = useCardImage(card.imagePath, imageLang(card.langs, cardLang), 'high')
-  const back = useAssetImage('external', CARD_BACK)
+  const front = useCardImage(card.imagePath, imageLang(card.langs, cardLang), 'high', card.game)
+  const back = useAssetImage('external', cardBack(card.game, card.category))
+
+  /**
+   * Si la carta se imprime apaisada.
+   *
+   * Los campos de batalla de Riftbound lo son. El escenario del visor es
+   * vertical, así que hay que darle la vuelta a la relación de aspecto o la
+   * carta saldría recortada por los lados. Se mide sobre la imagen ya cargada,
+   * que es quien lo sabe, en vez de guardarlo como un campo más del catálogo.
+   */
+  const [wide, setWide] = useState(false)
 
   const apply = useCallback(() => {
     frame.current = 0
@@ -142,6 +180,9 @@ export function CardViewer({ card, lang, cardLang, strings }: Props): React.JSX.
   // hereda lo que hubiera en las variables CSS del nodo y puede abrirse girada.
   useLayoutEffect(() => {
     rot.current = { x: 0, y: 0 }
+    // También la orientación: si la carta nueva no llega a cargar imagen, sin
+    // esto se quedaría con el escenario apaisado de la anterior.
+    setWide(false)
     apply()
   }, [card.cardId, apply])
 
@@ -201,14 +242,23 @@ export function CardViewer({ card, lang, cardLang, strings }: Props): React.JSX.
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
       >
-        <div ref={stageRef} className="card-viewer-card">
+        <div ref={stageRef} className={`card-viewer-card${wide ? ' is-wide' : ''}`}>
           {/* ── Anverso ── */}
           <div
             className="card-face card-viewer-face card-viewer-front"
             style={{ background: frameGradient(card.types) }}
           >
             <div className="card-viewer-art" style={{ background: artGradient(card.types) }}>
-              {front.data ? <img src={front.data} alt={card.name} draggable={false} /> : null}
+              {front.data ? (
+                <img
+                  src={front.data}
+                  alt={card.name}
+                  draggable={false}
+                  onLoad={(e) =>
+                    setWide(e.currentTarget.naturalWidth > e.currentTarget.naturalHeight)
+                  }
+                />
+              ) : null}
               {!front.data ? (
                 <span
                   className="font-brand"

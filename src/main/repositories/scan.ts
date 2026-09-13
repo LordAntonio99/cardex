@@ -3,6 +3,7 @@ import {
   VARIANTS,
   VARIANT_BIT,
   type CardLang,
+  type GameId,
   type ScanCandidate,
   type ScanCommitItem,
   type ScanEvidence,
@@ -47,6 +48,7 @@ function toCandidate(cardId: string, score: number): ScanCandidate | null {
   if (!card) return null
   return {
     cardId: card.cardId,
+    game: card.game,
     name: card.name,
     numberLabel: card.numberLabel,
     setId: card.setId,
@@ -64,12 +66,26 @@ function toCandidate(cardId: string, score: number): ScanCandidate | null {
  * Variante que se propone al usuario.
  *
  * Ninguna imagen de referencia distingue una holográfica de su versión normal
- * —TCGdex publica una sola imagen por carta— y ningún proyecto conocido lo
- * resuelve de forma fiable desde una webcam. Así que no se adivina: se propone
- * la más probable entre las que la carta admite y el usuario la corrige con un
- * clic. La 1ª edición nunca se propone sola: es la que más cambia el precio.
+ * —no hay fuente que publique una imagen por variante— y ningún proyecto
+ * conocido lo resuelve de forma fiable desde una webcam. Así que no se adivina:
+ * se propone la más probable entre las que la carta admite y el usuario la
+ * corrige con un clic. La 1ª edición nunca se propone sola: es la que más
+ * cambia el precio.
+ *
+ * «La más probable» depende del juego, y la diferencia no es un matiz:
+ *
+ *  - En Pokémon, que una carta admita holo suele significar que ESA es la
+ *    carta: las raras holográficas no se imprimen también en normal.
+ *  - En Riftbound, en cambio, prácticamente toda carta existe en normal y en
+ *    foil, y de un sobre salen muchas más normales. Proponer foil aquí sería
+ *    equivocarse en la mayoría de las cartas de cada lote.
  */
-function suggestVariant(variantMask: number): Variant {
+function suggestVariant(variantMask: number, game: GameId): Variant {
+  if (game === 'riftbound') {
+    if (variantMask & VARIANT_BIT.normal) return 'normal'
+    if (variantMask & VARIANT_BIT.holo) return 'holo'
+    return 'normal'
+  }
   if (variantMask & VARIANT_BIT.holo) return 'holo'
   if (variantMask & VARIANT_BIT.normal) return 'normal'
   if (variantMask & VARIANT_BIT.reverse) return 'reverse'
@@ -200,10 +216,11 @@ export async function identify(imageDataUrl: string): Promise<ScanResult> {
     detection: {
       id: `det_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
       cardId: best.cardId,
+      game: best.game,
       name: best.name,
       numberLabel: best.numberLabel,
       lang: resolveLang(best.langs, matchedLang),
-      variant: suggestVariant(best.variantMask),
+      variant: suggestVariant(best.variantMask, best.game),
       imagePath: best.imagePath,
       priceCents: best.priceCents,
       confidence,

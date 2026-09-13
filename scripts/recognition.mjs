@@ -29,7 +29,31 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const PIPELINE = path.join(ROOT, 'out', 'main', 'pipeline.js')
 const MODEL = path.join(ROOT, 'resources', 'models', 'dinov2-small', 'model.onnx')
 const CACHE = path.join(ROOT, '.cache', 'images')
-const ASSETS = 'https://assets.tcgdex.net'
+
+/**
+ * De dónde baja la imagen de referencia cada juego.
+ *
+ * Tiene que ser la MISMA imagen que la aplicación enseña en calidad alta: el
+ * vector se calcula sobre ella y la cámara se compara contra el vector. Si aquí
+ * se pidiera un tamaño distinto del que sirve `images.ts`, no se rompería nada
+ * de forma visible, simplemente reconocería algo peor.
+ */
+const IMAGE_SOURCES = {
+  pokemon: {
+    langs: (cardLangs) => (cardLangs?.length ? cardLangs : ['en']),
+    url: (imagePath, lang) => `https://assets.tcgdex.net/${lang}/${imagePath}/high.webp`,
+    // Sin prefijo de juego a propósito: es la ruta que ya usaba la caché, y
+    // cambiarla obligaría a volver a bajar las 1.400 imágenes de Pokémon.
+    file: (imagePath, lang) => path.join(lang, `${imagePath.replaceAll('/', '_')}.webp`)
+  },
+  riftbound: {
+    // Riftbound sólo se imprime en inglés: un vector por carta y ya está.
+    langs: () => ['en'],
+    url: (imagePath) =>
+      `https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/${imagePath}?w=744&fm=webp&q=85`,
+    file: (imagePath) => path.join('riftbound', `${imagePath.replaceAll('/', '_')}.webp`)
+  }
+}
 
 /** Carga el núcleo compilado, con un mensaje útil si falta. */
 function loadPipeline() {
@@ -49,11 +73,11 @@ function loadPipeline() {
 }
 
 /** Descarga la imagen de una carta, con caché en disco. */
-async function fetchCardImage(imagePath, lang) {
-  const file = path.join(CACHE, lang, `${imagePath.replaceAll('/', '_')}.webp`)
+async function fetchCardImage(source, imagePath, lang) {
+  const file = path.join(CACHE, source.file(imagePath, lang))
   if (existsSync(file)) return readFile(file)
 
-  const url = `${ASSETS}/${lang}/${imagePath}/high.webp`
+  const url = source.url(imagePath, lang)
   let lastError
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     try {
@@ -83,20 +107,24 @@ async function fetchCardImage(imagePath, lang) {
  * Devuelve `null` si no ha salido ni un vector, para no publicar un fichero
  * vacío que luego el importador tendría que saber ignorar.
  */
-export async function buildRecognition(P, embedder, setId, cards) {
+export async function buildRecognition(P, embedder, setId, cards, game = 'pokemon') {
+  const source = IMAGE_SOURCES[game]
+  if (!source) throw new Error(`No sé de dónde bajar las imágenes de ${game}`)
+
   const entries = []
   const vectors = []
   let missing = 0
+  let turned = 0
 
   for (const card of cards) {
     if (!card.imagePath) continue
     // Un vector por idioma en que la carta existe de verdad. El Set Base nunca
     // se imprimió en español, y pedir su imagen ahí devuelve un 404.
-    const langs = Array.isArray(card.langs) && card.langs.length ? card.langs : ['en']
+    const langs = source.langs(card.langs)
     for (const lang of langs) {
       let bytes
       try {
-        bytes = await fetchCardImage(card.imagePath, lang)
+        bytes = await fetchCardImage(source, card.imagePath, lang)
       } catch (e) {
         console.warn(`    ! ${card.id} (${lang}): ${e.message}`)
         continue
@@ -105,7 +133,19 @@ export async function buildRecognition(P, embedder, setId, cards) {
         missing += 1
         continue
       }
-      const img = await P.decodeToRgba(bytes)
+      let img = await P.decodeToRgba(bytes)
+
+      // Las cartas apaisadas —los campos de batalla de Riftbound— se giran a
+      // vertical ANTES de reescalar. El escáner no puede entregarlas de otra
+      // forma: `orderCorners` normaliza todo cuadrilátero a vertical, así que
+      // la captura de una carta apaisada siempre llega girada. Sin esto la
+      // referencia sería la única imagen del catálogo que no se parece a lo que
+      // ve la cámara, y fallaría sin dar ningún error.
+      if (img.width > img.height) {
+        img = P.rotate90(img)
+        turned += 1
+      }
+
       const ref =
         img.width === P.CARD_W && img.height === P.CARD_H
           ? img
@@ -115,6 +155,8 @@ export async function buildRecognition(P, embedder, setId, cards) {
       vectors.push(vector)
     }
   }
+
+  if (turned) console.log(`    (${turned} carta(s) apaisada(s) giradas a vertical)`)
 
   if (!entries.length) return null
   if (missing) console.log(`    (${missing} imagen(es) sin publicar en su idioma)`)

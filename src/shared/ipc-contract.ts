@@ -16,6 +16,7 @@ import type {
   CardQuery,
   CatalogStatus,
   FilterOptions,
+  GameId,
   Movement,
   PortfolioSnapshot,
   PortfolioStats,
@@ -139,12 +140,16 @@ export interface IpcRequests {
    *
    * Hay tres orígenes distintos y no se pueden tratar igual:
    *
-   *  - `card`      TCGdex, con idioma y calidad: `{lang}/{path}/{quality}.webp`
-   *  - `setAsset`  TCGdex, con idioma pero SIN calidad: `{lang}/{path}.webp`
-   *                (los logos de set viven ahí, no bajo /high.webp)
+   *  - `card`      la ilustración, con idioma y calidad. Cómo se compone la URL
+   *                depende del juego: TCGdex sirve `{lang}/{path}/{quality}.webp`
+   *                y el CDN de Riot `{path}?w=…&fm=webp`.
+   *  - `setAsset`  logo o símbolo del set, con idioma pero SIN calidad. Sólo
+   *                Pokémon: Riot no los publica.
    *  - `external`  una URL https completa, o una ruta dentro del catálogo
    *                publicado. Es lo que usan el arte de sobres y el reverso de
    *                las cartas, que no están en ninguna API de cartas.
+   *
+   * `game` sólo importa en `card` y `setAsset`; por defecto, Pokémon.
    */
   'images:resolve': {
     req: {
@@ -152,6 +157,7 @@ export interface IpcRequests {
       path: string
       lang?: string
       quality?: 'low' | 'high'
+      game?: GameId
     }
     res: string | null
   }

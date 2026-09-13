@@ -8,6 +8,7 @@ import type {
   CardQuery,
   CatalogStatus,
   FilterOptions,
+  GameId,
   PortfolioSnapshot,
   PortfolioStats,
   ScanEngineStatus,
@@ -135,16 +136,20 @@ export function imageLang(available: readonly string[] | undefined, preferred: s
 export function useAssetImage(
   kind: 'card' | 'setAsset' | 'external',
   assetPath: string | null | undefined,
-  opts: { lang?: string; quality?: 'low' | 'high' } = {}
+  opts: { lang?: string; quality?: 'low' | 'high'; game?: GameId } = {}
 ): UseQueryResult<string | null> {
   return useQuery({
-    queryKey: ['image', kind, assetPath, opts.lang, opts.quality],
+    // El juego entra en la clave: la misma ruta puede significar cosas
+    // distintas en dos orígenes, y sin él una carta se quedaría con la imagen
+    // que resolvió la otra.
+    queryKey: ['image', kind, assetPath, opts.lang, opts.quality, opts.game],
     queryFn: () =>
       call('images:resolve', {
         kind,
         path: assetPath as string,
         ...(opts.lang ? { lang: opts.lang } : {}),
-        ...(opts.quality ? { quality: opts.quality } : {})
+        ...(opts.quality ? { quality: opts.quality } : {}),
+        ...(opts.game ? { game: opts.game } : {})
       }),
     enabled: Boolean(assetPath),
     staleTime: Infinity,
@@ -157,9 +162,10 @@ export function useAssetImage(
 export function useCardImage(
   imagePath: string | null,
   lang: string,
-  quality: 'low' | 'high'
+  quality: 'low' | 'high',
+  game: GameId = 'pokemon'
 ): UseQueryResult<string | null> {
-  return useAssetImage('card', imagePath, { lang, quality })
+  return useAssetImage('card', imagePath, { lang, quality, game })
 }
 
 /**

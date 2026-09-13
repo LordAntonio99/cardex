@@ -1,9 +1,10 @@
-import type { Pack, SetProgress } from '@shared/types'
+import { isGameId, type Pack, type SetProgress } from '@shared/types'
 import { getDb } from '../db'
 import { getSettings } from '../settings'
 
 interface SetRow {
   id: string
+  game: string
   series_id: string
   region: string
   code: string | null
@@ -51,11 +52,11 @@ function toPack(r: PackRow): Pack {
  */
 export function progress(): SetProgress[] {
   const db = getDb()
-  const uiLang = getSettings().uiLang
+  const { uiLang, game } = getSettings()
 
   const sets = db
-    .prepare<{ uiLang: string }, SetRow>(
-      `SELECT s.id, s.series_id, s.region, s.code,
+    .prepare<{ uiLang: string; game: string }, SetRow>(
+      `SELECT s.id, s.game, s.series_id, s.region, s.code,
               COALESCE(sn.name, s.name) AS name,
               s.released_on, s.total_official, s.total_all,
               s.logo_path, s.symbol_path, s.sort_key,
@@ -77,9 +78,13 @@ export function progress(): SetProgress[] {
               ), 0) AS value_cents
        FROM cat.sets s
        LEFT JOIN cat.set_names sn ON sn.set_id = s.id AND sn.lang = @uiLang
-       ORDER BY s.sort_key DESC, s.released_on DESC, s.id`
+       WHERE @game = 'all' OR s.game = @game
+       -- Con los dos juegos a la vez se agrupa por juego y dentro por fecha:
+       -- intercalar sets de Pokémon y de Riftbound por orden cronológico no le
+       -- sirve a nadie para ver cómo lleva una colección.
+       ORDER BY s.game, s.sort_key DESC, s.released_on DESC, s.id`
     )
-    .all({ uiLang })
+    .all({ uiLang, game })
 
   if (!sets.length) return []
 
@@ -103,6 +108,7 @@ export function progress(): SetProgress[] {
   return sets.map((s) => ({
     set: {
       id: s.id,
+      game: isGameId(s.game) ? s.game : 'pokemon',
       seriesId: s.series_id,
       region: s.region,
       code: s.code,

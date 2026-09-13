@@ -3,6 +3,7 @@ import { existsSync, mkdirSync } from 'node:fs'
 import { readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { protocol } from 'electron'
+import type { GameId } from '@shared/types'
 import { imagesDir } from '../db/connection'
 import { getDb } from '../db'
 import { log } from '../log'
@@ -15,9 +16,15 @@ import { catalogBase } from './sync'
  * Las imágenes NO se empaquetan nunca en el instalador: son propiedad de sus
  * titulares. Se descargan bajo demanda a userData, de modo que el instalable no
  * contiene material ajeno y la caché es contenido que genera cada usuario en su
- * máquina. Si algún día hay que cambiar de origen, es una línea.
+ * máquina.
+ *
+ * Cada juego tiene su origen y su forma de componer la URL, y por eso hay una
+ * tabla y no una constante: TCGdex sirve la carta como una ruta con idioma y
+ * calidad, y el CDN de Riot como un recurso con parámetros de transformación.
+ * Cambiar de origen sigue siendo tocar una entrada de esta tabla.
  */
-const ASSET_BASE = 'https://assets.tcgdex.net'
+const TCGDEX_BASE = 'https://assets.tcgdex.net'
+const RIOT_BASE = 'https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live'
 
 export const IMAGE_SCHEME = 'cardimg'
 
@@ -87,17 +94,74 @@ function externalUrl(value: string): URL | null {
 }
 
 /**
- * Lista de intentos, en orden.
+ * De dónde saca cada juego sus imágenes.
  *
- * Para las imágenes de TCGdex se prueba el idioma pedido y después el inglés:
- * hay sets que sólo existen en un idioma —el Set Base nunca se imprimió en
- * español— y sin este respaldo su logo no aparecería nunca.
+ * Devuelven la lista de intentos en orden de preferencia. Vacía significa «este
+ * juego no publica eso»: Riot no tiene logos de set, y la vista de Sets ya sabe
+ * dibujar el hueco con el nombre.
  */
+interface GameImages {
+  card(parts: string[], lang: string, quality: string): Candidate[]
+  setAsset(parts: string[], lang: string): Candidate[]
+}
+
+/**
+ * Para TCGdex se prueba el idioma pedido y después el inglés: hay sets que sólo
+ * existen en un idioma —el Set Base nunca se imprimió en español— y sin este
+ * respaldo ni su logo ni sus cartas aparecerían nunca.
+ */
+const langChain = (lang: string): string[] => (lang === 'en' ? ['en'] : [lang, 'en'])
+
+/** Ancho y calidad con que el CDN de Riot sirve cada tamaño. */
+const RIOT_QUALITY: Record<string, { w: number; q: number }> = {
+  low: { w: 300, q: 80 },
+  high: { w: 744, q: 85 }
+}
+
+const SOURCES: Record<GameId, GameImages> = {
+  pokemon: {
+    card: (parts, lang, quality) =>
+      langChain(lang).map((l) => ({
+        relative: path.join('cards', l, ...parts, `${quality}.webp`),
+        url: `${TCGDEX_BASE}/${l}/${parts.join('/')}/${quality}.webp`
+      })),
+    // Los logos y símbolos de set NO llevan segmento de calidad.
+    setAsset: (parts, lang) =>
+      langChain(lang).map((l) => ({
+        relative: path.join('sets', l, `${parts.join('/')}.webp`),
+        url: `${TCGDEX_BASE}/${l}/${parts.join('/')}.webp`
+      }))
+  },
+
+  riftbound: {
+    /**
+     * La ruta es el identificador del recurso en el CDN de Riot, y el tamaño va
+     * en parámetros: `?w=300&fm=webp` devuelve 22 KB donde el PNG original pesa
+     * 800. Riftbound sólo se imprime en inglés, así que el idioma no entra.
+     */
+    card: (parts, _lang, quality) => {
+      const size = RIOT_QUALITY[quality]
+      if (!size) return []
+      const asset = parts.join('/')
+      return [
+        {
+          relative: path.join('cards', 'riftbound', ...parts, `${quality}.webp`),
+          url: `${RIOT_BASE}/${asset}?w=${size.w}&fm=webp&q=${size.q}`
+        }
+      ]
+    },
+    // Riot no publica logo ni símbolo de set en la galería.
+    setAsset: () => []
+  }
+}
+
+/** Lista de intentos, en orden. */
 function candidates(
   kind: ImageKind,
   rawPath: string,
   lang: string,
-  quality: string
+  quality: string,
+  game: GameId
 ): Candidate[] | null {
   // El arte de sobres admite una URL completa, no sólo una ruta dentro del
   // catálogo. Así se puede apuntar a donde ya está alojada la imagen en vez de
@@ -130,19 +194,8 @@ function candidates(
 
   if (!SAFE_SEGMENT.test(lang) || !SAFE_SEGMENT.test(quality)) return null
 
-  const langs = lang === 'en' ? ['en'] : [lang, 'en']
-  return langs.map((l) =>
-    kind === 'card'
-      ? {
-          relative: path.join('cards', l, ...parts, `${quality}.webp`),
-          url: `${ASSET_BASE}/${l}/${parts.join('/')}/${quality}.webp`
-        }
-      : {
-          // Los logos y símbolos de set NO llevan segmento de calidad.
-          relative: path.join('sets', l, `${parts.join('/')}.webp`),
-          url: `${ASSET_BASE}/${l}/${parts.join('/')}.webp`
-        }
-  )
+  const source = SOURCES[game]
+  return kind === 'card' ? source.card(parts, lang, quality) : source.setAsset(parts, lang)
 }
 
 const localUrl = (relative: string): string =>
@@ -156,13 +209,17 @@ export async function resolve(
   kind: ImageKind,
   rawPath: string,
   lang = 'en',
-  quality: 'low' | 'high' = 'low'
+  quality: 'low' | 'high' = 'low',
+  game: GameId = 'pokemon'
 ): Promise<string | null> {
-  const list = candidates(kind, rawPath, lang, quality)
+  const list = candidates(kind, rawPath, lang, quality, game)
   if (!list) {
-    log.warn(`Ruta de imagen rechazada: ${kind} ${rawPath} (${lang}/${quality})`)
+    log.warn(`Ruta de imagen rechazada: ${game} ${kind} ${rawPath} (${lang}/${quality})`)
     return null
   }
+  // Vacía no es un error: hay juegos que no publican según qué. Riot no tiene
+  // logos de set, y la vista de Sets ya dibuja el hueco con el nombre.
+  if (!list.length) return null
 
   // Si alguna ya está en disco, se sirve sin tocar la red.
   for (const c of list) {

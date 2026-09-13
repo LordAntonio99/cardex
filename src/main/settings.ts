@@ -5,10 +5,12 @@ import {
   CARD_LANGS,
   DEFAULT_SETTINGS,
   EFFECTS_3D,
+  GAMES,
   UI_LANGS,
   type AppSettings,
   type CardLang,
   type Effect3d,
+  type GameId,
   type ThemeSource,
   type UiLang
 } from '@shared/types'
@@ -59,6 +61,9 @@ function coerce(raw: unknown): Persisted {
   return {
     settings: {
       uiLang: pick<UiLang>(s.uiLang, UI_LANGS, DEFAULT_SETTINGS.uiLang),
+      // Un juego que esta versión ya no conozca cae a 'all' en vez de dejar la
+      // aplicación filtrando por algo que no existe y enseñando cero cartas.
+      game: pick<GameId | 'all'>(s.game, ['all', ...GAMES], DEFAULT_SETTINGS.game),
       theme: pick<ThemeSource>(s.theme, THEMES, DEFAULT_SETTINGS.theme),
       effect3d: pick<Effect3d>(s.effect3d, EFFECTS_3D, DEFAULT_SETTINGS.effect3d),
       downloadImages:

@@ -1,7 +1,7 @@
 {
   "name": "cardex",
   "version": "0.2.0",
-  "description": "Gestor de colección de cartas Pokémon TCG",
+  "description": "Gestor de colección de cartas: JCC Pokémon y Riftbound",
   "main": "./out/main/index.js",
   "author": "LordAntonio99",
   "license": "MIT",

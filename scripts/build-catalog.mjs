@@ -30,7 +30,18 @@ import { cp, mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
 const API = 'https://api.tcgdex.net/v2'
-const SCHEMA_VERSION = 1
+
+/**
+ * Formato del catálogo publicado.
+ *
+ *   v1  sólo Pokémon
+ *   v2  el set declara su juego
+ *
+ * Una instalación que entienda hasta la v1 se planta con un catálogo v2 y pide
+ * que se actualice la aplicación, en vez de importar sets de Riftbound como si
+ * fueran de Pokémon. Es el mecanismo que `parseManifest` ya tenía puesto.
+ */
+const SCHEMA_VERSION = 2
 
 /**
  * Idioma preferido para la ficha completa.
@@ -44,11 +55,12 @@ const PREFERRED = 'es'
 // ── Argumentos ───────────────────────────────────────────────────────────────
 
 function parseArgs(argv) {
-  const args = { sets: [], series: null, langs: ['es', 'en'], limit: 0, out: 'catalog', packs: 'catalog-packs', concurrency: 8, recognition: false }
+  const args = { sets: [], riftbound: [], series: null, langs: ['es', 'en'], limit: 0, out: 'catalog', packs: 'catalog-packs', concurrency: 8, recognition: false }
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]
     const next = () => argv[++i]
     if (a === '--sets') args.sets = next().split(',').map((s) => s.trim()).filter(Boolean)
+    else if (a === '--riftbound') args.riftbound = next().split(',').map((s) => s.trim()).filter(Boolean)
     else if (a === '--series') args.series = next()
     else if (a === '--langs') args.langs = next().split(',').map((s) => s.trim()).filter(Boolean)
     else if (a === '--limit') args.limit = Number(next()) || 0
@@ -327,6 +339,7 @@ async function buildSet(setId, langs, limit, concurrency) {
   return {
     set: {
       id: head.id,
+      game: 'pokemon',
       seriesId: head.serie?.id ?? 'unknown',
       seriesName: head.serie?.name ?? head.serie?.id ?? 'unknown',
       region: 'intl',
@@ -353,16 +366,18 @@ async function buildSet(setId, langs, limit, concurrency) {
 async function main() {
   const args = parseArgs(process.argv.slice(2))
 
-  if (args.help || (!args.sets.length && !args.series)) {
+  if (args.help || (!args.sets.length && !args.series && !args.riftbound.length)) {
     console.log(`
 Uso:
   node scripts/build-catalog.mjs --sets sv03,sv01
   node scripts/build-catalog.mjs --series sv
+  node scripts/build-catalog.mjs --riftbound ogn,sfd,unl,ven
   node scripts/build-catalog.mjs --sets sv03 --limit 24
 
 Opciones:
-  --sets a,b        sets a generar
-  --series id       todos los sets de una serie
+  --sets a,b        sets de Pokémon a generar (TCGdex)
+  --series id       todos los sets de una serie de Pokémon
+  --riftbound a,b   sets de Riftbound, por su abreviatura: ogn, sfd, unl, ven
   --langs es,en     idiomas; la ficha completa sale del primero que tenga cartas
   --limit N         sólo las N primeras cartas de cada set (para pruebas)
   --out dir         directorio de salida (por defecto: catalog)
@@ -370,6 +385,11 @@ Opciones:
   --concurrency N   peticiones en paralelo (por defecto: 8)
   --recognition     calcula además los vectores del escáner (requiere
                     'npm run build' y 'npm run models:fetch')
+
+El manifiesto se reescribe ENTERO en cada ejecución, con los sets de esa
+ejecución y nada más. Hay que generar siempre todos los sets publicados a la
+vez, de los dos juegos, o una instalación nueva se quedará sólo con los de la
+última generación.
 `)
     process.exit(args.help ? 0 : 1)
   }
@@ -404,17 +424,27 @@ Opciones:
     console.log(`Arte de sobres copiado desde ${packImages}`)
   }
 
-  console.log(`Generando ${setIds.length} set(s) en ${outDir}`)
+  const total = setIds.length + args.riftbound.length
+  console.log(`Generando ${total} set(s) en ${outDir}`)
 
   const entries = []
   /** Cartas ya construidas por set, para la pasada de reconocimiento. */
   const byId = new Map()
-  for (const setId of setIds) {
-    const built = await buildSet(setId, args.langs, args.limit, args.concurrency)
-    if (!built) continue
 
-    // Superposición de sobres hecha a mano: TCGdex no los tiene, así que lo
-    // que haya en packs/<setId>.json manda y sobrevive a la regeneración.
+  /**
+   * Escribe un set ya construido y anota su entrada de manifiesto.
+   *
+   * Es común a los dos juegos a propósito: el manifiesto se reescribe entero en
+   * cada ejecución, así que partir esto en dos generadores publicaría índices
+   * donde el otro juego no existe.
+   */
+  const emit = async (built) => {
+    const setId = built.set.id
+
+    // Superposición de sobres hecha a mano. En Pokémon es la única forma de
+    // tener arte de sobres —ninguna API lo publica—; en Riftbound el generador
+    // ya los saca de los productos sellados de TCGplayer, pero lo que haya aquí
+    // sigue mandando y sobrevive a la regeneración.
     const overlay = path.join(packsDir, `${setId}.json`)
     if (existsSync(overlay)) {
       try {
@@ -438,7 +468,28 @@ Opciones:
       sha256: createHash('sha256').update(body, 'utf8').digest('hex'),
       cardCount: built.cards.length
     })
-    byId.set(setId, built.cards)
+    byId.set(setId, { cards: built.cards, game: built.set.game ?? 'pokemon' })
+  }
+
+  for (const setId of setIds) {
+    const built = await buildSet(setId, args.langs, args.limit, args.concurrency)
+    if (built) await emit(built)
+  }
+
+  // ── Riftbound ─────────────────────────────────────────────────────────────
+  // Otro juego, otros tres orígenes (galería de Riot, TCGplayer y el tipo de
+  // cambio del BCE) y la misma forma de salida.
+  if (args.riftbound.length) {
+    const riftbound = await import('./riftbound.mjs')
+    const fx = await riftbound.usdToEur()
+    console.log(
+      `\nRiftbound: precios de TCGplayer a euros con el tipo del BCE ` +
+        `(1 € = ${fx.usdPerEur} $, ${fx.on})`
+    )
+    for (const code of args.riftbound) {
+      const built = await riftbound.buildSet(code, { limit: args.limit, fx })
+      if (built) await emit(built)
+    }
   }
 
   // ── Vectores de reconocimiento ────────────────────────────────────────────
@@ -452,9 +503,9 @@ Opciones:
 Calculando vectores de reconocimiento (${P.RECOG_MODEL_ID})`)
     const embedder = await openEmbedder(P)
     try {
-      for (const [setId, cards] of byId) {
+      for (const [setId, { cards, game }] of byId) {
         const started = Date.now()
-        const sidecar = await buildRecognition(P, embedder, setId, cards)
+        const sidecar = await buildRecognition(P, embedder, setId, cards, game)
         if (!sidecar) {
           console.warn(`  ${setId}: sin imágenes, no se publican vectores`)
           continue

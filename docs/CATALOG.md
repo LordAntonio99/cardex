@@ -10,6 +10,31 @@ Cardex tiene **dos canales de actualización independientes**:
 Están separados a propósito: añadir un set nuevo no debería obligar a sacar una versión de la
 aplicación, ni a que nadie se la actualice.
 
+## Dos juegos
+
+El catálogo cubre **Pokémon** y **Riftbound** (el JCC de League of Legends). Cada set declara a
+cuál pertenece, y de ahí sale todo lo demás:
+
+| | Pokémon | Riftbound |
+|---|---|---|
+| Cartas y metadatos | [TCGdex](https://tcgdex.dev) (MIT) | galería oficial de Riot |
+| Ilustraciones | `assets.tcgdex.net` | CDN de Riot (`cmsassets.rgpub.io`) |
+| Precios | Cardmarket, vía TCGdex | TCGplayer, vía [TCGCSV](https://tcgcsv.com) |
+| Moneda | euros de origen | dólares convertidos con el tipo del BCE |
+| Arte de sobres | a mano, en `catalog-packs/` | productos sellados de TCGplayer |
+| Idiomas | español, inglés, japonés | sólo inglés |
+
+Los identificadores de Riftbound van con el prefijo `rb-` (`rb-ogn`, `rb-ogn-056-298`). No es
+cosmético: `card_keys.card_id` de la colección del usuario **no tiene clave foránea** al
+catálogo —SQLite no las admite entre bases adjuntas, y esa limitación es justo la garantía de
+que reimportar no puede tocar la colección—, así que nadie vigila que dos juegos no usen el
+mismo identificador. El prefijo lo hace imposible.
+
+> **Riftbound no se imprime en español.** La galería en `es-es` devuelve los mismos nombres, el
+> mismo texto y las mismas imágenes que en `en-us`; sólo traduce las etiquetas de su propia
+> interfaz. Sus cartas entran con `langs: ["en"]`, que es el caso que la aplicación ya trataba
+> con el Set Base.
+
 ---
 
 ## Dónde vive
@@ -60,15 +85,23 @@ npm run catalog:build -- --sets sv03,sv01,base1
 # Una serie entera
 npm run catalog:build -- --series sv
 
+# Riftbound, por la abreviatura impresa
+npm run catalog:build -- --riftbound ogn,sfd,unl,ven
+
+# Los dos juegos de una vez, que es como hay que publicarlo
+npm run catalog:build -- --sets sv03,base1 --riftbound ogn,sfd,unl,ven
+
 # Muestra pequeña, para probar
 npm run catalog:sample
 ```
 
-El script saca los datos de [TCGdex](https://tcgdex.dev), que es abierto (MIT), sigue vivo y
-trae los nombres en español de forma nativa.
+El generador es **uno solo** aunque los orígenes sean varios, porque el manifiesto se reescribe
+entero en cada ejecución: dos generadores publicarían dos índices donde el otro juego no
+existe. `scripts/build-catalog.mjs` orquesta y escribe, y `scripts/riftbound.mjs` es el origen
+de Riftbound.
 
-Opciones: `--langs es,en` (el primero aporta la ficha completa), `--limit N`, `--out dir`,
-`--concurrency N`.
+Opciones: `--langs es,en` (el primero aporta la ficha completa; sólo afecta a Pokémon),
+`--limit N`, `--out dir`, `--concurrency N`.
 
 ### Publicarlo
 
@@ -128,7 +161,7 @@ catálogo no es negociable desde el entorno.
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "catalogVersion": "2026.09.11",
   "generatedAt": "2026-09-11T11:48:40.698Z",
   "sets": [
@@ -145,12 +178,25 @@ catálogo no es negociable desde el entorno.
 Si `schemaVersion` es mayor que el que entiende la aplicación instalada, ésta se planta y pide
 que la actualices, en vez de importar a medias algo que no comprende.
 
+**Historial del formato:**
+
+| Versión | Qué cambió |
+|---|---|
+| 1 | sólo Pokémon |
+| 2 | el set declara su `game`; de ahí salen su origen de imágenes y su fuente de precios |
+
+La v2 se subió con Riftbound en lugar de colar `game` como campo opcional dentro de la v1. Una
+instalación anterior no conoce el campo, así que habría importado los sets de Riftbound como si
+fueran de Pokémon: imágenes pedidas a TCGdex que devuelven 404, precios sin fuente y cartas
+mezcladas en la rejilla. Es preferible que diga «actualiza la aplicación» y no toque nada.
+
 ### `sets/<setId>.json`
 
 ```json
 {
   "set": {
     "id": "sv03",
+    "game": "pokemon",
     "seriesId": "sv",
     "seriesName": "Escarlata y Púrpura",
     "region": "intl",
@@ -209,19 +255,38 @@ que la actualices, en vez de importar a medias algo que no comprende.
 
 Detalles que importan:
 
+- **`game`** acepta `pokemon` y `riftbound`. Ausente equivale a `pokemon`, así que los ficheros
+  de Pokémon anteriores no hay que regenerarlos por esto.
 - **`totalOfficial` frente a `totalAll`.** El porcentaje de completado se calcula contra
   `totalOfficial` (las cartas numeradas). Si se usara el total con secretas, un set nunca
-  llegaría al 100 % y el indicador mentiría.
-- **`types` va SIEMPRE en inglés canónico** (`Grass`, `Fire`, `Lightning`…). Es la clave de la
-  tabla de colores `oklch` con la que se pinta cada carta: si se colara `Planta`, el degradado
-  se iría al color por defecto. El generador los toma de la versión inglesa por este motivo.
+  llegaría al 100 % y el indicador mentiría. En Riftbound, `totalOfficial` es el
+  `collectorNumberMax` de la galería y `totalAll` el recuento con las *showcase*, que van por
+  encima de ese número igual que las secretas de Pokémon.
+- **`types` va SIEMPRE en inglés canónico** (`Grass`, `Fire`, `Lightning`… y en Riftbound
+  `Fury`, `Calm`, `Mind`, `Body`, `Chaos`, `Order`, `Colorless`). Es la clave de la tabla de
+  colores `oklch` con la que se pinta cada carta: si se colara `Planta` o `Calma`, el degradado
+  se iría al color por defecto **sin dar ningún error**. Los dos generadores los toman de la
+  versión inglesa por este motivo.
+- **`stats`** son las cifras impresas que no son el PV: `energy`, `might` y `power` en
+  Riftbound. Van como mapa, y no como columnas, para que el tercer juego no obligue a otra
+  migración. Sólo se guardan las que la carta trae de verdad; un cero es un valor legítimo.
+- **`category`** es `Pokemon | Trainer | Energy` en Pokémon y
+  `Unit | Spell | Legend | Battlefield | Gear | Rune` en Riftbound. El visor la usa para elegir
+  el reverso: en Riftbound no todas las cartas comparten el mismo.
 - **`rarity` va en el idioma principal** (español por defecto). El clasificador de rareza de la
   interfaz entiende tanto `Rara Doble` como `Double Rare`, así que el efecto holográfico
   funciona igual. Ojo: los datos de TCGdex en español están incompletos y algunas rarezas
   llegan en inglés; no es un fallo del generador.
-- **`imagePath` no lleva idioma ni extensión.** La aplicación compone la URL en tiempo de
-  render: `https://assets.tcgdex.net/{idioma}/{imagePath}/{low|high}.webp`. Así la misma fila
-  sirve para la carta en español, inglés y japonés.
+- **`imagePath` no es una URL.** La aplicación la compone en tiempo de render, y cómo la compone
+  depende del juego (`SOURCES`, en `src/main/catalog/images.ts`):
+
+  | Juego | `imagePath` | URL resultante |
+  |---|---|---|
+  | Pokémon | `sv/sv03/125` | `assets.tcgdex.net/{idioma}/{imagePath}/{low\|high}.webp` |
+  | Riftbound | `a3ddb0…-744x1039.png` | `cmsassets.rgpub.io/…/{imagePath}?w={300\|744}&fm=webp` |
+
+  Así la misma fila de Pokémon sirve para la carta en español, inglés y japonés, y la de
+  Riftbound para la miniatura de la rejilla y la del visor.
 - **`variants`** acepta `normal`, `holo`, `reverse` y `first_ed`. Se guardan como máscara de
   bits.
 - **`packs`** en una carta es opcional. Sin él se entiende que puede salir en cualquier sobre
@@ -254,6 +319,45 @@ Un aviso sobre los datos de origen: Cardmarket comparte identificador de product
 «shadowless» y «shadowless 1ª edición», así que en muchas cartas el precio de ambas sale
 idéntico. Es una limitación de la fuente, no del catálogo.
 
+### El precio no siempre viene de Cardmarket
+
+Cardmarket cotiza el mercado europeo, en euros, y es la fuente preferida. Pero **Riftbound no
+está en ninguna API pública de Cardmarket**, así que sus precios salen de TCGplayer a través de
+[TCGCSV](https://tcgcsv.com), que es un espejo diario sin clave ni registro.
+
+Eso obliga a dos cosas:
+
+1. **Convertir la moneda.** TCGplayer cotiza en dólares y Cardex lleva los euros por dentro —el
+   dinero viaja en céntimos enteros de euro desde la base hasta la interfaz—. El generador
+   aplica el tipo de cambio de referencia del BCE del día, **uno solo para toda la ejecución**:
+   mezclar tipos daría cifras que no cuadran entre sí sin que nadie pueda saber por qué. La
+   conversión queda anotada en cada precio publicado para poder auditarla:
+
+   ```json
+   {
+     "source": "tcgplayer",
+     "currency": "EUR",
+     "trendCents": 1834,
+     "sourceCurrency": "USD",
+     "fxRate": 0.862664,
+     "fxOn": "2026-09-11"
+   }
+   ```
+
+   Esos tres últimos campos **no se importan**: son para quien lea el catálogo publicado. La
+   ficha de carta sí dice de dónde sale el precio, para que nadie compare la cifra con
+   Cardmarket y piense que la aplicación se equivoca.
+
+2. **Elegir fuente al consultar.** Las vistas `card_default_price` y `card_variant_price`
+   (migración `006_price_source.sql`) toman la fuente de menor identificador de las que haya
+   para esa impresión: Cardmarket si existe, TCGplayer si no. Antes filtraban `source = 0` a
+   secas, que para Pokémon vale y para Riftbound habría dejado todas las cartas sin precio.
+
+**Riftbound no tiene variación a siete días.** TCGplayer publica precio de mercado pero no media
+semanal, así que `avg7Cents` va nulo y esas cartas salen con «—» y no entran en «las que más se
+mueven». Rellenarlo con el precio de hoy daría un 0,0 % permanente con toda la pinta de ser un
+dato.
+
 ### El idioma de la ficha se decide por set
 
 El generador prefiere el español, pero **se queda con el primer idioma que tenga cartas de
@@ -265,11 +369,16 @@ verdad**. El Set Base nunca se imprimió en español: TCGdex tiene el set traduc
 Sin eso, todo el Set Base se quedaría con el marcador de posición, porque
 `assets.tcgdex.net/es/base/base1/...` devuelve 404.
 
-### Los sobres son cosa tuya
+### Los sobres son cosa tuya (en Pokémon)
 
-**Ninguna fuente pública tiene arte de sobres.** TCGdex no lo publica: su endpoint
+**Ninguna fuente pública tiene arte de sobres de Pokémon.** TCGdex no lo publica: su endpoint
 `/boosters` devuelve 404, el campo no aparece ni en cartas ni en sets, y tampoco hay nada en
 su CDN. Comprobado, no supuesto.
+
+> En Riftbound sí lo hay: TCGplayer lista los productos sellados de cada set —sobres,
+> displays, mazos de campeón, bundles— con su imagen, y el generador los convierte en sobres
+> automáticamente, referenciando `tcgplayer-cdn.tcgplayer.com/product/<id>_400w.jpg`. No hay
+> nada que mantener a mano, pero si pones un `catalog-packs/rb-<set>.json`, ése manda.
 
 Por eso los sobres se mantienen a mano, en `catalog-packs/` de la rama `main`:
 
@@ -375,7 +484,22 @@ se lo bajara otra vez.
 **Una huella por carta y por idioma.** La misma carta impresa en español y en inglés son dos
 imágenes distintas, y comparar con las dos mejora el acierto. Los sets anteriores a Blanco y
 Negro no tienen imágenes en español en TCGdex; ahí sólo se publica la inglesa, que es la misma
-ilustración.
+ilustración. Riftbound sólo se imprime en inglés: una huella por carta y ya está.
+
+### Las cartas apaisadas se publican giradas
+
+Los campos de batalla de Riftbound se imprimen en horizontal. El escáner **no puede
+entregarlos así**: `orderCorners` normaliza cualquier cuadrilátero a vertical, de modo que la
+captura de una carta apaisada siempre llega girada 90°, en un sentido o en el otro según por
+dónde se haya dejado la carta sobre la mesa.
+
+Por eso el generador gira la imagen de referencia a vertical antes de calcular su huella. Con
+**una sola** basta: `matchCard` prueba la captura y su giro de 180°, y esas dos pruebas cubren
+los dos sentidos posibles. Comprobado contra el propio pipeline: un campo de batalla puesto de
+las dos maneras casa con su referencia a 0,90-0,95 de coseno.
+
+Sin esto, la referencia sería la única imagen del catálogo que no se parece a lo que ve la
+cámara, y fallaría **sin dar ningún error**.
 
 ### El identificador de modelo importa
 
@@ -407,12 +531,12 @@ dato derivado del que no se puede reconstruir la ilustración.
 El catálogo publica **metadatos**, que es lo que cubre la licencia MIT de TCGdex.
 
 Las **imágenes de carta no se publican ni se empaquetan nunca** en el instalador: son de The
-Pokémon Company, Nintendo, Creatures y GAME FREAK. La aplicación guarda sólo la ruta y baja la
-imagen desde `assets.tcgdex.net` a la máquina de cada usuario cuando hace falta, a
-`%APPDATA%/Cardex/images`.
+Pokémon Company, Nintendo, Creatures y GAME FREAK las de Pokémon, y de Riot Games las de
+Riftbound. La aplicación guarda sólo la ruta y baja la imagen del CDN que corresponda a la
+máquina de cada usuario cuando hace falta, a `%APPDATA%/Cardex/images`.
 
 De este modo el instalable no contiene material ajeno, la caché es contenido que genera cada
-usuario en su equipo, y cambiar de origen el día de mañana es una línea
-(`ASSET_BASE` en `src/main/catalog/images.ts`).
+usuario en su equipo, y cambiar de origen el día de mañana es una entrada de la tabla `SOURCES`
+en `src/main/catalog/images.ts`.
 
 El usuario puede desactivar la descarga de imágenes en los ajustes.

@@ -1,7 +1,7 @@
 # Cardex
 
-Gestor de colección de cartas Pokémon TCG para escritorio. Base de datos local, sin cuenta y
-sin servidor: todo vive en tu equipo.
+Gestor de colección de cartas para escritorio, con **JCC Pokémon** y **Riftbound** (el JCC de
+League of Legends). Base de datos local, sin cuenta y sin servidor: todo vive en tu equipo.
 
 - **Colección** — lo que tienes, con su valor y su variación.
 - **Explorador** — el catálogo entero; las que te faltan salen en gris.
@@ -9,16 +9,25 @@ sin servidor: todo vive en tu equipo.
 - **Escáner** — reconoce tus cartas con la webcam y las mete en el inventario.
 - **Mercado** — valor de la colección, histórico y las que más se mueven.
 
+El selector de la cabecera (`TODOS · POKÉMON · RIFTBOUND`) manda sobre las cinco pantallas a la
+vez y se recuerda entre arranques. Sólo aparece si el catálogo instalado trae los dos juegos.
+
 ## Estado
 
 **Versión 0.2.0.** Instalador para Windows en
 [Releases](https://github.com/LordAntonio99/cardex/releases).
 
-La novedad es que **el escáner reconoce cartas de verdad**, en tu equipo y sin conexión.
+La novedad de la 0.2.0 fue que **el escáner reconoce cartas de verdad**, en tu equipo y sin
+conexión. Lo que viene después, todavía sin publicar, es **Riftbound**: cuatro sets (Origins,
+Spiritforged, Unleashed y Vendetta) con el mismo trato que las de Pokémon.
 
-Al abrirla por primera vez se descarga el catálogo publicado: diez sets y 1.407 cartas, con sus
-imágenes, sus sobres, precios de Cardmarket y las huellas visuales que usa el escáner. Mientras
-llega verás una pantalla con el progreso. Tu colección arranca vacía.
+Al abrirla por primera vez se descarga el catálogo publicado, con sus imágenes, sus sobres, sus
+precios y las huellas visuales que usa el escáner. Mientras llega verás una pantalla con el
+progreso. Tu colección arranca vacía.
+
+> El catálogo con Riftbound usa el **formato v2**. Una instalación 0.2.0 no lo entiende y lo
+> dirá («actualiza la aplicación») en vez de importarlo a medias; su colección y su catálogo
+> instalado se quedan intactos. Es el mecanismo que ya existía para esto.
 
 Lo que **todavía no** hace:
 
@@ -32,6 +41,17 @@ Lo que **todavía no** hace:
 - **Los precios no se refrescan solos.** Llegan con el catálogo, así que se actualizan cuando se
   publica uno nuevo. El histórico de tu colección sí crece: cada sincronización anota el precio
   del día de lo que tienes.
+- En Riftbound, **el precio es el mercado americano convertido a euros**, no el europeo:
+  Cardmarket no abre su API y lo único accesible sin clave es el espejo de TCGplayer. Suele
+  quedar por debajo de Cardmarket. La ficha de cada carta dice de dónde sale su precio.
+- Riftbound **no tiene variación a siete días** por el mismo motivo: TCGplayer publica precio de
+  mercado pero no media semanal, así que esas cartas salen con «—» y no entran en «las que más
+  se mueven».
+- **Riftbound sólo existe en inglés.** No es una carencia de Cardex: Riot no lo publica
+  traducido.
+- La gráfica de Mercado es la de **la cartera entera**, también con un juego seleccionado. El
+  histórico se anota una vez al día con el total, y partirlo por juego hacia atrás significaría
+  reconstruir un pasado que no existe. La vista lo dice donde toca.
 - **Sólo se compila para Windows.** El código no asume Windows más allá de la barra de título,
   pero macOS y Linux no se han probado.
 - El instalador va **sin firmar**: Windows SmartScreen avisará la primera vez. Hay que darle a
@@ -45,6 +65,10 @@ Node 22 o superior.
 
 Pon la carta delante de la webcam: se reconoce sola, cae al lote y confirmas todo de una vez al
 final. Funciona **sin conexión y sin cuenta**: el reconocimiento corre en tu equipo.
+
+Reconoce los dos juegos sin que haya que decirle cuál estás escaneando: la carta se identifica
+contra el catálogo entero y de ahí sale a qué juego pertenece. Los **campos de batalla** de
+Riftbound, que se imprimen apaisados, también.
 
 Para que acierte:
 
@@ -79,8 +103,8 @@ trabajar. Para meter algunas en tu colección: Escáner → «Simular detección
 ### Probar un catálogo antes de publicarlo
 
 ```bash
-npm run catalog:build -- --sets me05   # genera ./catalog
-npm run catalog:serve                  # lo sirve en http://localhost:8787
+npm run catalog:build -- --sets me05 --riftbound ogn   # genera ./catalog
+npm run catalog:serve                                  # lo sirve en http://localhost:8787
 ```
 
 Y en otra terminal, la aplicación apuntando ahí en vez de a GitHub:
@@ -208,10 +232,16 @@ Los datos de sets y cartas se publican aparte de la aplicación, en la rama `cat
 repositorio, para poder añadir sets nuevos sin sacar versión. El formato y cómo generarlo están
 en [docs/CATALOG.md](docs/CATALOG.md).
 
-Fuente: [TCGdex](https://tcgdex.dev) (MIT), que trae los nombres en español de forma nativa.
+Fuentes:
 
-Lo único que no sale de ninguna API es el **arte de los sobres**. Se mantiene a mano en
-`catalog-packs/`: las definiciones por set en `catalog-packs/<setId>.json` y las imágenes en
+| | Pokémon | Riftbound |
+|---|---|---|
+| Cartas | [TCGdex](https://tcgdex.dev) (MIT), con los nombres en español nativos | galería oficial de Riot |
+| Precios | Cardmarket, vía TCGdex | TCGplayer, vía [TCGCSV](https://tcgcsv.com), convertido a euros con el tipo del BCE |
+| Sobres | a mano, en `catalog-packs/` | productos sellados de TCGplayer |
+
+Lo único que no sale de ninguna API es el **arte de los sobres de Pokémon**. Se mantiene a mano
+en `catalog-packs/`: las definiciones por set en `catalog-packs/<setId>.json` y las imágenes en
 `catalog-packs/images/`, que el generador copia al catálogo publicado. Mientras un sobre no
 tenga imagen, la vista de Sets dibuja el hueco con su nombre.
 
@@ -244,7 +274,8 @@ quien ya la tenga instalada.
 
 ## Créditos
 
-Interfaz diseñada en Claude Design. Datos de [TCGdex](https://tcgdex.dev).
+Interfaz diseñada en Claude Design. Datos de [TCGdex](https://tcgdex.dev),
+[TCGCSV](https://tcgcsv.com) y la galería oficial de Riftbound.
 
 El escáner se apoya en [ONNX Runtime](https://onnxruntime.ai) (MIT),
 [DINOv2](https://github.com/facebookresearch/dinov2) (Apache-2.0, en la conversión a ONNX de
@@ -253,4 +284,5 @@ El escáner se apoya en [ONNX Runtime](https://onnxruntime.ai) (MIT),
 se envía ninguna imagen a ningún servidor.
 
 Pokémon y las cartas del JCC Pokémon son propiedad de The Pokémon Company, Nintendo, Creatures
-y GAME FREAK. Este proyecto no está afiliado ni respaldado por ninguna de ellas.
+y GAME FREAK. Riftbound y League of Legends son propiedad de Riot Games. Este proyecto no está
+afiliado ni respaldado por ninguna de ellas.
