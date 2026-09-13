@@ -76,6 +76,8 @@ export interface CatalogSetFile {
     hp?: number | null
     /** Cifras impresas que no son el PV: energía, poderío y poder en Riftbound. */
     stats?: Record<string, number>
+    /** Campeón, facción, criatura… En Riftbound es donde vive el nombre del campeón. */
+    tags?: string[]
     illustrator?: string | null
     imagePath?: string | null
     variants?: string[]

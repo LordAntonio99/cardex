@@ -433,6 +433,10 @@ export async function buildSet(code, { limit = 0, fx }) {
       types: (c.domain?.values ?? []).map((d) => titleCase(d.id)).filter(Boolean),
       hp: null,
       ...(Object.keys(stats).length ? { stats } : {}),
+      // El campeón, la facción, la criatura. Es lo ÚNICO que ata la carta a su
+      // campeón: la leyenda de Shen se llama «Eye of Twilight» y su nombre no
+      // sale por ningún otro lado. Las lleva el 70 % de las cartas.
+      ...((c.tags?.tags ?? []).length ? { tags: c.tags.tags } : {}),
       illustrator: c.illustrator?.values?.map((i) => i.label).join(', ') || null,
       imagePath: assetId(c.cardImage?.url),
       // Riftbound se imprime en normal y en foil; el foil ocupa el eje `holo`.

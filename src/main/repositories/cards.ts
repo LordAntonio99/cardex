@@ -28,6 +28,7 @@ interface CardRow {
   types: string
   hp: number | null
   stats: string | null
+  tags: string | null
   image_path: string | null
   variant_mask: number
   langs: string | null
@@ -75,6 +76,17 @@ function parseStats(json: string | null): Record<string, number> | null {
   }
 }
 
+/** Las etiquetas de la carta. Lista vacía cuando no tiene, nunca nulo. */
+function parseTags(json: string | null): string[] {
+  if (!json) return []
+  try {
+    const v: unknown = JSON.parse(json)
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []
+  } catch {
+    return []
+  }
+}
+
 function toItem(r: CardRow): CardListItem {
   return {
     cardId: r.card_id,
@@ -90,6 +102,7 @@ function toItem(r: CardRow): CardListItem {
     types: parseTypes(r.types),
     hp: r.hp,
     stats: parseStats(r.stats),
+    tags: parseTags(r.tags),
     imagePath: r.image_path,
     variantMask: r.variant_mask,
     langs: (r.langs ?? 'en').split(',').filter(Boolean) as CardListItem['langs'],
@@ -148,6 +161,7 @@ const SELECT_COLS = `
   c.types         AS types,
   c.hp            AS hp,
   c.stats         AS stats,
+  c.tags          AS tags,
   c.image_path    AS image_path,
   c.variant_mask  AS variant_mask,
   (SELECT GROUP_CONCAT(cl.lang) FROM cat.card_langs cl WHERE cl.card_id = c.id) AS langs,

@@ -138,6 +138,14 @@ export interface Card {
    * juego no obligue a otra migración.
    */
   stats: Record<string, number> | null
+  /**
+   * Campeón, facción, criatura…
+   *
+   * En Riftbound es lo ÚNICO que ata una carta a su campeón: la leyenda de Shen
+   * se llama «Eye of Twilight» y su nombre no aparece por ningún lado. Por eso
+   * entran en el buscador, no sólo en la ficha.
+   */
+  tags: string[]
   illustrator: string | null
   /**
    * Ruta de la imagen, sin idioma ni calidad. La compone la aplicación en
@@ -255,6 +263,7 @@ export interface CardListItem {
   types: CardTypeKey[]
   hp: number | null
   stats: Record<string, number> | null
+  tags: string[]
   imagePath: string | null
   variantMask: number
   /**

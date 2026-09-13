@@ -261,9 +261,9 @@ function importSet(file: CatalogSetFile, sourceFile: string, hash: string): numb
     const insCard = db.prepare(
       `INSERT INTO cat.cards
          (id, set_id, local_id, number_sort, number_suffix, name, rarity, category,
-          types, hp, stats, illustrator, image_path, variant_mask)
+          types, hp, stats, tags, illustrator, image_path, variant_mask)
        VALUES (@id, @setId, @localId, @numberSort, @numberSuffix, @name, @rarity, @category,
-               @types, @hp, @stats, @illustrator, @imagePath, @variantMask)`
+               @types, @hp, @stats, @tags, @illustrator, @imagePath, @variantMask)`
     )
     const insCardName = db.prepare(
       'INSERT INTO cat.card_names (card_id, lang, name) VALUES (@cardId, @lang, @name)'
@@ -275,8 +275,8 @@ function importSet(file: CatalogSetFile, sourceFile: string, hash: string): numb
       'INSERT OR IGNORE INTO cat.card_packs (card_id, pack_id) VALUES (@cardId, @packId)'
     )
     const insSearch = db.prepare(
-      `INSERT INTO cat.card_search_src (card_id, lang, name, set_name, number)
-       VALUES (@cardId, @lang, @name, @setName, @number)`
+      `INSERT INTO cat.card_search_src (card_id, lang, name, set_name, number, tags)
+       VALUES (@cardId, @lang, @name, @setName, @number, @tags)`
     )
     const insPrinting = db.prepare(
       `INSERT INTO cat.card_printings
@@ -308,6 +308,8 @@ function importSet(file: CatalogSetFile, sourceFile: string, hash: string): numb
         // Nulo y no '{}' cuando no hay ninguna: así la interfaz distingue «esta
         // carta no imprime cifras» de «tiene cifras y todas valen cero».
         stats: c.stats && Object.keys(c.stats).length ? JSON.stringify(c.stats) : null,
+        // Nulo cuando no hay ninguna, igual que `stats`.
+        tags: c.tags?.length ? JSON.stringify(c.tags) : null,
         illustrator: c.illustrator ?? null,
         imagePath: c.imagePath ?? null,
         variantMask: variantMask(c.variants)
@@ -325,6 +327,11 @@ function importSet(file: CatalogSetFile, sourceFile: string, hash: string): numb
       }
 
       // Una fila de búsqueda por idioma disponible, más la canónica.
+      //
+      // Las etiquetas van en todas ellas porque son lo único que ata una carta
+      // a su campeón: Riftbound llama «Eye of Twilight» a la leyenda de Shen, y
+      // sin esto buscar «Shen» no la encuentra.
+      const tagText = (c.tags ?? []).join(' ')
       const searchNames = new Set<string>([c.name, ...Object.values(names)])
       for (const name of searchNames) {
         insSearch.run({
@@ -332,7 +339,8 @@ function importSet(file: CatalogSetFile, sourceFile: string, hash: string): numb
           lang: 'all',
           name,
           setName: s.names?.['es'] ?? s.name,
-          number: c.localId
+          number: c.localId,
+          tags: tagText
         })
       }
 

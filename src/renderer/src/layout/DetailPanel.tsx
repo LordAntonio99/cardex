@@ -204,6 +204,11 @@ export function DetailPanel({
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {c.rarity ? <Tag tone="brand">{c.rarity}</Tag> : null}
             {c.types[0] ? <Tag>{c.types[0]}</Tag> : null}
+            {/* El campeón, la facción, la criatura. En Riftbound es lo único que
+                dice que «Eye of Twilight» es la carta de Shen. */}
+            {c.tags.map((t) => (
+              <Tag key={t}>{t}</Tag>
+            ))}
             <Tag>{shownLang.toUpperCase()}</Tag>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 5, paddingTop: 4 }}>
