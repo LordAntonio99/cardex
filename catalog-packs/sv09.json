@@ -1,0 +1,82 @@
+[
+  {
+    "id": "sv09-booster-hop",
+    "name": "Journey Together Booster Pack (Hop & Zacian)",
+    "names": {
+      "es": "Sobre Juntos de Aventuras (Hop y Zacian)",
+      "en": "Journey Together Booster Pack (Hop & Zacian)"
+    },
+    "kind": "booster",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/4/40/SV9_Booster_Hop_Zacian.png/300px-SV9_Booster_Hop_Zacian.png"
+  },
+  {
+    "id": "sv09-booster-iono",
+    "name": "Journey Together Booster Pack (Iono & Bellibolt)",
+    "names": {
+      "es": "Sobre Juntos de Aventuras (Ionia y Bellibolt)",
+      "en": "Journey Together Booster Pack (Iono & Bellibolt)"
+    },
+    "kind": "booster",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/b/b3/SV9_Booster_Iono_Bellibolt.png/300px-SV9_Booster_Iono_Bellibolt.png"
+  },
+  {
+    "id": "sv09-booster-lillie",
+    "name": "Journey Together Booster Pack (Lillie & Clefairy)",
+    "names": {
+      "es": "Sobre Juntos de Aventuras (Lylia y Clefairy)",
+      "en": "Journey Together Booster Pack (Lillie & Clefairy)"
+    },
+    "kind": "booster",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/1/16/SV9_Booster_Lillie_Clefairy.png/300px-SV9_Booster_Lillie_Clefairy.png"
+  },
+  {
+    "id": "sv09-booster-n",
+    "name": "Journey Together Booster Pack (N & Zoroark)",
+    "names": {
+      "es": "Sobre Juntos de Aventuras (N y Zoroark)",
+      "en": "Journey Together Booster Pack (N & Zoroark)"
+    },
+    "kind": "booster",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/e/e0/SV9_Booster_N_Zoroark.png/300px-SV9_Booster_N_Zoroark.png"
+  },
+  {
+    "id": "sv09-etb",
+    "name": "Journey Together Elite Trainer Box",
+    "names": {
+      "es": "Caja de Entrenador Élite Juntos de Aventuras",
+      "en": "Journey Together Elite Trainer Box"
+    },
+    "kind": "etb",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/d/d1/SV9_Elite_Trainer_Box.png/300px-SV9_Elite_Trainer_Box.png"
+  },
+  {
+    "id": "sv09-bundle",
+    "name": "Journey Together Booster Bundle",
+    "names": {
+      "es": "Pack de Sobres Juntos de Aventuras",
+      "en": "Journey Together Booster Bundle"
+    },
+    "kind": "bundle",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/1/14/SV9_Booster_Bundle.jpg/440px-SV9_Booster_Bundle.jpg"
+  },
+  {
+    "id": "sv09-build-battle",
+    "name": "Journey Together Build & Battle Box",
+    "names": {
+      "es": "Caja Construye y Combate Juntos de Aventuras",
+      "en": "Journey Together Build & Battle Box"
+    },
+    "kind": "collection",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/3/3f/SV9_Build_Battle_Box.png/300px-SV9_Build_Battle_Box.png"
+  },
+  {
+    "id": "sv09-display",
+    "name": "Journey Together Booster Display (36)",
+    "names": {
+      "es": "Caja de 36 Sobres Juntos de Aventuras",
+      "en": "Journey Together Booster Display (36)"
+    },
+    "kind": "bundle",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/8/89/SV9_Booster_Display_Box.jpg/440px-SV9_Booster_Display_Box.jpg"
+  }
+]
