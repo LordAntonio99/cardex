@@ -40,10 +40,14 @@ export function PhoneReview({
   const [picking, setPicking] = useState(false)
 
   const cardLang: CardLang = item?.lang ?? (lang === 'en' ? 'en' : 'es')
+  // El juego decide de qué CDN sale la imagen. Sin pasarlo, una carta de
+  // Riftbound se le pedía a TCGdex, devolvía 404 y el hueco de «lo que propone
+  // el catálogo» se quedaba vacío justo cuando hay que comparar las dos.
   const proposed = useCardImage(
     item?.imagePath ?? null,
     imageLang(item?.langs, cardLang),
-    'high'
+    'high',
+    item?.game ?? 'pokemon'
   )
 
   const failure = ((): string | null => {
