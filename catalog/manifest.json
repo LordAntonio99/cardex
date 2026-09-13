@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "catalogVersion": "2026.09.13",
-  "generatedAt": "2026-09-13T16:35:27.672Z",
+  "generatedAt": "2026-09-13T17:07:04.079Z",
   "sets": [
     {
       "id": "base1",
@@ -398,9 +398,69 @@
       "file": "sets/SV5K.json",
       "sha256": "d70e26fe6182a8ae2d9c73291ae18375c3f91fec93ff1ca0c2a93d2123405f25",
       "cardCount": 100
+    },
+    {
+      "id": "rb-ogn",
+      "file": "sets/rb-ogn.json",
+      "sha256": "ecbd71c9e4768c8c6bb66a4a6893baceaefe44c7abae6ef30d8e756771c88bbd",
+      "cardCount": 352
+    },
+    {
+      "id": "rb-sfd",
+      "file": "sets/rb-sfd.json",
+      "sha256": "e2080ed7ecd060a8c936b72ee2f8d5156b918394f187ea3868f88698b3bf2498",
+      "cardCount": 288
+    },
+    {
+      "id": "rb-unl",
+      "file": "sets/rb-unl.json",
+      "sha256": "7583de3826b74442010a41c908590f1f4a7ccdfa95adc5e77fef62ed337cf916",
+      "cardCount": 288
+    },
+    {
+      "id": "rb-ven",
+      "file": "sets/rb-ven.json",
+      "sha256": "ecd39db3f2a870079071d9b57085b001005fd4ac890dce549f48916a6ed7e5d0",
+      "cardCount": 237
     }
   ],
   "recognition": [
+    {
+      "id": "rb-ogn",
+      "file": "recog/rb-ogn.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "ad995d0e5ff0efaeebc9721a3e9c7a9c8448d21b66308d69b3d54773330f18e6",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 352
+    },
+    {
+      "id": "rb-sfd",
+      "file": "recog/rb-sfd.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "e879a8c78c1098e917636b9cbf9067b5a731b2dda8ac61ac491e41015b353aeb",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 288
+    },
+    {
+      "id": "rb-unl",
+      "file": "recog/rb-unl.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "2a3476b8a3f232af63a950bc33ab29d347a1af2b35371f3c2062baef3649f335",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 288
+    },
+    {
+      "id": "rb-ven",
+      "file": "recog/rb-ven.dinov2s-u8-224-cls-v1.bin",
+      "sha256": "c7443e7597b01ce1be4b8c2c9fe47ecb1b3617ce36c4dc39dfe32e5f1480afc3",
+      "model": "dinov2s-u8-224-cls-v1",
+      "dims": 384,
+      "dtype": "f32",
+      "count": 237
+    },
     {
       "id": "base1",
       "file": "recog/base1.dinov2s-u8-224-cls-v1.bin",
