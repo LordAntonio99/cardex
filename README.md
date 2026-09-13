@@ -15,8 +15,9 @@ sin servidor: todo vive en tu equipo.
 [Releases](https://github.com/LordAntonio99/cardex/releases).
 
 Al abrirla por primera vez se descarga el catálogo publicado: de momento el **Set Base** (102
-cartas, con la 1ª edición como impresión propia) y **Oscuridad Absoluta** (120 cartas), con sus
-imágenes, sus sobres y precios de Cardmarket. Tu colección arranca vacía.
+cartas, con la 1ª edición como impresión propia), **Juntos de Aventuras** (190 cartas) y
+**Oscuridad Absoluta** (120 cartas), con sus imágenes, sus sobres, precios de Cardmarket y las
+huellas visuales que usa el escáner. Tu colección arranca vacía.
 
 Lo que **todavía no** hace:
 

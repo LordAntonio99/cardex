@@ -67,6 +67,10 @@ export function registerIpc(): void {
     await shell.openPath(target)
   })
 
+  handle('system:restart', () => {
+    app.relaunch()
+    app.quit()
+  })
   handle('system:openExternal', async ({ url }) => {
     // Sólo https: nunca abrimos lo que nos pasen sin mirar el esquema.
     if (!url.startsWith('https://')) throw new Error(`Esquema no permitido: ${url}`)

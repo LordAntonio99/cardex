@@ -69,6 +69,20 @@ const es = {
   logoPlaceholder: 'Logo del set',
   noPacks: 'Sin sobres registrados en el catálogo',
 
+  // Actualización de catálogo
+  catalogEyebrow: 'CATÁLOGO',
+  catalogWorkingTitle: 'Trayendo cartas nuevas',
+  catalogWorkingBody: 'Hay sets o sobres que todavía no tienes. Se descargan una sola vez y quedan en tu equipo; tu colección no se toca.',
+  catalogDoneTitle: 'Catálogo al día',
+  catalogDoneBody: 'Reinicia para que la aplicación arranque con las cartas nuevas cargadas.',
+  catalogStepChecking: 'COMPROBANDO',
+  catalogStepSets: 'CARTAS',
+  catalogStepVectors: 'DATOS DEL ESCÁNER',
+  catalogDoneStep: 'LISTO',
+  catalogRestart: 'Reiniciar ahora',
+  catalogRestarting: 'Reiniciando…',
+  catalogLater: 'MÁS TARDE',
+
   // Escáner
   scanEyebrow: 'ESCÁNER',
   scanTitle: 'Escaneo por lotes',
@@ -276,6 +290,19 @@ const en: typeof es = {
   packPlaceholder: 'Pack',
   logoPlaceholder: 'Set logo',
   noPacks: 'No packs recorded in the catalogue',
+
+  catalogEyebrow: 'CATALOGUE',
+  catalogWorkingTitle: 'Fetching new cards',
+  catalogWorkingBody: 'There are sets or packs you do not have yet. They download once and stay on your machine; your collection is not touched.',
+  catalogDoneTitle: 'Catalogue up to date',
+  catalogDoneBody: 'Restart so the app starts with the new cards loaded.',
+  catalogStepChecking: 'CHECKING',
+  catalogStepSets: 'CARDS',
+  catalogStepVectors: 'SCANNER DATA',
+  catalogDoneStep: 'DONE',
+  catalogRestart: 'Restart now',
+  catalogRestarting: 'Restarting…',
+  catalogLater: 'LATER',
 
   scanEyebrow: 'SCANNER',
   scanTitle: 'Batch scanning',

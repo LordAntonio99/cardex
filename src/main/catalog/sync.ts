@@ -524,9 +524,14 @@ export async function sync(opts: { force: boolean }): Promise<CatalogStatus> {
 
     log.info(`Catálogo v${manifest.catalogVersion}: ${pending.length} set(s) por importar`)
 
+    // La barra cuenta las dos descargas: el fichero del set y el de sus huellas.
+    const total = pending.length + pendingRecog.length
     let done = 0
     for (const entry of pending) {
-      emit({ state: 'syncing', progress: { done, total: pending.length, currentSet: entry.id } })
+      emit({
+        state: 'syncing',
+        progress: { done, total, currentSet: entry.id, phase: 'sets' }
+      })
       try {
         const { json: setJson, raw } = await fetchJson(`${BASE}/${entry.file}`)
         const hash = sha256(raw)
@@ -547,6 +552,10 @@ export async function sync(opts: { force: boolean }): Promise<CatalogStatus> {
     }
 
     for (const entry of pendingRecog) {
+      emit({
+        state: 'syncing',
+        progress: { done, total, currentSet: entry.id, phase: 'recognition' }
+      })
       try {
         const bytes = await fetchBytes(`${BASE}/${entry.file}`)
         const hash = sha256Bytes(bytes)
@@ -567,7 +576,12 @@ export async function sync(opts: { force: boolean }): Promise<CatalogStatus> {
         // con lo que haya; si no hay nada, lo dice.
         log.error(`No se han podido importar los vectores de ${entry.id}`, e)
       }
+      done += 1
     }
+
+    // Último aviso con la barra llena: si no, el salto de 'syncing' a 'idle'
+    // deja la barra a medias justo en el momento en que ya ha terminado.
+    emit({ state: 'syncing', progress: { done, total, currentSet: '', phase: 'recognition' } })
 
     // El índice de búsqueda se reconstruye una vez al final, no por set.
     getDb().exec("INSERT INTO cat.cards_fts(cards_fts) VALUES('rebuild')")

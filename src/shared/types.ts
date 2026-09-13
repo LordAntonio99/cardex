@@ -407,8 +407,19 @@ export type CatalogState = 'idle' | 'checking' | 'syncing' | 'error'
 export interface CatalogStatus {
   state: CatalogState
   installed: CatalogInstalled
-  /** Sólo durante 'syncing'. */
-  progress?: { done: number; total: number; currentSet: string }
+  /**
+   * Sólo durante 'syncing'.
+   *
+   * `total` cuenta los ficheros que hay que traer, sets y huellas del escáner
+   * juntos: son dos descargas distintas por set y el usuario no tiene por qué
+   * saberlo, pero sí merece una barra que avance de verdad hasta el final.
+   */
+  progress?: {
+    done: number
+    total: number
+    currentSet: string
+    phase: 'sets' | 'recognition'
+  }
   /** Sólo en 'error'. */
   message?: string
 }
