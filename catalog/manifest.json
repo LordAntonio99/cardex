@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "catalogVersion": "2026.09.13",
-  "generatedAt": "2026-09-13T21:10:00.613Z",
+  "catalogVersion": "2026.09.17",
+  "generatedAt": "2026-09-17T18:16:23.351Z",
   "sets": [
     {
       "id": "base1",
@@ -422,6 +422,18 @@
       "file": "sets/rb-ven.json",
       "sha256": "82af943c5371bbb2ce164d24ed84d5bac3301ec6c92df338030afb9959b5520e",
       "cardCount": 237
+    },
+    {
+      "id": "30c",
+      "file": "sets/30c.json",
+      "sha256": "6d7789ac657e4ad487ac1a5bda65969e8b65d1bdf1027130088ec0383b11bf5c",
+      "cardCount": 161
+    },
+    {
+      "id": "30ccc",
+      "file": "sets/30ccc.json",
+      "sha256": "35e1d3144edba7bd4838408cb888fd7f0cc1dfea6e84dae489d30de1eff25028",
+      "cardCount": 30
     }
   ],
   "recognition": [
