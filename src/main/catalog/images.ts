@@ -155,6 +155,38 @@ const SOURCES: Record<GameId, GameImages> = {
   }
 }
 
+/**
+ * Una imagen alojada fuera, dada como URL completa.
+ *
+ * El arte de sobres lo usa desde siempre: apunta a donde ya está la imagen en
+ * vez de volver a publicarla. Las cartas y los logos de set lo admiten también,
+ * y por un motivo concreto: un set recién salido existe antes de que el CDN de
+ * su juego lo tenga, y sin esto se queda meses con el marcador de posición
+ * aunque las ilustraciones estén disponibles en otro sitio.
+ *
+ * El catálogo puede pedir un tamaño u otro con `{pequeño|grande}`: se queda con
+ * el primer término para la calidad baja y con el segundo para la alta, porque
+ * cada CDN nombra sus tamaños a su manera —`small`/`large` en uno, `low`/`high`
+ * en otro— y esa palabra es dato del catálogo, no del programa.
+ *
+ * Sigue sin publicarse ninguna imagen: esto es una ruta, y la descarga la hace
+ * la máquina de cada usuario contra el origen, igual que el resto.
+ */
+function remoteCandidate(rawPath: string, quality: string, bucket: string): Candidate[] | null {
+  const chosen = rawPath.replace(/\{([^{}|]*)\|([^{}|]*)\}/g, (_m, low, high) =>
+    quality === 'high' ? high : low
+  )
+  const url = externalUrl(chosen)
+  if (!url) return null
+  const ext = path.extname(url.pathname).toLowerCase()
+  const safeExt = /^\.(webp|png|jpe?g|gif|avif)$/.test(ext) ? ext : '.img'
+  // El nombre en la caché sale de un hash de la URL: los nombres remotos traen
+  // caracteres que no queremos escribir en disco. La calidad entra en el hash
+  // porque dos tamaños de la misma carta son dos ficheros.
+  const name = createHash('sha1').update(url.href).digest('hex').slice(0, 20)
+  return [{ relative: path.join(bucket, 'ext', `${name}${safeExt}`), url: url.href }]
+}
+
 /** Lista de intentos, en orden. */
 function candidates(
   kind: ImageKind,
@@ -163,19 +195,11 @@ function candidates(
   quality: string,
   game: GameId
 ): Candidate[] | null {
-  // El arte de sobres admite una URL completa, no sólo una ruta dentro del
-  // catálogo. Así se puede apuntar a donde ya está alojada la imagen en vez de
-  // volver a publicarla: la aplicación se la baja una vez a la máquina de cada
-  // usuario y ahí se queda.
-  if (kind === 'external' && /^https?:\/\//i.test(rawPath)) {
-    const url = externalUrl(rawPath)
-    if (!url) return null
-    const ext = path.extname(url.pathname).toLowerCase()
-    const safeExt = /^\.(webp|png|jpe?g|gif|avif)$/.test(ext) ? ext : '.img'
-    // El nombre en la caché sale de un hash de la URL: los nombres remotos
-    // traen caracteres que no queremos escribir en disco.
-    const name = createHash('sha1').update(url.href).digest('hex').slice(0, 20)
-    return [{ relative: path.join('packs', 'ext', `${name}${safeExt}`), url: url.href }]
+  // Una URL completa vale para cualquiera de los tres: el sobre que nunca tuvo
+  // otro sitio donde estar, y la carta o el logo de un set que su CDN todavía
+  // no sirve.
+  if (/^https?:\/\//i.test(rawPath)) {
+    return remoteCandidate(rawPath, quality, kind === 'external' ? 'packs' : 'cards')
   }
 
   const parts = safeSegments(rawPath)

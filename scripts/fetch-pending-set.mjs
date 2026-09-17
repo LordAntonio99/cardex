@@ -54,7 +54,7 @@ const UA = 'Cardex catalog builder'
 // ── Argumentos ───────────────────────────────────────────────────────────────
 
 function parseArgs(argv) {
-  const args = { set: null, repo: null, ref: null, dir: null, series: null, out: 'catalog-pending' }
+  const args = { set: null, repo: null, ref: null, dir: null, series: null, out: 'catalog-pending', images: null, logo: null, symbol: null, names: {} }
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]
     const next = () => argv[++i]
@@ -64,7 +64,13 @@ function parseArgs(argv) {
     else if (a === '--dir') args.dir = next()
     else if (a === '--series') args.series = next()
     else if (a === '--out') args.out = next()
-    else if (a === '--help' || a === '-h') args.help = true
+    else if (a === '--images') args.images = next()
+    else if (a === '--logo') args.logo = next()
+    else if (a === '--symbol') args.symbol = next()
+    else if (a === '--name') {
+      const [lang, ...resto] = next().split('=')
+      if (lang && resto.length) args.names[lang.trim()] = resto.join('=')
+    } else if (a === '--help' || a === '-h') args.help = true
   }
   return args
 }
@@ -162,6 +168,22 @@ const push = (arr, v) => {
   if (!arr.includes(v)) arr.push(v)
 }
 
+/**
+ * Expande la plantilla de imagen de una carta.
+ *
+ * `{n}` es el número sin ceros a la izquierda, porque no todos los CDN los
+ * escriben igual: TCGdex numera `001` y el de pokemontcg.io `1`. Los que no son
+ * números —las Mew RGB de este set son `R`, `G` y `B`— pasan tal cual.
+ *
+ * `{pequeño|grande}` lo resuelve la aplicación, no esto: es la palabra que cada
+ * CDN usa para cada tamaño, y viaja en el catálogo para no tener que enseñarle
+ * al programa los nombres de nadie.
+ */
+function expandImage(template, localId) {
+  const n = /^\d+$/.test(localId) ? String(Number(localId)) : localId
+  return template.replaceAll('{n}', n).replaceAll('{localId}', localId)
+}
+
 function sortKey(releaseDate) {
   if (!releaseDate) return 0
   return Number(String(releaseDate).replaceAll('-', '')) || 0
@@ -215,6 +237,22 @@ Opciones:
   --dir ruta        carpeta del set dentro del repositorio
   --series id       serie a la que pertenece (para la ruta de imagen)
   --out dir         dónde escribir (por defecto: catalog-pending)
+  --images plantilla
+                    URL de la ilustración, con {n} por el número sin ceros y
+                    {pequeño|grande} por el nombre del tamaño en ese CDN. Sin
+                    esto se apunta a la ruta de TCGdex, que llegará más tarde.
+  --logo url        logo del set, si su CDN aún no lo tiene
+  --symbol url      símbolo del set, igual
+  --name es=Texto   nombre del set en un idioma que los datos fuente no traen
+                    (repetible)
+
+Ejemplo con ilustraciones ya disponibles en otro CDN:
+
+  node scripts/fetch-pending-set.mjs --set 30c \\
+    --repo KlausDerKleber/cards-database --ref feat/en-30c \\
+    --dir "data/Mega Evolution/30th Celebration" --series me \\
+    --images 'https://images.scrydex.com/pokemon/me55-{n}/{small|large}' \\
+    --name 'es=Celebración 30.º Aniversario'
 `)
     process.exit(args.help ? 0 : 1)
   }
@@ -286,8 +324,12 @@ Opciones:
       types: c.types ?? [],
       hp: typeof c.hp === 'number' ? c.hp : null,
       illustrator: c.illustrator ?? null,
-      // La ruta definitiva de TCGdex, que hoy da 404 a propósito.
-      imagePath: `${seriesId}/${setId}/${localId}`,
+      // Sin --images, la ruta definitiva de TCGdex, que hoy da 404 a propósito y
+      // se encenderá sola cuando su CDN tenga el set. Con --images, una URL
+      // completa a donde las ilustraciones ya estén.
+      imagePath: args.images
+        ? expandImage(args.images, localId)
+        : `${seriesId}/${setId}/${localId}`,
       variants: variantList(c.variants),
       langs: ['en'],
       // Sin precios: los de TCGdex se calculan en su servidor y no están en los
@@ -315,12 +357,14 @@ Opciones:
       region: 'intl',
       code: setDef.abbreviations?.official ?? setDef.abbreviation?.official ?? null,
       name: setDef.name?.en ?? setId,
-      names: setDef.name ?? {},
+      // Los datos fuente sólo traen el inglés mientras el set es nuevo. El
+      // nombre en otros idiomas, si se sabe, entra por --name es=…
+      names: { ...(setDef.name ?? {}), ...args.names },
       releasedOn: setDef.releaseDate ?? null,
       totalOfficial: oficiales,
       totalAll: limpias.length,
-      logoPath: `${seriesId}/${setId}/logo`,
-      symbolPath: `${seriesId}/${setId}/symbol`,
+      logoPath: args.logo ?? `${seriesId}/${setId}/logo`,
+      symbolPath: args.symbol ?? `${seriesId}/${setId}/symbol`,
       sortKey: sortKey(setDef.releaseDate),
       sourceLang: 'en',
       // Deja constancia de que esto no salió de la API, y de dónde salió.

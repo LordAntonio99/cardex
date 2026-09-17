@@ -8,20 +8,21 @@
     "code": "30C",
     "name": "30th Celebration",
     "names": {
-      "en": "30th Celebration"
+      "en": "30th Celebration",
+      "es": "Celebración 30.º Aniversario"
     },
     "releasedOn": "2026-09-16",
     "totalOfficial": 128,
     "totalAll": 161,
-    "logoPath": "me/30c/logo",
-    "symbolPath": "me/30c/symbol",
+    "logoPath": "https://images.scrydex.com/pokemon/me55-logo/logo",
+    "symbolPath": "https://images.scrydex.com/pokemon/me55-symbol/symbol",
     "sortKey": 20260916,
     "sourceLang": "en",
     "pendingSource": {
       "repo": "KlausDerKleber/cards-database",
       "ref": "feat/en-30c",
       "dir": "data/Mega Evolution/30th Celebration",
-      "fetchedAt": "2026-09-17T18:16:11.734Z"
+      "fetchedAt": "2026-09-17T18:38:32.312Z"
     }
   },
   "cards": [
@@ -39,7 +40,7 @@
       ],
       "hp": 60,
       "illustrator": "Nelnal",
-      "imagePath": "me/30c/001",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-1/{small|large}",
       "variants": [
         "normal"
       ],
@@ -62,7 +63,7 @@
       ],
       "hp": 150,
       "illustrator": "Oswaldo KATO",
-      "imagePath": "me/30c/002",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-2/{small|large}",
       "variants": [
         "normal"
       ],
@@ -85,7 +86,7 @@
       ],
       "hp": 80,
       "illustrator": "Yoriyuki Ikegami",
-      "imagePath": "me/30c/003",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-3/{small|large}",
       "variants": [
         "normal"
       ],
@@ -108,7 +109,7 @@
       ],
       "hp": 80,
       "illustrator": "Shibuzoh.",
-      "imagePath": "me/30c/004",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-4/{small|large}",
       "variants": [
         "normal"
       ],
@@ -131,7 +132,7 @@
       ],
       "hp": 120,
       "illustrator": "Minahamu",
-      "imagePath": "me/30c/005",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-5/{small|large}",
       "variants": [
         "normal"
       ],
@@ -154,7 +155,7 @@
       ],
       "hp": 40,
       "illustrator": "Kurata So",
-      "imagePath": "me/30c/006",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-6/{small|large}",
       "variants": [
         "normal"
       ],
@@ -177,7 +178,7 @@
       ],
       "hp": 80,
       "illustrator": "takashi shiraishi",
-      "imagePath": "me/30c/007",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-7/{small|large}",
       "variants": [
         "normal"
       ],
@@ -200,7 +201,7 @@
       ],
       "hp": 120,
       "illustrator": "Jerky",
-      "imagePath": "me/30c/008",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-8/{small|large}",
       "variants": [
         "normal"
       ],
@@ -223,7 +224,7 @@
       ],
       "hp": 70,
       "illustrator": "miki kudo",
-      "imagePath": "me/30c/009",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-9/{small|large}",
       "variants": [
         "normal"
       ],
@@ -246,7 +247,7 @@
       ],
       "hp": 110,
       "illustrator": "kodama",
-      "imagePath": "me/30c/010",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-10/{small|large}",
       "variants": [
         "normal"
       ],
@@ -269,7 +270,7 @@
       ],
       "hp": 120,
       "illustrator": "HYOGONOSUKE",
-      "imagePath": "me/30c/011",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-11/{small|large}",
       "variants": [
         "normal"
       ],
@@ -292,7 +293,7 @@
       ],
       "hp": 130,
       "illustrator": "Anesaki Dynamic",
-      "imagePath": "me/30c/012",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-12/{small|large}",
       "variants": [
         "normal"
       ],
@@ -315,7 +316,7 @@
       ],
       "hp": 80,
       "illustrator": "Jiro Sasumo",
-      "imagePath": "me/30c/013",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-13/{small|large}",
       "variants": [
         "normal"
       ],
@@ -338,7 +339,7 @@
       ],
       "hp": 130,
       "illustrator": "Uta",
-      "imagePath": "me/30c/014",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-14/{small|large}",
       "variants": [
         "normal"
       ],
@@ -361,7 +362,7 @@
       ],
       "hp": 210,
       "illustrator": "5ban Graphics",
-      "imagePath": "me/30c/015",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-15/{small|large}",
       "variants": [
         "holo"
       ],
@@ -384,7 +385,7 @@
       ],
       "hp": 80,
       "illustrator": "Uninori",
-      "imagePath": "me/30c/016",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-16/{small|large}",
       "variants": [
         "normal"
       ],
@@ -407,7 +408,7 @@
       ],
       "hp": 130,
       "illustrator": "{{OBP|Masa|illustrator}}",
-      "imagePath": "me/30c/017",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-17/{small|large}",
       "variants": [
         "normal"
       ],
@@ -430,7 +431,7 @@
       ],
       "hp": 120,
       "illustrator": "HYOGONOSUKE",
-      "imagePath": "me/30c/018",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-18/{small|large}",
       "variants": [
         "normal"
       ],
@@ -453,7 +454,7 @@
       ],
       "hp": 140,
       "illustrator": "Tonji Matsuno",
-      "imagePath": "me/30c/019",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-19/{small|large}",
       "variants": [
         "normal"
       ],
@@ -476,7 +477,7 @@
       ],
       "hp": 130,
       "illustrator": "kawayoo",
-      "imagePath": "me/30c/020",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-20/{small|large}",
       "variants": [
         "normal"
       ],
@@ -499,7 +500,7 @@
       ],
       "hp": 300,
       "illustrator": "5ban Graphics",
-      "imagePath": "me/30c/021",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-21/{small|large}",
       "variants": [
         "holo"
       ],
@@ -522,7 +523,7 @@
       ],
       "hp": 30,
       "illustrator": "Narano",
-      "imagePath": "me/30c/022",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-22/{small|large}",
       "variants": [
         "normal"
       ],
@@ -545,7 +546,7 @@
       ],
       "hp": 70,
       "illustrator": "Ken Sugimori",
-      "imagePath": "me/30c/023",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-23/{small|large}",
       "variants": [
         "holo"
       ],
@@ -568,7 +569,7 @@
       ],
       "hp": 70,
       "illustrator": "danciao",
-      "imagePath": "me/30c/024",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-24/{small|large}",
       "variants": [
         "holo"
       ],
@@ -591,7 +592,7 @@
       ],
       "hp": 70,
       "illustrator": "satoma",
-      "imagePath": "me/30c/025",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-25/{small|large}",
       "variants": [
         "holo"
       ],
@@ -614,7 +615,7 @@
       ],
       "hp": 70,
       "illustrator": "Takeshi Nakamura",
-      "imagePath": "me/30c/026",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-26/{small|large}",
       "variants": [
         "holo"
       ],
@@ -637,7 +638,7 @@
       ],
       "hp": 80,
       "illustrator": "Asako Ito",
-      "imagePath": "me/30c/027",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-27/{small|large}",
       "variants": [
         "holo"
       ],
@@ -660,7 +661,7 @@
       ],
       "hp": 60,
       "illustrator": "sowsow",
-      "imagePath": "me/30c/028",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-28/{small|large}",
       "variants": [
         "holo"
       ],
@@ -683,7 +684,7 @@
       ],
       "hp": 60,
       "illustrator": "James Turner",
-      "imagePath": "me/30c/029",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-29/{small|large}",
       "variants": [
         "holo"
       ],
@@ -706,7 +707,7 @@
       ],
       "hp": 60,
       "illustrator": "DOM",
-      "imagePath": "me/30c/030",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-30/{small|large}",
       "variants": [
         "holo"
       ],
@@ -729,7 +730,7 @@
       ],
       "hp": 50,
       "illustrator": "Atsushi Furusawa",
-      "imagePath": "me/30c/031",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-31/{small|large}",
       "variants": [
         "holo"
       ],
@@ -752,7 +753,7 @@
       ],
       "hp": 50,
       "illustrator": "Tomokazu Komiya",
-      "imagePath": "me/30c/032",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-32/{small|large}",
       "variants": [
         "holo"
       ],
@@ -775,7 +776,7 @@
       ],
       "hp": 60,
       "illustrator": "Narumi Sato",
-      "imagePath": "me/30c/033",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-33/{small|large}",
       "variants": [
         "holo"
       ],
@@ -798,7 +799,7 @@
       ],
       "hp": 70,
       "illustrator": "USGMEN",
-      "imagePath": "me/30c/034",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-34/{small|large}",
       "variants": [
         "holo"
       ],
@@ -821,7 +822,7 @@
       ],
       "hp": 60,
       "illustrator": "Susumu Maeya",
-      "imagePath": "me/30c/035",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-35/{small|large}",
       "variants": [
         "holo"
       ],
@@ -844,7 +845,7 @@
       ],
       "hp": 70,
       "illustrator": "OKACHEKE",
-      "imagePath": "me/30c/036",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-36/{small|large}",
       "variants": [
         "holo"
       ],
@@ -867,7 +868,7 @@
       ],
       "hp": 70,
       "illustrator": "Yuu Nishida",
-      "imagePath": "me/30c/037",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-37/{small|large}",
       "variants": [
         "holo"
       ],
@@ -890,7 +891,7 @@
       ],
       "hp": 60,
       "illustrator": "Tetsu Kayama",
-      "imagePath": "me/30c/038",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-38/{small|large}",
       "variants": [
         "holo"
       ],
@@ -913,7 +914,7 @@
       ],
       "hp": 70,
       "illustrator": "Teeziro",
-      "imagePath": "me/30c/039",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-39/{small|large}",
       "variants": [
         "holo"
       ],
@@ -936,7 +937,7 @@
       ],
       "hp": 80,
       "illustrator": "Shinji Kanda",
-      "imagePath": "me/30c/040",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-40/{small|large}",
       "variants": [
         "holo"
       ],
@@ -959,7 +960,7 @@
       ],
       "hp": 60,
       "illustrator": "Rianti Hidayat",
-      "imagePath": "me/30c/041",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-41/{small|large}",
       "variants": [
         "holo"
       ],
@@ -982,7 +983,7 @@
       ],
       "hp": 60,
       "illustrator": "Akira Komayama",
-      "imagePath": "me/30c/042",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-42/{small|large}",
       "variants": [
         "holo"
       ],
@@ -1005,7 +1006,7 @@
       ],
       "hp": 70,
       "illustrator": "OOYAMA",
-      "imagePath": "me/30c/043",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-43/{small|large}",
       "variants": [
         "holo"
       ],
@@ -1028,7 +1029,7 @@
       ],
       "hp": 60,
       "illustrator": "{{OBP|akagi|illustrator}}",
-      "imagePath": "me/30c/044",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-44/{small|large}",
       "variants": [
         "holo"
       ],
@@ -1051,7 +1052,7 @@
       ],
       "hp": 60,
       "illustrator": "Naoyo Kimura",
-      "imagePath": "me/30c/045",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-45/{small|large}",
       "variants": [
         "holo"
       ],
@@ -1074,7 +1075,7 @@
       ],
       "hp": 60,
       "illustrator": "svlt",
-      "imagePath": "me/30c/046",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-46/{small|large}",
       "variants": [
         "holo"
       ],
@@ -1097,7 +1098,7 @@
       ],
       "hp": 70,
       "illustrator": "Atsuko Nishida",
-      "imagePath": "me/30c/047",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-47/{small|large}",
       "variants": [
         "holo"
       ],
@@ -1120,7 +1121,7 @@
       ],
       "hp": 70,
       "illustrator": "KIYOTAKA OSHIYAMA",
-      "imagePath": "me/30c/048",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-48/{small|large}",
       "variants": [
         "holo"
       ],
@@ -1143,7 +1144,7 @@
       ],
       "hp": 80,
       "illustrator": "Nurikabe",
-      "imagePath": "me/30c/049",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-49/{small|large}",
       "variants": [
         "holo"
       ],
@@ -1166,7 +1167,7 @@
       ],
       "hp": 80,
       "illustrator": "Shimaris Yukichi",
-      "imagePath": "me/30c/050",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-50/{small|large}",
       "variants": [
         "holo"
       ],
@@ -1189,7 +1190,7 @@
       ],
       "hp": 70,
       "illustrator": "nagimiso",
-      "imagePath": "me/30c/051",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-51/{small|large}",
       "variants": [
         "holo"
       ],
@@ -1212,7 +1213,7 @@
       ],
       "hp": 70,
       "illustrator": "Kazuki Minami",
-      "imagePath": "me/30c/052",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-52/{small|large}",
       "variants": [
         "holo"
       ],
@@ -1235,7 +1236,7 @@
       ],
       "hp": 190,
       "illustrator": "5ban Graphics",
-      "imagePath": "me/30c/053",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-53/{small|large}",
       "variants": [
         "holo"
       ],
@@ -1258,7 +1259,7 @@
       ],
       "hp": 190,
       "illustrator": "takuyoa",
-      "imagePath": "me/30c/054",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-54/{small|large}",
       "variants": [
         "holo"
       ],
@@ -1281,7 +1282,7 @@
       ],
       "hp": 120,
       "illustrator": "HYOGONOSUKE",
-      "imagePath": "me/30c/055",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-55/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1304,7 +1305,7 @@
       ],
       "hp": 130,
       "illustrator": "{{OBP|akagi|illustrator}}",
-      "imagePath": "me/30c/056",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-56/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1327,7 +1328,7 @@
       ],
       "hp": 110,
       "illustrator": "Bun Toujo",
-      "imagePath": "me/30c/057",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-57/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1350,7 +1351,7 @@
       ],
       "hp": 70,
       "illustrator": "Shimaris Yukichi",
-      "imagePath": "me/30c/058",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-58/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1373,7 +1374,7 @@
       ],
       "hp": 130,
       "illustrator": "Haru Akasaka",
-      "imagePath": "me/30c/059",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-59/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1396,7 +1397,7 @@
       ],
       "hp": 140,
       "illustrator": "Yuriko Akase",
-      "imagePath": "me/30c/060",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-60/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1419,7 +1420,7 @@
       ],
       "hp": 70,
       "illustrator": "Naoki Saito",
-      "imagePath": "me/30c/061",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-61/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1442,7 +1443,7 @@
       ],
       "hp": 120,
       "illustrator": "Kazumasa Yasukuni",
-      "imagePath": "me/30c/062",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-62/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1465,7 +1466,7 @@
       ],
       "hp": 130,
       "illustrator": "nagimiso",
-      "imagePath": "me/30c/063",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-63/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1488,7 +1489,7 @@
       ],
       "hp": 230,
       "illustrator": "5ban Graphics",
-      "imagePath": "me/30c/064",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-64/{small|large}",
       "variants": [
         "holo"
       ],
@@ -1511,7 +1512,7 @@
       ],
       "hp": 60,
       "illustrator": "danciao",
-      "imagePath": "me/30c/065",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-65/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1534,7 +1535,7 @@
       ],
       "hp": 160,
       "illustrator": "aky CG Works",
-      "imagePath": "me/30c/066",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-66/{small|large}",
       "variants": [
         "holo"
       ],
@@ -1557,7 +1558,7 @@
       ],
       "hp": 70,
       "illustrator": "Saya Tsuruta",
-      "imagePath": "me/30c/067",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-67/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1580,7 +1581,7 @@
       ],
       "hp": 130,
       "illustrator": "Kagemaru Himeno",
-      "imagePath": "me/30c/068",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-68/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1603,7 +1604,7 @@
       ],
       "hp": 110,
       "illustrator": "aspara",
-      "imagePath": "me/30c/069",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-69/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1626,7 +1627,7 @@
       ],
       "hp": 260,
       "illustrator": "5ban Graphics",
-      "imagePath": "me/30c/070",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-70/{small|large}",
       "variants": [
         "holo"
       ],
@@ -1649,7 +1650,7 @@
       ],
       "hp": 270,
       "illustrator": "5ban Graphics",
-      "imagePath": "me/30c/071",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-71/{small|large}",
       "variants": [
         "holo"
       ],
@@ -1672,7 +1673,7 @@
       ],
       "hp": 80,
       "illustrator": "mingo",
-      "imagePath": "me/30c/072",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-72/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1695,7 +1696,7 @@
       ],
       "hp": 70,
       "illustrator": "Shinya Komatsu",
-      "imagePath": "me/30c/073",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-73/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1718,7 +1719,7 @@
       ],
       "hp": 120,
       "illustrator": "KEIICHIRO ITO",
-      "imagePath": "me/30c/074",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-74/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1741,7 +1742,7 @@
       ],
       "hp": 140,
       "illustrator": "Yoshioka",
-      "imagePath": "me/30c/075",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-75/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1764,7 +1765,7 @@
       ],
       "hp": 120,
       "illustrator": "kodama",
-      "imagePath": "me/30c/076",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-76/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1787,7 +1788,7 @@
       ],
       "hp": 70,
       "illustrator": "sui",
-      "imagePath": "me/30c/077",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-77/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1810,7 +1811,7 @@
       ],
       "hp": 60,
       "illustrator": "Mina Nakai",
-      "imagePath": "me/30c/078",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-78/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1833,7 +1834,7 @@
       ],
       "hp": 100,
       "illustrator": "Masako Tomii",
-      "imagePath": "me/30c/079",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-79/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1856,7 +1857,7 @@
       ],
       "hp": 160,
       "illustrator": "Bun Toujo",
-      "imagePath": "me/30c/080",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-80/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1879,7 +1880,7 @@
       ],
       "hp": 60,
       "illustrator": "Fujimoto Gold",
-      "imagePath": "me/30c/081",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-81/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1902,7 +1903,7 @@
       ],
       "hp": 140,
       "illustrator": "Takumi Wada",
-      "imagePath": "me/30c/082",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-82/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1925,7 +1926,7 @@
       ],
       "hp": 120,
       "illustrator": "Hideki Ishikawa",
-      "imagePath": "me/30c/083",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-83/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1948,7 +1949,7 @@
       ],
       "hp": 160,
       "illustrator": "Kurata So",
-      "imagePath": "me/30c/084",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-84/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1971,7 +1972,7 @@
       ],
       "hp": 130,
       "illustrator": "matazo",
-      "imagePath": "me/30c/085",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-85/{small|large}",
       "variants": [
         "normal"
       ],
@@ -1994,7 +1995,7 @@
       ],
       "hp": 130,
       "illustrator": "Mitsuhiro Arita",
-      "imagePath": "me/30c/086",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-86/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2017,7 +2018,7 @@
       ],
       "hp": 60,
       "illustrator": "Taira Akitsu",
-      "imagePath": "me/30c/087",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-87/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2040,7 +2041,7 @@
       ],
       "hp": 90,
       "illustrator": "Miki Tanaka",
-      "imagePath": "me/30c/088",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-88/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2063,7 +2064,7 @@
       ],
       "hp": 60,
       "illustrator": "Natsumi Yoshida",
-      "imagePath": "me/30c/089",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-89/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2086,7 +2087,7 @@
       ],
       "hp": 280,
       "illustrator": "5ban Graphics",
-      "imagePath": "me/30c/090",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-90/{small|large}",
       "variants": [
         "holo"
       ],
@@ -2109,7 +2110,7 @@
       ],
       "hp": 110,
       "illustrator": "Iori Suzuki",
-      "imagePath": "me/30c/091",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-91/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2132,7 +2133,7 @@
       ],
       "hp": 270,
       "illustrator": "Keisuke Azuma",
-      "imagePath": "me/30c/092",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-92/{small|large}",
       "variants": [
         "holo"
       ],
@@ -2155,7 +2156,7 @@
       ],
       "hp": 80,
       "illustrator": "Kouki Saitou",
-      "imagePath": "me/30c/093",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-93/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2178,7 +2179,7 @@
       ],
       "hp": 80,
       "illustrator": "Souichirou Gunjima",
-      "imagePath": "me/30c/094",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-94/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2201,7 +2202,7 @@
       ],
       "hp": 70,
       "illustrator": "Atsuya Uki",
-      "imagePath": "me/30c/095",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-95/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2224,7 +2225,7 @@
       ],
       "hp": 120,
       "illustrator": "Shiburingaru",
-      "imagePath": "me/30c/096",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-96/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2247,7 +2248,7 @@
       ],
       "hp": 70,
       "illustrator": "Gapao",
-      "imagePath": "me/30c/097",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-97/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2270,7 +2271,7 @@
       ],
       "hp": 100,
       "illustrator": "IKEDA Saki",
-      "imagePath": "me/30c/098",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-98/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2293,7 +2294,7 @@
       ],
       "hp": 170,
       "illustrator": "Ryuta Fuse",
-      "imagePath": "me/30c/099",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-99/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2316,7 +2317,7 @@
       ],
       "hp": 120,
       "illustrator": "hncl",
-      "imagePath": "me/30c/100",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-100/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2339,7 +2340,7 @@
       ],
       "hp": 70,
       "illustrator": "Mékayu",
-      "imagePath": "me/30c/101",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-101/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2362,7 +2363,7 @@
       ],
       "hp": 160,
       "illustrator": "5ban Graphics",
-      "imagePath": "me/30c/102",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-102/{small|large}",
       "variants": [
         "holo"
       ],
@@ -2385,7 +2386,7 @@
       ],
       "hp": 130,
       "illustrator": "toriyufu",
-      "imagePath": "me/30c/103",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-103/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2408,7 +2409,7 @@
       ],
       "hp": 130,
       "illustrator": "Po-Suzuki",
-      "imagePath": "me/30c/104",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-104/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2431,7 +2432,7 @@
       ],
       "hp": 170,
       "illustrator": "Nurikabe",
-      "imagePath": "me/30c/105",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-105/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2454,7 +2455,7 @@
       ],
       "hp": 130,
       "illustrator": "AKIRA EGAWA",
-      "imagePath": "me/30c/106",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-106/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2477,7 +2478,7 @@
       ],
       "hp": 130,
       "illustrator": "Tsuyoshi Nagano",
-      "imagePath": "me/30c/107",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-107/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2500,7 +2501,7 @@
       ],
       "hp": 130,
       "illustrator": "Sanosuke Sakuma",
-      "imagePath": "me/30c/108",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-108/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2523,7 +2524,7 @@
       ],
       "hp": 330,
       "illustrator": "5ban Graphics",
-      "imagePath": "me/30c/109",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-109/{small|large}",
       "variants": [
         "holo"
       ],
@@ -2546,7 +2547,7 @@
       ],
       "hp": 70,
       "illustrator": "miki kudo",
-      "imagePath": "me/30c/110",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-110/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2569,7 +2570,7 @@
       ],
       "hp": 90,
       "illustrator": "Jiro Sasumo",
-      "imagePath": "me/30c/111",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-111/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2592,7 +2593,7 @@
       ],
       "hp": 180,
       "illustrator": "MARINA Chikazawa",
-      "imagePath": "me/30c/112",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-112/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2615,7 +2616,7 @@
       ],
       "hp": 60,
       "illustrator": "MINAMINAMI Take",
-      "imagePath": "me/30c/113",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-113/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2638,7 +2639,7 @@
       ],
       "hp": 130,
       "illustrator": "Pani Kobayashi",
-      "imagePath": "me/30c/114",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-114/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2661,7 +2662,7 @@
       ],
       "hp": 70,
       "illustrator": "Toshinao Aoki",
-      "imagePath": "me/30c/115",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-115/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2684,7 +2685,7 @@
       ],
       "hp": 70,
       "illustrator": "Wintr Wandr",
-      "imagePath": "me/30c/116",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-116/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2707,7 +2708,7 @@
       ],
       "hp": 70,
       "illustrator": "En Morikura",
-      "imagePath": "me/30c/117",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-117/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2730,7 +2731,7 @@
       ],
       "hp": 70,
       "illustrator": "Hitoshi Ariga",
-      "imagePath": "me/30c/118",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-118/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2753,7 +2754,7 @@
       ],
       "hp": 160,
       "illustrator": "Aya Kusube",
-      "imagePath": "me/30c/119",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-119/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2776,7 +2777,7 @@
       ],
       "hp": 30,
       "illustrator": "Kanami Ogata",
-      "imagePath": "me/30c/120",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-120/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2799,7 +2800,7 @@
       ],
       "hp": 120,
       "illustrator": "Kazuki Minami",
-      "imagePath": "me/30c/121",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-121/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2822,7 +2823,7 @@
       ],
       "hp": 60,
       "illustrator": "Megumi Mizutani",
-      "imagePath": "me/30c/122",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-122/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2845,7 +2846,7 @@
       ],
       "hp": 120,
       "illustrator": "Kamome Shirahama",
-      "imagePath": "me/30c/123",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-123/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2868,7 +2869,7 @@
       ],
       "hp": 90,
       "illustrator": "ryoma uratsuka",
-      "imagePath": "me/30c/124",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-124/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2891,7 +2892,7 @@
       ],
       "hp": 80,
       "illustrator": "Kariya",
-      "imagePath": "me/30c/125",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-125/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2912,7 +2913,7 @@
       "types": [],
       "hp": null,
       "illustrator": null,
-      "imagePath": "me/30c/126",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-126/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2933,7 +2934,7 @@
       "types": [],
       "hp": null,
       "illustrator": null,
-      "imagePath": "me/30c/127",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-127/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2954,7 +2955,7 @@
       "types": [],
       "hp": null,
       "illustrator": null,
-      "imagePath": "me/30c/128",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-128/{small|large}",
       "variants": [
         "normal"
       ],
@@ -2977,7 +2978,7 @@
       ],
       "hp": 150,
       "illustrator": "AYUMI ODASHIMA",
-      "imagePath": "me/30c/129",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-129/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3000,7 +3001,7 @@
       ],
       "hp": 120,
       "illustrator": "mashu",
-      "imagePath": "me/30c/130",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-130/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3023,7 +3024,7 @@
       ],
       "hp": 130,
       "illustrator": "Amelicart",
-      "imagePath": "me/30c/131",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-131/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3046,7 +3047,7 @@
       ],
       "hp": 120,
       "illustrator": "mashu",
-      "imagePath": "me/30c/132",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-132/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3069,7 +3070,7 @@
       ],
       "hp": 120,
       "illustrator": "mashu",
-      "imagePath": "me/30c/133",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-133/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3092,7 +3093,7 @@
       ],
       "hp": 140,
       "illustrator": "Kazumasa Yasukuni",
-      "imagePath": "me/30c/134",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-134/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3115,7 +3116,7 @@
       ],
       "hp": 70,
       "illustrator": "Yoshimi Miyoshi",
-      "imagePath": "me/30c/135",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-135/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3138,7 +3139,7 @@
       ],
       "hp": 70,
       "illustrator": "Whisker",
-      "imagePath": "me/30c/136",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-136/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3161,7 +3162,7 @@
       ],
       "hp": 140,
       "illustrator": "YASHIRO Nanaco",
-      "imagePath": "me/30c/137",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-137/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3184,7 +3185,7 @@
       ],
       "hp": 130,
       "illustrator": "Raita Kazama",
-      "imagePath": "me/30c/138",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-138/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3207,7 +3208,7 @@
       ],
       "hp": 60,
       "illustrator": "OKUBO",
-      "imagePath": "me/30c/139",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-139/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3230,7 +3231,7 @@
       ],
       "hp": 80,
       "illustrator": "GOSSAN",
-      "imagePath": "me/30c/140",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-140/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3253,7 +3254,7 @@
       ],
       "hp": 70,
       "illustrator": "OKUBO",
-      "imagePath": "me/30c/141",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-141/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3276,7 +3277,7 @@
       ],
       "hp": 130,
       "illustrator": "toriyufu",
-      "imagePath": "me/30c/142",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-142/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3299,7 +3300,7 @@
       ],
       "hp": 180,
       "illustrator": "Gemi",
-      "imagePath": "me/30c/143",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-143/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3322,7 +3323,7 @@
       ],
       "hp": 60,
       "illustrator": "OKUBO",
-      "imagePath": "me/30c/144",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-144/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3345,7 +3346,7 @@
       ],
       "hp": 60,
       "illustrator": "0313",
-      "imagePath": "me/30c/145",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-145/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3368,7 +3369,7 @@
       ],
       "hp": 80,
       "illustrator": "osare",
-      "imagePath": "me/30c/146",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-146/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3391,7 +3392,7 @@
       ],
       "hp": 210,
       "illustrator": "Atsushi Furusawa",
-      "imagePath": "me/30c/147",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-147/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3414,7 +3415,7 @@
       ],
       "hp": 300,
       "illustrator": "GIDORA",
-      "imagePath": "me/30c/148",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-148/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3437,7 +3438,7 @@
       ],
       "hp": 190,
       "illustrator": "kantaro",
-      "imagePath": "me/30c/149",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-149/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3460,7 +3461,7 @@
       ],
       "hp": 190,
       "illustrator": "kantaro",
-      "imagePath": "me/30c/150",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-150/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3483,7 +3484,7 @@
       ],
       "hp": 230,
       "illustrator": "Yano Keiji",
-      "imagePath": "me/30c/151",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-151/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3506,7 +3507,7 @@
       ],
       "hp": 160,
       "illustrator": "Kuroimori",
-      "imagePath": "me/30c/152",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-152/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3529,7 +3530,7 @@
       ],
       "hp": 270,
       "illustrator": "You Iribi",
-      "imagePath": "me/30c/153",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-153/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3552,7 +3553,7 @@
       ],
       "hp": 280,
       "illustrator": "CHORISO",
-      "imagePath": "me/30c/154",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-154/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3575,7 +3576,7 @@
       ],
       "hp": 160,
       "illustrator": "AKIRA EGAWA",
-      "imagePath": "me/30c/155",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-155/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3598,7 +3599,7 @@
       ],
       "hp": 330,
       "illustrator": "Ryota Murayama",
-      "imagePath": "me/30c/156",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-156/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3621,7 +3622,7 @@
       ],
       "hp": 230,
       "illustrator": "YOSHIROTTEN",
-      "imagePath": "me/30c/157",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-157/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3644,7 +3645,7 @@
       ],
       "hp": 160,
       "illustrator": "YOSHIROTTEN",
-      "imagePath": "me/30c/158",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-158/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3667,7 +3668,7 @@
       ],
       "hp": 60,
       "illustrator": "YOSHIROTTEN",
-      "imagePath": "me/30c/B",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-B/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3690,7 +3691,7 @@
       ],
       "hp": 60,
       "illustrator": "YOSHIROTTEN",
-      "imagePath": "me/30c/G",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-G/{small|large}",
       "variants": [
         "holo"
       ],
@@ -3713,7 +3714,7 @@
       ],
       "hp": 60,
       "illustrator": "YOSHIROTTEN",
-      "imagePath": "me/30c/R",
+      "imagePath": "https://images.scrydex.com/pokemon/me55-R/{small|large}",
       "variants": [
         "holo"
       ],
