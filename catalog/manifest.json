@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "catalogVersion": "2026.09.17",
-  "generatedAt": "2026-09-17T18:16:23.351Z",
+  "generatedAt": "2026-09-17T18:38:43.663Z",
   "sets": [
     {
       "id": "base1",
@@ -426,7 +426,7 @@
     {
       "id": "30c",
       "file": "sets/30c.json",
-      "sha256": "6d7789ac657e4ad487ac1a5bda65969e8b65d1bdf1027130088ec0383b11bf5c",
+      "sha256": "40d2eaa51e46754fb297703a3d249d65024aa30577390393c0396f60f34f61e7",
       "cardCount": 161
     },
     {
