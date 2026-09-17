@@ -74,6 +74,34 @@ Si el set no tiene cartas en español, **se añade igual**: el generador se qued
 idioma de `--langs` que devuelva cartas (`sourceLang`), así que `base1` entra en inglés y los
 nombres en español que sí existan se aprovechan. No hay que hacer nada especial.
 
+Si el set **no está todavía en TCGdex**, no hay que esperar: mira si está escrito en una pull
+request abierta de `tcgdex/cards-database`, que es donde aparece días antes que en la API.
+
+```bash
+curl -s -A 'Cardex' 'https://api.github.com/repos/tcgdex/cards-database/pulls?state=open&per_page=60' \
+  | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{
+      for (const p of JSON.parse(d)) if (/<nombre del set>/i.test(p.title))
+        console.log('#'+p.number, p.created_at.slice(0,10), p.title)})"
+```
+
+Si está, se congela y se publica ya, sin esperar a que fusionen nada:
+
+```bash
+node scripts/fetch-pending-set.mjs --set 30c \
+  --repo <fork>/cards-database --ref <rama> \
+  --dir "data/<Serie>/<Nombre del set>" --series me
+```
+
+Escribe `catalog-pending/<setId>.json`, que se versiona y que el generador usa **sólo mientras
+la API no tenga el set**. Las cartas entran sin imagen y sin precios; ambas cosas aparecen solas
+al regenerar el día que TCGdex publique. El detalle entero, en
+[docs/CATALOG.md](../../../docs/CATALOG.md#sets-que-tcgdex-todavía-no-sirve).
+
+**No cojas los datos de pokemontcg.io para esto.** Los tiene antes, pero numera `me55-1` donde
+TCGdex pondrá `30c-001`, y `card_keys.card_id` de la colección apunta a esas cadenas: al
+regenerar contra la API, cada carta que alguien hubiera marcado como suya se quedaría huérfana.
+Sirve para contrastar el recuento, no para publicar.
+
 ---
 
 ## Paso 2 — Generar los ficheros
@@ -332,6 +360,11 @@ Lo que conviene saber antes de tocar nada:
 
 ## Trampas ya pisadas
 
+- **Regenerar los sets japoneses sin `ja` en `--langs`.** Sus ids no existen en `es` ni en `en`:
+  `S12a`, `SV9`, `SVLN` y compañía salen «no encontrado» y, si no se usó `--keep`,
+  **desaparecen del manifiesto**. El generador ahora los enumera al terminar y devuelve código 1
+  cuando de verdad se han perdido, pero la comprobación se añadió después de generar un catálogo
+  con la mitad de los sets fuera.
 - **Generar sólo el set nuevo.** El manifiesto se reescribe entero. Regenera siempre todos,
   **de los dos juegos**: `--sets` sin `--riftbound` borra Riftbound del índice.
 - **`git checkout catalog`** borra el catálogo generado. Worktree.

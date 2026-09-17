@@ -1,0 +1,29 @@
+[
+  {
+    "id": "30c-booster",
+    "name": "30th Celebration Booster Pack",
+    "names": {
+      "en": "30th Celebration Booster Pack"
+    },
+    "kind": "booster",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/4/47/30th_Celebration_Booster.png/300px-30th_Celebration_Booster.png"
+  },
+  {
+    "id": "30c-bundle",
+    "name": "30th Celebration Booster Bundle",
+    "names": {
+      "en": "30th Celebration Booster Bundle"
+    },
+    "kind": "bundle",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/8/8d/30th_Celebration_Booster_Bundle.png/300px-30th_Celebration_Booster_Bundle.png"
+  },
+  {
+    "id": "30c-etb",
+    "name": "30th Celebration Elite Trainer Box",
+    "names": {
+      "en": "30th Celebration Elite Trainer Box"
+    },
+    "kind": "etb",
+    "artworkPath": "https://archives.bulbagarden.net/media/upload/thumb/1/10/30th_Celebration_Elite_Trainer_Box.png/300px-30th_Celebration_Elite_Trainer_Box.png"
+  }
+]

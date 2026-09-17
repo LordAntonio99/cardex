@@ -19,6 +19,12 @@
  * script respeta un fichero de superposición por set en `packs/<setId>.json`:
  * lo que pongas ahí a mano sobrevive a cada regeneración.
  *
+ * Sets que TCGdex todavía no sirve: si un set no existe en la API pero hay un
+ * `catalog-pending/<setId>.json`, se usa ése. Lo escribe
+ * `scripts/fetch-pending-set.mjs` leyendo los datos de una rama sin fusionar del
+ * repositorio de TCGdex. La API siempre manda, así que el fichero congelado deja
+ * de usarse solo el día que el set se publique de verdad.
+ *
  * Nota legal: esto genera METADATOS. Las imágenes de carta no se descargan ni
  * se publican: el fichero guarda la ruta y la aplicación las trae de
  * assets.tcgdex.net a la máquina de cada usuario cuando hacen falta.
@@ -55,7 +61,7 @@ const PREFERRED = 'es'
 // ── Argumentos ───────────────────────────────────────────────────────────────
 
 function parseArgs(argv) {
-  const args = { sets: [], riftbound: [], series: null, langs: ['es', 'en'], limit: 0, out: 'catalog', packs: 'catalog-packs', concurrency: 8, recognition: false, keep: false }
+  const args = { sets: [], riftbound: [], series: null, langs: ['es', 'en'], limit: 0, out: 'catalog', packs: 'catalog-packs', pending: 'catalog-pending', concurrency: 8, recognition: false, keep: false }
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]
     const next = () => argv[++i]
@@ -66,6 +72,7 @@ function parseArgs(argv) {
     else if (a === '--limit') args.limit = Number(next()) || 0
     else if (a === '--out') args.out = next()
     else if (a === '--packs') args.packs = next()
+    else if (a === '--pending') args.pending = next()
     else if (a === '--concurrency') args.concurrency = Number(next()) || 8
     else if (a === '--recognition') args.recognition = true
     else if (a === '--keep') args.keep = true
@@ -414,6 +421,8 @@ Opciones:
   --limit N         sólo las N primeras cartas de cada set (para pruebas)
   --out dir         directorio de salida (por defecto: catalog)
   --packs dir       sobres mantenidos a mano (por defecto: catalog-packs)
+  --pending dir     sets congelados que TCGdex aún no sirve
+                    (por defecto: catalog-pending)
   --concurrency N   peticiones en paralelo (por defecto: 8)
   --recognition     calcula además los vectores del escáner (requiere
                     'npm run build' y 'npm run models:fetch')
@@ -518,9 +527,16 @@ comprobando que sigue en su sitio y que no ha cambiado.
     byId.set(canonId, { cards: built.cards, game: built.set.game ?? 'pokemon' })
   }
 
+  /** Sets que se pidieron y no salieron. Ver la comprobación del final. */
+  const ausentes = []
+
   for (const setId of setIds) {
-    const built = await buildSet(setId, args.langs, args.limit, args.concurrency)
+    // La API manda. Sólo si no tiene el set se mira si hay uno congelado.
+    const built =
+      (await buildSet(setId, args.langs, args.limit, args.concurrency)) ??
+      (await loadPending(setId, args.pending))
     if (built) await emit(built, setId)
+    else ausentes.push(setId)
   }
 
   // ── Riftbound ─────────────────────────────────────────────────────────────
@@ -582,6 +598,64 @@ Calculando vectores de reconocimiento (${P.RECOG_MODEL_ID})`)
 
   const cards = finalSets.reduce((a, e) => a + e.cardCount, 0)
   console.log(`\nListo: ${finalSets.length} set(s), ${cards} cartas -> ${outDir}/manifest.json`)
+
+  // ── Un set que se pidió y no salió no puede pasar inadvertido ─────────────
+  // Los ids japoneses no existen en 'es' ni en 'en': pedirlos sin 'ja' en
+  // --langs los da por no encontrados con una línea perdida entre cientos. Con
+  // --keep se conserva lo que ya estaba publicado, así que se avisa y se sigue;
+  // sin --keep desaparecen del manifiesto, y entonces esto tiene que doler.
+  if (ausentes.length) {
+    console.error(`\n${ausentes.length} set(s) pedidos que NO se han generado:`)
+    console.error(`  ${ausentes.join(', ')}`)
+    console.error(
+      'Si son japoneses, prueba con --langs es,en,ja: sus ids no existen en es/en.'
+    )
+    if (args.keep) {
+      console.error('Como se ha usado --keep, siguen en el índice con lo que ya estaba publicado.')
+    } else {
+      console.error(`\nSin --keep, el manifiesto de ${outDir} ya NO los contiene. No publiques esto.`)
+      process.exitCode = 1
+    }
+  }
+}
+
+/**
+ * Carga un set congelado de `catalog-pending/`.
+ *
+ * Se usa SÓLO cuando TCGdex no tiene el set todavía. Un set se pone a la venta
+ * antes de que su API lo publique, pero los datos ya están escritos en una pull
+ * request del repositorio de datos; `scripts/fetch-pending-set.mjs` los deja
+ * cuajados ahí con los identificadores que TCGdex acabará usando.
+ *
+ * Que la API mande siempre es lo que hace que esto se desmonte solo: el día que
+ * TCGdex publique el set, `buildSet` devuelve datos, este camino no se toma y el
+ * fichero congelado se queda de adorno hasta que alguien lo borre.
+ */
+async function loadPending(setId, dir) {
+  const file = path.join(path.resolve(dir), `${setId}.json`)
+  if (!existsSync(file)) return null
+  try {
+    const doc = JSON.parse(await readFile(file, 'utf8'))
+    if (doc?.set?.id !== setId) {
+      console.warn(`  ! ${dir}/${setId}.json declara el set '${doc?.set?.id}'; se ignora`)
+      return null
+    }
+    if (!Array.isArray(doc.cards) || !doc.cards.length) {
+      console.warn(`  ! ${dir}/${setId}.json no trae cartas; se ignora`)
+      return null
+    }
+    const origen = doc.set.pendingSource
+    console.log(
+      `    (${setId} no está en TCGdex; se toma de ${dir}/${setId}.json` +
+        (origen ? `, congelado de ${origen.repo}@${origen.ref}` : '') +
+        ')'
+    )
+    if (!doc.packs) doc.packs = []
+    return doc
+  } catch (e) {
+    console.warn(`  ! ${dir}/${setId}.json ilegible: ${e.message}`)
+    return null
+  }
 }
 
 /**

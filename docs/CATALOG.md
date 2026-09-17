@@ -396,6 +396,44 @@ verdad**. El Set Base nunca se imprimió en español: TCGdex tiene el set traduc
 Sin eso, todo el Set Base se quedaría con el marcador de posición, porque
 `assets.tcgdex.net/es/base/base1/...` devuelve 404.
 
+### Sets que TCGdex todavía no sirve
+
+Un set se pone a la venta antes de que TCGdex lo publique en su API. Los datos, sin embargo, ya
+están escritos: viven en una pull request de
+[`tcgdex/cards-database`](https://github.com/tcgdex/cards-database) desde días antes.
+`scripts/fetch-pending-set.mjs` los lee de ahí y los deja **congelados** en
+`catalog-pending/<setId>.json`, con la misma forma que produce el generador:
+
+```bash
+node scripts/fetch-pending-set.mjs --set 30c \
+  --repo KlausDerKleber/cards-database --ref feat/en-30c \
+  --dir "data/Mega Evolution/30th Celebration" --series me
+```
+
+Ese fichero **se versiona en `main`**, igual que los sobres. Al generar, si un set no existe en
+la API y hay un fichero congelado, se usa el congelado. **La API siempre manda**: el día que
+TCGdex publique el set, el fichero deja de usarse solo y se puede borrar sin más.
+
+Lo que trae y lo que no:
+
+| | |
+|---|---|
+| Nombre, rareza, tipos, HP, ilustrador, variantes | Sí, del fichero fuente |
+| Identificadores | Acuñados como `<setId>-<localId>`, **los mismos que usará TCGdex** |
+| Precios | No. Los calcula el servidor de TCGdex y no están en los datos fuente |
+| Imágenes | No. `imagePath` apunta ya a la ruta definitiva, que hoy da 404 |
+
+**Lo del identificador no es un detalle.** `card_keys.card_id` de la colección del usuario apunta
+a esas cadenas. Publicar el set con los identificadores de otra fuente —los de pokemontcg.io,
+por ejemplo, que numera `me55-1` donde TCGdex pondrá `30c-001`— y regenerar después contra la
+API convertiría en huérfana cada carta que alguien hubiera marcado como suya. Por eso el script
+contrasta la convención contra un set hermano ya publicado antes de acuñar nada, y se planta si
+no casa.
+
+Las imágenes ausentes no hay que resolverlas: la aplicación dibuja el marcador de posición
+cuando una imagen da 404, y como `imagePath` ya apunta a donde TCGdex las pondrá, **aparecen
+solas** en cuanto su CDN las tenga. Sin republicar el catálogo y sin sacar versión.
+
 ### Los sobres son cosa tuya (en Pokémon)
 
 **Ninguna fuente pública tiene arte de sobres de Pokémon.** TCGdex no lo publica: su endpoint
